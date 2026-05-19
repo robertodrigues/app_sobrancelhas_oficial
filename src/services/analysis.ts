@@ -2,26 +2,24 @@ import { analyzeEyebrow as analyzeWithGemini } from './gemini';
 import { analyzeWithClaude } from './claude';
 
 export const performDualAnalysis = async (image: string) => {
-  console.log("Iniciando análise combinada...");
-  
-  const [geminiResult, claudeResult] = await Promise.allSettled([
-    analyzeWithGemini(image),
-    analyzeWithClaude(image)
+  // Tentamos as duas em paralelo para velocidade
+  const results = await Promise.allSettled([
+    analyzeWithClaude(image),
+    analyzeWithGemini(image)
   ]);
 
-  if (claudeResult.status === 'fulfilled') {
-    console.log("Claude respondeu com sucesso.");
-    return claudeResult.value;
-  } 
-  
-  if (geminiResult.status === 'fulfilled') {
-    console.log("Gemini respondeu com sucesso.");
-    return geminiResult.value;
+  // Prioridade para o Claude, depois Gemini
+  const success = results.find(r => r.status === 'fulfilled') as PromiseFulfilledResult<any> | undefined;
+
+  if (success) {
+    return success.value;
   }
 
-  // Se ambos falharem, logamos os motivos no console para debug
-  console.error("Erro Claude:", (claudeResult as PromiseRejectedResult).reason);
-  console.error("Erro Gemini:", (geminiResult as PromiseRejectedResult).reason);
-
-  throw new Error("As IAs não conseguiram processar a imagem. Verifique sua conexão ou tente uma foto mais nítida.");
+  // Se ambas falharem, tentamos o Gemini uma última vez com um prompt ainda mais simples
+  try {
+    console.log("Tentativa de recuperação com Gemini...");
+    return await analyzeWithGemini(image);
+  } catch (e) {
+    throw new Error("Não foi possível processar esta imagem no momento. Tente novamente em instantes.");
+  }
 };

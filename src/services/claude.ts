@@ -10,49 +10,24 @@ const anthropic = new Anthropic({
 export const analyzeWithClaude = async (base64Image: string) => {
   const base64Data = base64Image.includes(",") ? base64Image.split(",")[1] : base64Image;
   const mimeTypeMatch = base64Image.match(/^data:(image\/[a-zA-Z]+);base64,/);
-  const mimeType = (mimeTypeMatch ? mimeTypeMatch[1] : "image/jpeg") as "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+  const mimeType = (mimeTypeMatch ? mimeTypeMatch[1] : "image/jpeg") as any;
 
   const prompt = `
-    Você é uma assistente especializada em Tricologia de Sobrancelhas.
-    O usuário marcou áreas específicas na imagem com cores para guiar sua análise:
-    - MARCAÇÕES VERDES: Indicam o "Ponto Inicial" (parte mais próxima ao nariz).
-    - MARCAÇÕES AMARELAS: Indicam o "Meio da Sobrancelha" (corpo central).
-    - MARCAÇÕES VERMELHAS: Indicam a "Cauda" (parte final).
-
-    Analise a imagem focando especialmente nas áreas circuladas ou riscadas com essas cores.
-    Gere um relatório técnico completo seguindo exatamente esta estrutura JSON:
-
+    Analise esta imagem de sobrancelha para um relatório de visagismo e saúde capilar.
+    Ignore imperfeições na foto e foque nas áreas marcadas (Verde: Início, Amarelo: Meio, Vermelho: Cauda).
+    Seja prestativa e forneça uma análise técnica mesmo que a imagem não seja ideal.
+    
+    Retorne o resultado estritamente no formato JSON:
     {
       "regioes": {
-        "ponto_inicial": { 
-          "descricao": "descrição técnica baseada na área verde", 
-          "densidade": "porcentagem", 
-          "dano": "tipo e grau", 
-          "espessura": "fio predominante", 
-          "prognostico": "prognóstico",
-          "cor": "verde" | "amarelo" | "vermelho"
-        },
-        "meio": { 
-          "descricao": "descrição técnica baseada na área amarela", 
-          "densidade": "porcentagem", 
-          "dano": "tipo e grau", 
-          "espessura": "fio predominante", 
-          "prognostico": "prognóstico",
-          "cor": "verde" | "amarelo" | "vermelho"
-        },
-        "cauda": { 
-          "descricao": "descrição técnica baseada na área vermelha", 
-          "densidade": "porcentagem", 
-          "dano": "tipo e grau", 
-          "espessura": "fio predominante", 
-          "prognostico": "prognóstico",
-          "cor": "verde" | "amarelo" | "vermelho"
-        }
+        "ponto_inicial": { "descricao": "...", "densidade": "...", "dano": "...", "espessura": "...", "prognostico": "...", "cor": "verde" },
+        "meio": { "descricao": "...", "densidade": "...", "dano": "...", "espessura": "...", "prognostico": "...", "cor": "amarelo" },
+        "cauda": { "descricao": "...", "densidade": "...", "dano": "...", "espessura": "...", "prognostico": "...", "cor": "vermelho" }
       },
-      "visao_geral": "texto",
-      "resumo_geral": "texto",
-      "objetivo_tratamento": "texto",
-      "alerta_causa_interna": "texto ou null"
+      "visao_geral": "...",
+      "resumo_geral": "...",
+      "objetivo_tratamento": "...",
+      "alerta_causa_interna": "..."
     }
   `;
 
@@ -60,37 +35,21 @@ export const analyzeWithClaude = async (base64Image: string) => {
     const response = await anthropic.messages.create({
       model: "claude-3-5-sonnet-20241022",
       max_tokens: 2000,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: mimeType,
-                data: base64Data,
-              },
-            },
-            {
-              type: "text",
-              text: prompt,
-            },
-          ],
-        },
-      ],
+      messages: [{
+        role: "user",
+        content: [
+          { type: "image", source: { type: "base64", media_type: mimeType, data: base64Data } },
+          { type: "text", text: prompt }
+        ]
+      }]
     });
 
     const text = response.content[0].type === 'text' ? response.content[0].text : '';
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}') + 1;
-    
-    if (start !== -1 && end !== 0) {
-      return JSON.parse(text.substring(start, end));
-    }
-    throw new Error("Falha ao processar resposta do Claude");
+    return JSON.parse(text.substring(start, end));
   } catch (error) {
-    console.error("Erro no Claude:", error);
+    console.error("Erro Claude:", error);
     throw error;
   }
 };

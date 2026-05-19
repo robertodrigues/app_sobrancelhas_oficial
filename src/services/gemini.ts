@@ -21,46 +21,27 @@ export const analyzeEyebrow = async (base64Image: string) => {
   });
 
   const prompt = `
-    Você é uma assistente especializada em Tricologia de Sobrancelhas.
-    O usuário marcou áreas específicas na imagem com cores para guiar sua análise:
-    - MARCAÇÕES VERDES: Indicam o "Ponto Inicial" (parte mais próxima ao nariz).
-    - MARCAÇÕES AMARELAS: Indicam o "Meio da Sobrancelha" (corpo central).
-    - MARCAÇÕES VERMELHAS: Indicam a "Cauda" (parte final).
-
-    Analise a imagem focando especialmente nas áreas circuladas ou riscadas com essas cores.
-    Gere um relatório técnico completo seguindo exatamente esta estrutura JSON:
-
+    Você é uma consultora estética especialista em design e saúde das sobrancelhas.
+    Sua missão é analisar a imagem fornecida, independente da qualidade ou ângulo, e fornecer o melhor diagnóstico possível.
+    
+    O usuário marcou áreas com cores:
+    - VERDE: Ponto Inicial
+    - AMARELO: Meio/Corpo
+    - VERMELHO: Cauda
+    
+    Mesmo que a imagem esteja borrada ou as marcações não estejam perfeitas, faça uma estimativa técnica baseada no que é visível. Não recuse a análise.
+    
+    Retorne APENAS um JSON com esta estrutura:
     {
       "regioes": {
-        "ponto_inicial": { 
-          "descricao": "descrição técnica baseada na área verde", 
-          "densidade": "porcentagem", 
-          "dano": "tipo e grau", 
-          "espessura": "fio predominante", 
-          "prognostico": "prognóstico",
-          "cor": "verde" | "amarelo" | "vermelho"
-        },
-        "meio": { 
-          "descricao": "descrição técnica baseada na área amarela", 
-          "densidade": "porcentagem", 
-          "dano": "tipo e grau", 
-          "espessura": "fio predominante", 
-          "prognostico": "prognóstico",
-          "cor": "verde" | "amarelo" | "vermelho"
-        },
-        "cauda": { 
-          "descricao": "descrição técnica baseada na área vermelha", 
-          "densidade": "porcentagem", 
-          "dano": "tipo e grau", 
-          "espessura": "fio predominante", 
-          "prognostico": "prognóstico",
-          "cor": "verde" | "amarelo" | "vermelho"
-        }
+        "ponto_inicial": { "descricao": "...", "densidade": "...", "dano": "...", "espessura": "...", "prognostico": "...", "cor": "verde" },
+        "meio": { "descricao": "...", "densidade": "...", "dano": "...", "espessura": "...", "prognostico": "...", "cor": "amarelo" },
+        "cauda": { "descricao": "...", "densidade": "...", "dano": "...", "espessura": "...", "prognostico": "...", "cor": "vermelho" }
       },
-      "visao_geral": "texto",
-      "resumo_geral": "texto",
-      "objetivo_tratamento": "texto",
-      "alerta_causa_interna": "texto ou null"
+      "visao_geral": "...",
+      "resumo_geral": "...",
+      "objetivo_tratamento": "...",
+      "alerta_causa_interna": "..."
     }
   `;
 
@@ -72,19 +53,15 @@ export const analyzeEyebrow = async (base64Image: string) => {
 
     const response = await result.response;
     const text = response.text();
-    
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}') + 1;
     
     if (start !== -1 && end !== 0) {
-      const jsonString = text.substring(start, end);
-      return JSON.parse(jsonString);
+      return JSON.parse(text.substring(start, end));
     }
-    
-    throw new Error("Formato de resposta inválido");
-
+    throw new Error("Resposta inválida");
   } catch (error) {
-    console.error("Erro na análise:", error);
+    console.error("Erro Gemini:", error);
     throw error;
   }
 };
