@@ -32,7 +32,8 @@ const Capture = () => {
   }, []);
 
   const capture = useCallback(() => {
-    const imageSrc = webcamRef.current?.getScreenshot({ width: 1200, height: 900 });
+    // Reduzido para 800x600 para garantir compatibilidade com as APIs de IA
+    const imageSrc = webcamRef.current?.getScreenshot({ width: 800, height: 600 });
     if (imageSrc) {
       setCapturedImage(imageSrc);
     }
@@ -70,10 +71,11 @@ const Capture = () => {
 
       if (error) throw error;
 
-      showSuccess('Análise de alta precisão concluída!');
+      showSuccess('Análise concluída com sucesso!');
       navigate('/resultado', { state: { analysis: result, image: imageToAnalyze } });
     } catch (error: any) {
-      showError("Erro na análise: " + error.message);
+      console.error("Erro detalhado da análise:", error);
+      showError("Falha na análise: " + (error.message || "Erro desconhecido"));
     } finally {
       setIsAnalyzing(false);
     }
@@ -125,7 +127,7 @@ const Capture = () => {
               audio={false}
               ref={webcamRef}
               screenshotFormat="image/jpeg"
-              videoConstraints={{ facingMode: 'environment', width: 1200, height: 900 }}
+              videoConstraints={{ facingMode: 'environment', width: 800, height: 600 }}
               className="h-full w-full object-cover"
             />
             <CameraOverlay side={side} />
@@ -136,8 +138,8 @@ const Capture = () => {
             {isAnalyzing && (
               <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white p-6 text-center">
                 <BrainCircuit className="w-16 h-16 animate-pulse text-accent mb-4" />
-                <h2 className="text-xl font-bold mb-2">Dual AI Processing</h2>
-                <p className="text-sm text-slate-300">Analisando marcações coloridas para máxima precisão...</p>
+                <h2 className="text-xl font-bold mb-2">Processando Diagnóstico</h2>
+                <p className="text-sm text-slate-300">Aguarde, as IAs estão gerando o relatório técnico...</p>
               </div>
             )}
           </div>
