@@ -1,0 +1,56 @@
+import React from 'react';
+import Navbar from '@/components/layout/Navbar';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ArrowLeft, Save } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { showSuccess } from '@/utils/toast';
+
+const NewClient = () => {
+  const navigate = useNavigate();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    showSuccess('Cliente cadastrado com sucesso!');
+    navigate('/clientes');
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 pb-24 md:pt-20">
+      <Navbar />
+      <main className="max-w-md mx-auto p-6">
+        <header className="flex items-center gap-4 mb-8">
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+            <ArrowLeft size={24} />
+          </button>
+          <h1 className="text-2xl font-bold text-slate-900">Novo Cliente</h1>
+        </header>
+
+        <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div className="space-y-2">
+            <Label htmlFor="name">Nome Completo</Label>
+            <Input id="name" placeholder="Ex: Maria Silva" required />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="email">E-mail</Label>
+            <Input id="email" type="email" placeholder="maria@exemplo.com" required />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone">Telefone (WhatsApp)</Label>
+            <Input id="phone" placeholder="(11) 99999-9999" />
+          </div>
+
+          <Button type="submit" className="w-full gap-2 h-12 text-lg">
+            <Save size={20} />
+            Salvar Cliente
+          </Button>
+        </form>
+      </main>
+    </div>
+  );
+};
+
+export default NewClient;
