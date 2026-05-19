@@ -18,11 +18,11 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   const [activeRegion, setActiveRegion] = useState<Region>(null);
   const [isEraser, setIsEraser] = useState(false);
 
-  // Cores sólidas, a transparência será controlada pelo globalAlpha
+  // Cores mais vibrantes para o modo 'multiply'
   const colors = {
-    ponto_inicial: '#22c55e', // Verde
-    meio: '#eab308',          // Amarelo
-    cauda: '#ef4444',         // Vermelho
+    ponto_inicial: '#4ade80', // Verde brilhante
+    meio: '#facc15',          // Amarelo brilhante
+    cauda: '#f87171',         // Vermelho brilhante
   };
 
   useEffect(() => {
@@ -73,17 +73,13 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
       contextRef.current.globalCompositeOperation = 'destination-out';
       contextRef.current.globalAlpha = 1.0;
       contextRef.current.lineWidth = 40;
-      contextRef.current.shadowBlur = 0;
     } else if (activeRegion) {
-      // Configuração para efeito de "Marca-Texto" / Mapa de Calor
-      contextRef.current.globalCompositeOperation = 'source-over';
-      contextRef.current.globalAlpha = 0.3; // Opacidade baixa para não cobrir a imagem
+      // O segredo da opacidade: 'multiply' mistura a cor com a imagem de baixo
+      // sem esconder os detalhes (como fios de cabelo e poros)
+      contextRef.current.globalCompositeOperation = 'multiply';
+      contextRef.current.globalAlpha = 0.6; // Opacidade ideal para o modo multiply
       contextRef.current.strokeStyle = colors[activeRegion];
-      contextRef.current.lineWidth = 60; 
-      
-      // Esfumado nas bordas para parecer um mapa de calor
-      contextRef.current.shadowBlur = 20;
-      contextRef.current.shadowColor = colors[activeRegion];
+      contextRef.current.lineWidth = 70; // Pincel largo para marcar a região
     }
 
     setIsDrawing(true);
