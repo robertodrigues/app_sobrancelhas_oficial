@@ -18,11 +18,11 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   const [activeRegion, setActiveRegion] = useState<Region>(null);
   const [isEraser, setIsEraser] = useState(false);
 
-  // Cores em RGBA para garantir a transparência (0.4 = 40% de opacidade)
+  // Cores sólidas, a transparência será controlada pelo globalAlpha
   const colors = {
-    ponto_inicial: 'rgba(34, 197, 94, 0.4)', // Verde transparente
-    meio: 'rgba(234, 179, 8, 0.4)',          // Amarelo transparente
-    cauda: 'rgba(239, 68, 68, 0.4)',         // Vermelho transparente
+    ponto_inicial: '#22c55e', // Verde
+    meio: '#eab308',          // Amarelo
+    cauda: '#ef4444',         // Vermelho
   };
 
   useEffect(() => {
@@ -71,15 +71,18 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
     
     if (isEraser) {
       contextRef.current.globalCompositeOperation = 'destination-out';
+      contextRef.current.globalAlpha = 1.0;
       contextRef.current.lineWidth = 40;
       contextRef.current.shadowBlur = 0;
     } else if (activeRegion) {
+      // Configuração para efeito de "Marca-Texto" / Mapa de Calor
       contextRef.current.globalCompositeOperation = 'source-over';
+      contextRef.current.globalAlpha = 0.3; // Opacidade baixa para não cobrir a imagem
       contextRef.current.strokeStyle = colors[activeRegion];
-      contextRef.current.lineWidth = 50; // Pincel bem grosso para cobrir a região
+      contextRef.current.lineWidth = 60; 
       
-      // Efeito de borda suave (esfumado)
-      contextRef.current.shadowBlur = 15;
+      // Esfumado nas bordas para parecer um mapa de calor
+      contextRef.current.shadowBlur = 20;
       contextRef.current.shadowColor = colors[activeRegion];
     }
 
