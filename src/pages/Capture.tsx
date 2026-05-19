@@ -17,7 +17,8 @@ const Capture = () => {
   const navigate = useNavigate();
 
   const capture = useCallback(() => {
-    const imageSrc = webcamRef.current?.getScreenshot({ width: 1080, height: 1440 });
+    // Aumentando a qualidade para 0.9 e garantindo formato jpeg
+    const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
       setCapturedImage(imageSrc);
     }
@@ -67,7 +68,11 @@ const Capture = () => {
               audio={false}
               ref={webcamRef}
               screenshotFormat="image/jpeg"
-              videoConstraints={{ facingMode: 'environment', aspectRatio: 3/4 }}
+              videoConstraints={{ 
+                facingMode: 'environment', 
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+              }}
               className="h-full w-full object-cover"
             />
             <CameraOverlay side={side} />
