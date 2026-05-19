@@ -2,7 +2,7 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import Navbar from "@/components/layout/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, FileText, TrendingUp } from "lucide-react";
+import { Plus, Users, FileText, TrendingUp, Camera } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
