@@ -12,8 +12,8 @@ export const analyzeWithClaude = async (base64Image: string) => {
     const base64Data = base64Image.split(',')[1] || base64Image;
 
     const response = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20240620", // Versão estável e amplamente disponível
-      max_tokens: 1000,
+      model: "claude-3-5-sonnet-latest", // Usando o alias mais recente
+      max_tokens: 1024,
       messages: [{
         role: "user",
         content: [
@@ -27,7 +27,7 @@ export const analyzeWithClaude = async (base64Image: string) => {
           },
           { 
             type: "text", 
-            text: "Analise as marcações coloridas na sobrancelha (Verde: Início, Amarelo: Meio, Vermelho: Cauda) e retorne um JSON técnico com as chaves: regioes, visao_geral, resumo_geral, objetivo_tratamento, alerta_causa_interna." 
+            text: "Analise esta sobrancelha e retorne um JSON com as chaves: regioes, visao_geral, resumo_geral, objetivo_tratamento, alerta_causa_interna." 
           }
         ]
       }]
@@ -36,12 +36,13 @@ export const analyzeWithClaude = async (base64Image: string) => {
     const text = response.content[0].type === 'text' ? response.content[0].text : '';
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}') + 1;
-    
-    if (start === -1) throw new Error("Resposta da IA não contém JSON");
-    
     return JSON.parse(text.substring(start, end));
   } catch (error: any) {
     console.error("Erro Claude:", error);
-    throw new Error("Claude: " + (error.message || "Erro na API"));
+    // Se o 3.5 falhar, tentamos o Haiku como último recurso
+    if (error.status === 404) {
+       throw new Error("Modelo Claude não encontrado. Verifique as permissões da chave.");
+    }
+    throw error;
   }
 };
