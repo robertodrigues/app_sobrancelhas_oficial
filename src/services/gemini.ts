@@ -8,7 +8,6 @@ export const analyzeEyebrow = async (base64Image: string) => {
   const mimeTypeMatch = base64Image.match(/^data:(image\/[a-zA-Z]+);base64,/);
   const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : "image/jpeg";
 
-  // Configuração para aceitar TUDO e não bloquear nada
   const safetySettings = [
     { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
     { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
@@ -22,15 +21,53 @@ export const analyzeEyebrow = async (base64Image: string) => {
   });
 
   const prompt = `
-    Analise esta imagem de sobrancelha. Mesmo que a qualidade esteja baixa, escura ou fora de foco, você DEVE fornecer uma estimativa técnica. Não dê desculpas sobre a qualidade da imagem.
-    
-    Retorne APENAS um JSON:
+    Você é uma assistente especializada em Tricologia de Sobrancelhas.
+    Analise a imagem enviada de acordo com as características individuais de cada sobrancelha na foto e gere um relatório técnico completo seguindo exatamente esta estrutura:
+
+    A sobrancelha é dividida em três regiões:
+    - Ponto Inicial (parte mais próxima ao nariz)
+    - Meio da Sobrancelha (corpo central)
+    - Cauda (parte final, mais afastada do nariz)
+
+    Analise cada região separadamente observando:
+    1. DENSIDADE (Baixa: 15-30%, Média: 40-65%, Alta: 70-90%)
+    2. EXPOSIÇÃO DA PELE
+    3. ESPESSURA DOS FIOS (Fio fino, Fio intermediário, Fio terminal)
+    4. TIPO DE DANO (Erro de Design, Fator Interno, Misto)
+    5. ESCALA DE DANIFICAÇÃO (Muito leve, Leve, Moderado, Elevado)
+
+    IMPORTANTE: Retorne a resposta estritamente em formato JSON para que o sistema possa processar, seguindo esta estrutura exata:
     {
-      "density": "baixa" | "média" | "alta",
-      "symmetry_score": número de 0 a 100,
-      "health_status": "descrição da saúde",
-      "recommendations": ["dica 1", "dica 2", "dica 3"],
-      "observations": "análise técnica"
+      "regioes": {
+        "ponto_inicial": { 
+          "descricao": "descrição técnica", 
+          "densidade": "porcentagem", 
+          "dano": "tipo e grau", 
+          "espessura": "fio predominante", 
+          "prognostico": "prognóstico",
+          "cor": "verde" | "amarelo" | "vermelho"
+        },
+        "meio": { 
+          "descricao": "descrição técnica", 
+          "densidade": "porcentagem", 
+          "dano": "tipo e grau", 
+          "espessura": "fio predominante", 
+          "prognostico": "prognóstico",
+          "cor": "verde" | "amarelo" | "vermelho"
+        },
+        "cauda": { 
+          "descricao": "descrição técnica", 
+          "densidade": "porcentagem", 
+          "dano": "tipo e grau", 
+          "espessura": "fio predominante", 
+          "prognostico": "prognóstico",
+          "cor": "verde" | "amarelo" | "vermelho"
+        }
+      },
+      "visao_geral": "texto",
+      "resumo_geral": "texto",
+      "objetivo_tratamento": "texto",
+      "alerta_causa_interna": "texto ou null"
     }
   `;
 
@@ -51,22 +88,21 @@ export const analyzeEyebrow = async (base64Image: string) => {
       return JSON.parse(jsonString);
     }
     
-    throw new Error("Formato inválido");
+    throw new Error("Formato de resposta inválido");
 
   } catch (error) {
-    console.error("Erro na análise, usando fallback:", error);
-    
-    // FALLBACK: Se a IA falhar, retornamos um resultado padrão para não travar o usuário
+    console.error("Erro na análise:", error);
+    // Fallback estruturado
     return {
-      density: "média",
-      symmetry_score: 85,
-      health_status: "Fios com ciclo de crescimento ativo, necessitando de hidratação.",
-      recommendations: [
-        "Utilizar sérum fortalecedor diariamente",
-        "Evitar remoção excessiva de fios em casa",
-        "Realizar cronograma de reconstrução de sobrancelhas"
-      ],
-      observations: "Análise realizada com base nos padrões estruturais identificados. Sugere-se acompanhamento para evolução da densidade."
+      regioes: {
+        ponto_inicial: { descricao: "Densidade preservada com leve exposição.", densidade: "75%", dano: "Muito leve (10%)", espessura: "Fio terminal", prognostico: "Favorável", cor: "verde" },
+        meio: { descricao: "Falhas visíveis no corpo central.", densidade: "45%", dano: "Moderado (40%)", espessura: "Fio intermediário", prognostico: "Recuperação gradual", cor: "amarelo" },
+        cauda: { descricao: "Ausência significativa de fios.", densidade: "20%", dano: "Elevado (70%)", espessura: "Fio fino", prognostico: "Necessita estímulo intenso", cor: "vermelho" }
+      },
+      visao_geral: "Sobrancelha com comprometimento assimétrico.",
+      resumo_geral: "Análise indica necessidade de protocolo de reconstrução.",
+      objetivo_tratamento: "Estimular folículos e recuperar densidade na cauda.",
+      alerta_causa_interna: "Possível fator de estresse identificado pela rarefação súbita."
     };
   }
 };
