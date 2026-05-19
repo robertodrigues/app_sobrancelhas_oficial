@@ -17,8 +17,8 @@ const Capture = () => {
   const navigate = useNavigate();
 
   const capture = useCallback(() => {
-    // Aumentando a qualidade para 0.9 e garantindo formato jpeg
-    const imageSrc = webcamRef.current?.getScreenshot();
+    // Captura com resolução balanceada para não sobrecarregar a API
+    const imageSrc = webcamRef.current?.getScreenshot({ width: 800, height: 600 });
     if (imageSrc) {
       setCapturedImage(imageSrc);
     }
@@ -41,11 +41,10 @@ const Capture = () => {
     setIsAnalyzing(true);
     try {
       const result = await analyzeEyebrow(capturedImage);
-      showSuccess('Análise concluída com sucesso!');
+      showSuccess('Análise concluída!');
       navigate('/resultado', { state: { analysis: result, image: capturedImage } });
     } catch (error: any) {
-      showError(error.message || 'Erro ao analisar imagem. Tente novamente.');
-      console.error(error);
+      showError(error.message);
     } finally {
       setIsAnalyzing(false);
     }
@@ -69,9 +68,9 @@ const Capture = () => {
               ref={webcamRef}
               screenshotFormat="image/jpeg"
               videoConstraints={{ 
-                facingMode: 'environment', 
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
+                facingMode: 'environment',
+                width: 800,
+                height: 600
               }}
               className="h-full w-full object-cover"
             />
@@ -84,7 +83,7 @@ const Capture = () => {
               <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white p-6 text-center">
                 <Loader2 className="w-12 h-12 animate-spin text-accent mb-4" />
                 <h2 className="text-xl font-bold mb-2">IA Analisando...</h2>
-                <p className="text-sm text-slate-300">Identificando densidade, simetria e saúde dos fios.</p>
+                <p className="text-sm text-slate-300">Processando detalhes da sobrancelha.</p>
               </div>
             )}
           </div>
