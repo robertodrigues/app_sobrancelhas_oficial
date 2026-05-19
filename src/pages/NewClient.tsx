@@ -22,16 +22,23 @@ const NewClient = () => {
     setLoading(true);
     
     try {
-      const { error } = await supabase
+      console.log('Tentando salvar cliente:', formData);
+      const { data, error } = await supabase
         .from('clients')
-        .insert([formData]);
+        .insert([formData])
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro detalhado do Supabase:', error);
+        throw error;
+      }
 
+      console.log('Cliente salvo com sucesso:', data);
       showSuccess('Cliente cadastrado com sucesso!');
       navigate('/clientes');
     } catch (error: any) {
-      showError('Erro ao cadastrar: ' + error.message);
+      console.error('Erro na submissão:', error);
+      showError('Erro ao cadastrar: ' + (error.message || 'Erro desconhecido'));
     } finally {
       setLoading(false);
     }
