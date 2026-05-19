@@ -28,7 +28,7 @@ const Index = () => {
                 <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-3">
                   <Users className="h-5 w-5 text-blue-500" />
                 </div>
-                <div className="text-2xl font-bold text-slate-900">24</div>
+                <div className="text-2xl font-bold text-slate-900">0</div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Clientes</p>
               </CardContent>
             </Card>
@@ -40,7 +40,7 @@ const Index = () => {
                 <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center mb-3">
                   <FileText className="h-5 w-5 text-purple-500" />
                 </div>
-                <div className="text-2xl font-bold text-slate-900">142</div>
+                <div className="text-2xl font-bold text-slate-900">0</div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Análises</p>
               </CardContent>
             </Card>
@@ -75,24 +75,10 @@ const Index = () => {
             <Button variant="link" className="text-accent font-semibold text-sm">Ver tudo</Button>
           </div>
           <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <motion.div 
-                key={i} 
-                initial={{ opacity: 0, x: -20 }} 
-                animate={{ opacity: 1, x: 0 }} 
-                transition={{ delay: i * 0.1 }}
-                className="flex items-center p-4 bg-white rounded-2xl shadow-sm border border-slate-50 group cursor-pointer hover:border-accent/20 transition-colors"
-              >
-                <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mr-4 group-hover:bg-accent/5 transition-colors">
-                  <TrendingUp size={20} className="text-accent" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-slate-900">Análise de Evolução</p>
-                  <p className="text-xs font-medium text-slate-400">Maria Silva • Há 2 horas</p>
-                </div>
-                <ChevronRight size={18} className="text-slate-300 group-hover:text-accent transition-colors" />
-              </motion.div>
-            ))}
+            {/* Lista vazia ou placeholder quando não houver atividades */}
+            <div className="text-center py-8 bg-white rounded-2xl border border-dashed border-slate-200">
+              <p className="text-sm text-slate-400">Nenhuma atividade recente</p>
+            </div>
           </div>
         </section>
       </main>
