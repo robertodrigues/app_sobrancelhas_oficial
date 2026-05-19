@@ -4,10 +4,10 @@ import Navbar from '@/components/layout/Navbar';
 import CameraOverlay from '@/components/camera/CameraOverlay';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Camera, RefreshCw, Check, ArrowLeft, Upload, Loader2, User } from 'lucide-react';
+import { Camera, RefreshCw, Check, ArrowLeft, Upload, Loader2, User, BrainCircuit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
-import { analyzeEyebrow } from '@/services/gemini';
+import { performDualAnalysis } from '@/services/analysis';
 import { supabase } from '@/lib/supabase';
 
 const Capture = () => {
@@ -55,21 +55,21 @@ const Capture = () => {
     
     setIsAnalyzing(true);
     try {
-      const result = await analyzeEyebrow(capturedImage);
+      // Agora usa a análise combinada Gemini + Claude
+      const result = await performDualAnalysis(capturedImage);
       
-      // Salvar no Supabase
       const { error } = await supabase.from('analyses').insert([{
         client_id: selectedClientId,
-        image_url: capturedImage, // Em um app real, faríamos upload para o Storage, aqui salvamos o base64 para simplificar
+        image_url: capturedImage,
         result: result
       }]);
 
       if (error) throw error;
 
-      showSuccess('Análise concluída e salva!');
+      showSuccess('Análise de alta precisão concluída!');
       navigate('/resultado', { state: { analysis: result, image: capturedImage } });
     } catch (error: any) {
-      showError(error.message);
+      showError("Erro na análise: " + error.message);
     } finally {
       setIsAnalyzing(false);
     }
@@ -85,7 +85,6 @@ const Capture = () => {
         <div className="w-10"></div>
       </div>
 
-      {/* Seleção de Cliente */}
       <div className="px-6 py-2 z-10">
         <Select onValueChange={setSelectedClientId} value={selectedClientId}>
           <SelectTrigger className="bg-white/10 border-white/20 text-white h-12 rounded-xl">
@@ -98,9 +97,6 @@ const Capture = () => {
             {clients.map(client => (
               <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
             ))}
-            {clients.length === 0 && (
-              <div className="p-2 text-center text-sm text-slate-500">Nenhum cliente cadastrado</div>
-            )}
           </SelectContent>
         </Select>
       </div>
@@ -112,11 +108,7 @@ const Capture = () => {
               audio={false}
               ref={webcamRef}
               screenshotFormat="image/jpeg"
-              videoConstraints={{ 
-                facingMode: 'environment',
-                width: 800,
-                height: 600
-              }}
+              videoConstraints={{ facingMode: 'environment', width: 800, height: 600 }}
               className="h-full w-full object-cover"
             />
             <CameraOverlay side={side} />
@@ -126,9 +118,9 @@ const Capture = () => {
             <img src={capturedImage} alt="Captura" className="h-full w-full object-cover" />
             {isAnalyzing && (
               <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white p-6 text-center">
-                <Loader2 className="w-12 h-12 animate-spin text-accent mb-4" />
-                <h2 className="text-xl font-bold mb-2">IA Analisando...</h2>
-                <p className="text-sm text-slate-300">Processando detalhes e salvando no banco de dados.</p>
+                <BrainCircuit className="w-16 h-16 animate-pulse text-accent mb-4" />
+                <h2 className="text-xl font-bold mb-2">Dual AI Processing</h2>
+                <p className="text-sm text-slate-300">Combinando Gemini & Claude para máxima precisão técnica...</p>
               </div>
             )}
           </div>
