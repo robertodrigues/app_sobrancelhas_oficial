@@ -22,23 +22,24 @@ const NewClient = () => {
     setLoading(true);
     
     try {
-      console.log('Tentando salvar cliente:', formData);
-      const { data, error } = await supabase
+      // Remove campos vazios para evitar erros de validação no banco
+      const dataToSave = {
+        name: formData.name,
+        ...(formData.email ? { email: formData.email } : {}),
+        ...(formData.phone ? { phone: formData.phone } : {})
+      };
+
+      const { error } = await supabase
         .from('clients')
-        .insert([formData])
-        .select();
+        .insert([dataToSave]);
 
-      if (error) {
-        console.error('Erro detalhado do Supabase:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('Cliente salvo com sucesso:', data);
       showSuccess('Cliente cadastrado com sucesso!');
       navigate('/clientes');
     } catch (error: any) {
-      console.error('Erro na submissão:', error);
-      showError('Erro ao cadastrar: ' + (error.message || 'Erro desconhecido'));
+      console.error('Erro ao salvar:', error);
+      showError('Erro ao cadastrar: ' + (error.message || 'Verifique se as tabelas foram criadas no Supabase'));
     } finally {
       setLoading(false);
     }
@@ -57,7 +58,7 @@ const NewClient = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
           <div className="space-y-2">
-            <Label htmlFor="name">Nome Completo</Label>
+            <Label htmlFor="name">Nome Completo *</Label>
             <Input 
               id="name" 
               placeholder="Ex: Maria Silva" 
@@ -68,19 +69,18 @@ const NewClient = () => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
+            <Label htmlFor="email">E-mail (Opcional)</Label>
             <Input 
               id="email" 
               type="email" 
               placeholder="maria@exemplo.com" 
-              required 
               value={formData.email}
               onChange={(e) => setFormData({...formData, email: e.target.value})}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Telefone (WhatsApp)</Label>
+            <Label htmlFor="phone">Telefone (Opcional)</Label>
             <Input 
               id="phone" 
               placeholder="(11) 99999-9999" 
