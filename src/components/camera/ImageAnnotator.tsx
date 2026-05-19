@@ -18,10 +18,11 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   const [activeRegion, setActiveRegion] = useState<Region>(null);
   const [isEraser, setIsEraser] = useState(false);
 
+  // Cores em RGBA para garantir a transparência (0.4 = 40% de opacidade)
   const colors = {
-    ponto_inicial: '#22c55e', // Verde
-    meio: '#eab308',         // Amarelo
-    cauda: '#ef4444',        // Vermelho
+    ponto_inicial: 'rgba(34, 197, 94, 0.4)', // Verde transparente
+    meio: 'rgba(234, 179, 8, 0.4)',          // Amarelo transparente
+    cauda: 'rgba(239, 68, 68, 0.4)',         // Vermelho transparente
   };
 
   useEffect(() => {
@@ -38,7 +39,6 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
         ctx.drawImage(img, 0, 0);
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.lineWidth = 8;
         contextRef.current = ctx;
       }
     };
@@ -71,11 +71,16 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
     
     if (isEraser) {
       contextRef.current.globalCompositeOperation = 'destination-out';
-      contextRef.current.lineWidth = 20;
+      contextRef.current.lineWidth = 40;
+      contextRef.current.shadowBlur = 0;
     } else if (activeRegion) {
       contextRef.current.globalCompositeOperation = 'source-over';
       contextRef.current.strokeStyle = colors[activeRegion];
-      contextRef.current.lineWidth = 8;
+      contextRef.current.lineWidth = 50; // Pincel bem grosso para cobrir a região
+      
+      // Efeito de borda suave (esfumado)
+      contextRef.current.shadowBlur = 15;
+      contextRef.current.shadowColor = colors[activeRegion];
     }
 
     setIsDrawing(true);
@@ -123,7 +128,10 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
         <Button variant="ghost" size="icon" onClick={onCancel}>
           <X size={24} />
         </Button>
-        <h2 className="font-bold">Marcar Regiões</h2>
+        <div className="text-center">
+          <h2 className="font-bold text-sm">Mapeamento Técnico</h2>
+          <p className="text-[10px] text-slate-400 uppercase tracking-widest">Pinte as regiões</p>
+        </div>
         <Button variant="ghost" size="icon" onClick={handleSave} className="text-green-400">
           <Check size={24} />
         </Button>
@@ -144,46 +152,47 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
         
         {!activeRegion && !isEraser && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="bg-black/60 backdrop-blur-md p-4 rounded-2xl text-white text-center">
-              <MousePointer2 className="mx-auto mb-2 animate-bounce" />
-              <p className="text-sm font-medium">Selecione uma região abaixo para marcar</p>
+            <div className="bg-black/60 backdrop-blur-md p-6 rounded-3xl text-white text-center border border-white/10">
+              <MousePointer2 className="mx-auto mb-3 animate-bounce text-accent" size={32} />
+              <p className="text-sm font-bold">Selecione uma cor abaixo</p>
+              <p className="text-xs text-slate-400">e pinte a região da sobrancelha</p>
             </div>
           </div>
         )}
       </div>
 
-      <div className="p-6 bg-slate-900 space-y-4">
+      <div className="p-6 bg-slate-900 space-y-4 border-t border-slate-800">
         <div className="grid grid-cols-3 gap-3">
           <button
             onClick={() => { setActiveRegion('ponto_inicial'); setIsEraser(false); }}
             className={cn(
-              "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all",
-              activeRegion === 'ponto_inicial' ? "border-green-500 bg-green-500/10" : "border-slate-700 bg-slate-800"
+              "flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all",
+              activeRegion === 'ponto_inicial' ? "border-green-500 bg-green-500/20" : "border-slate-700 bg-slate-800/50"
             )}
           >
-            <div className="w-4 h-4 rounded-full bg-green-500" />
-            <span className="text-[10px] font-bold text-white uppercase">P. Inicial</span>
+            <div className="w-6 h-6 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+            <span className="text-[10px] font-bold text-white uppercase">Início</span>
           </button>
           
           <button
             onClick={() => { setActiveRegion('meio'); setIsEraser(false); }}
             className={cn(
-              "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all",
-              activeRegion === 'meio' ? "border-yellow-500 bg-yellow-500/10" : "border-slate-700 bg-slate-800"
+              "flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all",
+              activeRegion === 'meio' ? "border-yellow-500 bg-yellow-500/20" : "border-slate-700 bg-slate-800/50"
             )}
           >
-            <div className="w-4 h-4 rounded-full bg-yellow-500" />
+            <div className="w-6 h-6 rounded-full bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]" />
             <span className="text-[10px] font-bold text-white uppercase">Meio</span>
           </button>
 
           <button
             onClick={() => { setActiveRegion('cauda'); setIsEraser(false); }}
             className={cn(
-              "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all",
-              activeRegion === 'cauda' ? "border-red-500 bg-red-500/10" : "border-slate-700 bg-slate-800"
+              "flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all",
+              activeRegion === 'cauda' ? "border-red-500 bg-red-500/20" : "border-slate-700 bg-slate-800/50"
             )}
           >
-            <div className="w-4 h-4 rounded-full bg-red-500" />
+            <div className="w-6 h-6 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
             <span className="text-[10px] font-bold text-white uppercase">Cauda</span>
           </button>
         </div>
@@ -192,8 +201,8 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
           variant="outline"
           onClick={() => { setIsEraser(!isEraser); setActiveRegion(null); }}
           className={cn(
-            "w-full h-12 gap-2 rounded-xl border-slate-700 text-white",
-            isEraser ? "bg-white text-slate-900" : "bg-slate-800"
+            "w-full h-14 gap-2 rounded-2xl border-slate-700 text-white transition-all",
+            isEraser ? "bg-white text-slate-900" : "bg-slate-800/50"
           )}
         >
           <Eraser size={20} />
