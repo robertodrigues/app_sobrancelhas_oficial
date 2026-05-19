@@ -3,13 +3,15 @@ import Webcam from 'react-webcam';
 import Navbar from '@/components/layout/Navbar';
 import CameraOverlay from '@/components/camera/CameraOverlay';
 import { Button } from '@/components/ui/button';
-import { Camera, RefreshCw, Check, ArrowLeft, Upload } from 'lucide-react';
+import { Camera, RefreshCw, Check, ArrowLeft, Upload, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
+import { analyzeEyebrow } from '@/services/gemini';
 
 const Capture = () => {
   const [side, setSide] = useState<'left' | 'right'>('right');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const webcamRef = useRef<Webcam>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -24,32 +26,27 @@ const Capture = () => {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (!file.type.startsWith('image/')) {
-        showError('Por favor, selecione um arquivo de imagem válido.');
-        return;
-      }
-
       const reader = new FileReader();
       reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setCapturedImage(result);
-        showSuccess('Imagem carregada com sucesso!');
+        setCapturedImage(e.target?.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const triggerFileUpload = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleSave = () => {
-    showSuccess(`Foto da sobrancelha ${side === 'right' ? 'direita' : 'esquerda'} salva!`);
-    if (side === 'right') {
-      setSide('left');
-      setCapturedImage(null);
-    } else {
-      navigate('/');
+  const handleConfirm = async () => {
+    if (!capturedImage) return;
+    
+    setIsAnalyzing(true);
+    try {
+      const result = await analyzeEyebrow(capturedImage);
+      showSuccess('Análise concluída com sucesso!');
+      navigate('/resultado', { state: { analysis: result, image: capturedImage } });
+    } catch (error) {
+      showError('Erro ao analisar imagem. Tente novamente.');
+      console.error(error);
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -70,46 +67,36 @@ const Capture = () => {
               audio={false}
               ref={webcamRef}
               screenshotFormat="image/jpeg"
-              videoConstraints={{
-                facingMode: 'environment',
-                aspectRatio: 3/4
-              }}
+              videoConstraints={{ facingMode: 'environment', aspectRatio: 3/4 }}
               className="h-full w-full object-cover"
             />
             <CameraOverlay side={side} />
           </>
         ) : (
-          <img src={capturedImage} alt="Captura" className="h-full w-full object-cover" />
+          <div className="relative h-full w-full">
+            <img src={capturedImage} alt="Captura" className="h-full w-full object-cover" />
+            {isAnalyzing && (
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white p-6 text-center">
+                <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+                <h2 className="text-xl font-bold mb-2">IA Analisando...</h2>
+                <p className="text-sm text-slate-300">Identificando densidade, simetria e saúde dos fios.</p>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
       <div className="bg-slate-900 p-8 flex flex-col items-center gap-6">
         {!capturedImage ? (
           <div className="flex items-center gap-8">
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={handleFileUpload} 
-              accept="image/*" 
-              className="hidden" 
-            />
-            <button
-              onClick={triggerFileUpload}
-              className="w-14 h-14 bg-slate-800 text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform border border-slate-700"
-              title="Upload da Galeria"
-            >
+            <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
+            <button onClick={() => fileInputRef.current?.click()} className="w-14 h-14 bg-slate-800 text-white rounded-full flex items-center justify-center border border-slate-700">
               <Upload size={24} />
             </button>
-
-            <button
-              onClick={capture}
-              className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-transform"
-              title="Tirar Foto"
-            >
+            <button onClick={capture} className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-xl">
               <div className="w-16 h-16 border-4 border-slate-900 rounded-full"></div>
             </button>
-
-            <div className="w-14"></div> {/* Spacer para equilibrar o layout */}
+            <div className="w-14"></div>
           </div>
         ) : (
           <div className="flex gap-4 w-full max-w-xs">
@@ -117,20 +104,19 @@ const Capture = () => {
               variant="outline" 
               className="flex-1 bg-transparent border-white text-white hover:bg-white/10"
               onClick={() => setCapturedImage(null)}
+              disabled={isAnalyzing}
             >
               <RefreshCw className="mr-2 h-4 w-4" /> Repetir
             </Button>
             <Button 
               className="flex-1 bg-primary hover:bg-primary/90"
-              onClick={handleSave}
+              onClick={handleConfirm}
+              disabled={isAnalyzing}
             >
-              <Check className="mr-2 h-4 w-4" /> Confirmar
+              {isAnalyzing ? <Loader2 className="animate-spin" /> : <><Check className="mr-2 h-4 w-4" /> Analisar</>}
             </Button>
           </div>
         )}
-        <p className="text-slate-400 text-xs text-center">
-          Use a câmera para captura técnica ou faça upload de uma foto da galeria.
-        </p>
       </div>
     </div>
   );

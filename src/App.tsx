@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Capture from "./pages/Capture";
 import Clients from "./pages/Clients";
 import NewClient from "./pages/NewClient";
+import AnalysisResult from "./pages/AnalysisResult";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/captura" element={<Capture />} />
           <Route path="/clientes" element={<Clients />} />
           <Route path="/novo-cliente" element={<NewClient />} />
+          <Route path="/resultado" element={<AnalysisResult />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
