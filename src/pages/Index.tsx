@@ -2,11 +2,31 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import Navbar from "@/components/layout/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, FileText, TrendingUp, Camera, ChevronRight, Sparkles } from "lucide-react";
+import { Plus, Users, FileText, Camera, Sparkles, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 const Index = () => {
+  const [stats, setStats] = useState({ clients: 0, analyses: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const { count: clientCount } = await supabase.from('clients').select('*', { count: 'exact', head: true });
+        const { count: analysisCount } = await supabase.from('analyses').select('*', { count: 'exact', head: true });
+        setStats({ clients: clientCount || 0, analyses: analysisCount || 0 });
+      } catch (error) {
+        console.error('Erro ao buscar estatísticas:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-28 md:pt-20">
       <Navbar />
@@ -28,7 +48,9 @@ const Index = () => {
                 <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-3">
                   <Users className="h-5 w-5 text-blue-500" />
                 </div>
-                <div className="text-2xl font-bold text-slate-900">0</div>
+                <div className="text-2xl font-bold text-slate-900">
+                  {loading ? <Loader2 className="animate-spin h-5 w-5" /> : stats.clients}
+                </div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Clientes</p>
               </CardContent>
             </Card>
@@ -40,7 +62,9 @@ const Index = () => {
                 <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center mb-3">
                   <FileText className="h-5 w-5 text-purple-500" />
                 </div>
-                <div className="text-2xl font-bold text-slate-900">0</div>
+                <div className="text-2xl font-bold text-slate-900">
+                  {loading ? <Loader2 className="animate-spin h-5 w-5" /> : stats.analyses}
+                </div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Análises</p>
               </CardContent>
             </Card>
@@ -75,7 +99,6 @@ const Index = () => {
             <Button variant="link" className="text-accent font-semibold text-sm">Ver tudo</Button>
           </div>
           <div className="space-y-3">
-            {/* Lista vazia ou placeholder quando não houver atividades */}
             <div className="text-center py-8 bg-white rounded-2xl border border-dashed border-slate-200">
               <p className="text-sm text-slate-400">Nenhuma atividade recente</p>
             </div>
