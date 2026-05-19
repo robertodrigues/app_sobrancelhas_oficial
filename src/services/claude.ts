@@ -4,7 +4,7 @@ const API_KEY = "sk-ant-api03-P3Bfm2Gno5I_xQgs4shFu-6V1JzH4AKMKeWsbhULIkCT-MUH8_
 
 const anthropic = new Anthropic({
   apiKey: API_KEY,
-  dangerouslyAllowBrowser: true // Necessário para rodar no client-side
+  dangerouslyAllowBrowser: true
 });
 
 export const analyzeWithClaude = async (base64Image: string) => {
@@ -14,25 +14,18 @@ export const analyzeWithClaude = async (base64Image: string) => {
 
   const prompt = `
     Você é uma assistente especializada em Tricologia de Sobrancelhas.
-    Analise a imagem enviada de acordo com as características individuais de cada sobrancelha na foto e gere um relatório técnico completo seguindo exatamente esta estrutura:
+    O usuário marcou áreas específicas na imagem com cores para guiar sua análise:
+    - MARCAÇÕES VERDES: Indicam o "Ponto Inicial" (parte mais próxima ao nariz).
+    - MARCAÇÕES AMARELAS: Indicam o "Meio da Sobrancelha" (corpo central).
+    - MARCAÇÕES VERMELHAS: Indicam a "Cauda" (parte final).
 
-    A sobrancelha é dividida em três regiões:
-    - Ponto Inicial (parte mais próxima ao nariz)
-    - Meio da Sobrancelha (corpo central)
-    - Cauda (parte final, mais afastada do nariz)
+    Analise a imagem focando especialmente nas áreas circuladas ou riscadas com essas cores.
+    Gere um relatório técnico completo seguindo exatamente esta estrutura JSON:
 
-    Analise cada região separadamente observando:
-    1. DENSIDADE (Baixa: 15-30%, Média: 40-65%, Alta: 70-90%)
-    2. EXPOSIÇÃO DA PELE
-    3. ESPESSURA DOS FIOS (Fio fino, Fio intermediário, Fio terminal)
-    4. TIPO DE DANO (Erro de Design, Fator Interno, Misto)
-    5. ESCALA DE DANIFICAÇÃO (Muito leve, Leve, Moderado, Elevado)
-
-    IMPORTANTE: Retorne a resposta estritamente em formato JSON para que o sistema possa processar, seguindo esta estrutura exata:
     {
       "regioes": {
         "ponto_inicial": { 
-          "descricao": "descrição técnica", 
+          "descricao": "descrição técnica baseada na área verde", 
           "densidade": "porcentagem", 
           "dano": "tipo e grau", 
           "espessura": "fio predominante", 
@@ -40,7 +33,7 @@ export const analyzeWithClaude = async (base64Image: string) => {
           "cor": "verde" | "amarelo" | "vermelho"
         },
         "meio": { 
-          "descricao": "descrição técnica", 
+          "descricao": "descrição técnica baseada na área amarela", 
           "densidade": "porcentagem", 
           "dano": "tipo e grau", 
           "espessura": "fio predominante", 
@@ -48,7 +41,7 @@ export const analyzeWithClaude = async (base64Image: string) => {
           "cor": "verde" | "amarelo" | "vermelho"
         },
         "cauda": { 
-          "descricao": "descrição técnica", 
+          "descricao": "descrição técnica baseada na área vermelha", 
           "densidade": "porcentagem", 
           "dano": "tipo e grau", 
           "espessura": "fio predominante", 

@@ -2,9 +2,10 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Webcam from 'react-webcam';
 import Navbar from '@/components/layout/Navbar';
 import CameraOverlay from '@/components/camera/CameraOverlay';
+import ImageAnnotator from '@/components/camera/ImageAnnotator';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Camera, RefreshCw, Check, ArrowLeft, Upload, Loader2, User, BrainCircuit } from 'lucide-react';
+import { Camera, RefreshCw, Check, ArrowLeft, Upload, Loader2, User, BrainCircuit, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
 import { performDualAnalysis } from '@/services/analysis';
@@ -13,6 +14,8 @@ import { supabase } from '@/lib/supabase';
 const Capture = () => {
   const [side, setSide] = useState<'left' | 'right'>('right');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [annotatedImage, setAnnotatedImage] = useState<string | null>(null);
+  const [isAnnotating, setIsAnnotating] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>("");
@@ -29,7 +32,7 @@ const Capture = () => {
   }, []);
 
   const capture = useCallback(() => {
-    const imageSrc = webcamRef.current?.getScreenshot({ width: 800, height: 600 });
+    const imageSrc = webcamRef.current?.getScreenshot({ width: 1200, height: 900 });
     if (imageSrc) {
       setCapturedImage(imageSrc);
     }
@@ -47,7 +50,9 @@ const Capture = () => {
   };
 
   const handleConfirm = async () => {
-    if (!capturedImage) return;
+    const imageToAnalyze = annotatedImage || capturedImage;
+    if (!imageToAnalyze) return;
+    
     if (!selectedClientId) {
       showError('Por favor, selecione um cliente antes de analisar.');
       return;
@@ -55,25 +60,37 @@ const Capture = () => {
     
     setIsAnalyzing(true);
     try {
-      // Agora usa a análise combinada Gemini + Claude
-      const result = await performDualAnalysis(capturedImage);
+      const result = await performDualAnalysis(imageToAnalyze);
       
       const { error } = await supabase.from('analyses').insert([{
         client_id: selectedClientId,
-        image_url: capturedImage,
+        image_url: imageToAnalyze,
         result: result
       }]);
 
       if (error) throw error;
 
       showSuccess('Análise de alta precisão concluída!');
-      navigate('/resultado', { state: { analysis: result, image: capturedImage } });
+      navigate('/resultado', { state: { analysis: result, image: imageToAnalyze } });
     } catch (error: any) {
       showError("Erro na análise: " + error.message);
     } finally {
       setIsAnalyzing(false);
     }
   };
+
+  if (isAnnotating && capturedImage) {
+    return (
+      <ImageAnnotator 
+        image={capturedImage} 
+        onSave={(img) => {
+          setAnnotatedImage(img);
+          setIsAnnotating(false);
+        }}
+        onCancel={() => setIsAnnotating(false)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
@@ -108,19 +125,19 @@ const Capture = () => {
               audio={false}
               ref={webcamRef}
               screenshotFormat="image/jpeg"
-              videoConstraints={{ facingMode: 'environment', width: 800, height: 600 }}
+              videoConstraints={{ facingMode: 'environment', width: 1200, height: 900 }}
               className="h-full w-full object-cover"
             />
             <CameraOverlay side={side} />
           </>
         ) : (
           <div className="relative h-full w-full">
-            <img src={capturedImage} alt="Captura" className="h-full w-full object-cover" />
+            <img src={annotatedImage || capturedImage} alt="Captura" className="h-full w-full object-cover" />
             {isAnalyzing && (
               <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white p-6 text-center">
                 <BrainCircuit className="w-16 h-16 animate-pulse text-accent mb-4" />
                 <h2 className="text-xl font-bold mb-2">Dual AI Processing</h2>
-                <p className="text-sm text-slate-300">Combinando Gemini & Claude para máxima precisão técnica...</p>
+                <p className="text-sm text-slate-300">Analisando marcações coloridas para máxima precisão...</p>
               </div>
             )}
           </div>
@@ -140,21 +157,31 @@ const Capture = () => {
             <div className="w-14"></div>
           </div>
         ) : (
-          <div className="flex gap-4 w-full max-w-xs">
+          <div className="flex flex-col gap-4 w-full max-w-xs">
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                className="flex-1 bg-transparent border-white text-white hover:bg-white/10"
+                onClick={() => { setCapturedImage(null); setAnnotatedImage(null); }}
+                disabled={isAnalyzing}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" /> Repetir
+              </Button>
+              <Button 
+                variant="outline"
+                className="flex-1 bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+                onClick={() => setIsAnnotating(true)}
+                disabled={isAnalyzing}
+              >
+                <Pencil className="mr-2 h-4 w-4" /> {annotatedImage ? "Editar" : "Marcar"}
+              </Button>
+            </div>
             <Button 
-              variant="outline" 
-              className="flex-1 bg-transparent border-white text-white hover:bg-white/10"
-              onClick={() => setCapturedImage(null)}
-              disabled={isAnalyzing}
-            >
-              <RefreshCw className="mr-2 h-4 w-4" /> Repetir
-            </Button>
-            <Button 
-              className="flex-1 bg-accent hover:bg-accent/90"
+              className="w-full h-12 bg-accent hover:bg-accent/90 text-lg font-bold"
               onClick={handleConfirm}
               disabled={isAnalyzing}
             >
-              {isAnalyzing ? <Loader2 className="animate-spin" /> : <><Check className="mr-2 h-4 w-4" /> Analisar</>}
+              {isAnalyzing ? <Loader2 className="animate-spin" /> : <><Check className="mr-2 h-4 w-4" /> Analisar Agora</>}
             </Button>
           </div>
         )}
