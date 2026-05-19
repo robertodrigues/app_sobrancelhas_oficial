@@ -1,23 +1,34 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Webcam from 'react-webcam';
 import Navbar from '@/components/layout/Navbar';
 import CameraOverlay from '@/components/camera/CameraOverlay';
 import { Button } from '@/components/ui/button';
-import { Camera, RefreshCw, Check, ArrowLeft, Upload, Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Camera, RefreshCw, Check, ArrowLeft, Upload, Loader2, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
 import { analyzeEyebrow } from '@/services/gemini';
+import { supabase } from '@/lib/supabase';
 
 const Capture = () => {
   const [side, setSide] = useState<'left' | 'right'>('right');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [clients, setClients] = useState<any[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string>("");
   const webcamRef = useRef<Webcam>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const fetchClients = async () => {
+      const { data } = await supabase.from('clients').select('id, name').order('name');
+      if (data) setClients(data);
+    };
+    fetchClients();
+  }, []);
+
   const capture = useCallback(() => {
-    // Captura com resolução balanceada para não sobrecarregar a API
     const imageSrc = webcamRef.current?.getScreenshot({ width: 800, height: 600 });
     if (imageSrc) {
       setCapturedImage(imageSrc);
@@ -37,11 +48,25 @@ const Capture = () => {
 
   const handleConfirm = async () => {
     if (!capturedImage) return;
+    if (!selectedClientId) {
+      showError('Por favor, selecione um cliente antes de analisar.');
+      return;
+    }
     
     setIsAnalyzing(true);
     try {
       const result = await analyzeEyebrow(capturedImage);
-      showSuccess('Análise concluída!');
+      
+      // Salvar no Supabase
+      const { error } = await supabase.from('analyses').insert([{
+        client_id: selectedClientId,
+        image_url: capturedImage, // Em um app real, faríamos upload para o Storage, aqui salvamos o base64 para simplificar
+        result: result
+      }]);
+
+      if (error) throw error;
+
+      showSuccess('Análise concluída e salva!');
       navigate('/resultado', { state: { analysis: result, image: capturedImage } });
     } catch (error: any) {
       showError(error.message);
@@ -58,6 +83,26 @@ const Capture = () => {
         </button>
         <h1 className="font-semibold">Captura Técnica</h1>
         <div className="w-10"></div>
+      </div>
+
+      {/* Seleção de Cliente */}
+      <div className="px-6 py-2 z-10">
+        <Select onValueChange={setSelectedClientId} value={selectedClientId}>
+          <SelectTrigger className="bg-white/10 border-white/20 text-white h-12 rounded-xl">
+            <div className="flex items-center gap-2">
+              <User size={18} className="text-accent" />
+              <SelectValue placeholder="Selecionar Cliente" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            {clients.map(client => (
+              <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+            ))}
+            {clients.length === 0 && (
+              <div className="p-2 text-center text-sm text-slate-500">Nenhum cliente cadastrado</div>
+            )}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="flex-1 relative flex items-center justify-center overflow-hidden">
@@ -83,7 +128,7 @@ const Capture = () => {
               <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white p-6 text-center">
                 <Loader2 className="w-12 h-12 animate-spin text-accent mb-4" />
                 <h2 className="text-xl font-bold mb-2">IA Analisando...</h2>
-                <p className="text-sm text-slate-300">Processando detalhes da sobrancelha.</p>
+                <p className="text-sm text-slate-300">Processando detalhes e salvando no banco de dados.</p>
               </div>
             )}
           </div>

@@ -2,29 +2,39 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import Navbar from "@/components/layout/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, FileText, Camera, Sparkles, Loader2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Plus, Users, FileText, Camera, Sparkles, Loader2, ChevronRight } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 const Index = () => {
   const [stats, setStats] = useState({ clients: 0, analyses: 0 });
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchData = async () => {
       try {
         const { count: clientCount } = await supabase.from('clients').select('*', { count: 'exact', head: true });
         const { count: analysisCount } = await supabase.from('analyses').select('*', { count: 'exact', head: true });
+        
+        const { data: recent } = await supabase
+          .from('analyses')
+          .select('*, clients(name)')
+          .order('created_at', { ascending: false })
+          .limit(5);
+
         setStats({ clients: clientCount || 0, analyses: analysisCount || 0 });
+        setRecentActivities(recent || []);
       } catch (error) {
-        console.error('Erro ao buscar estatísticas:', error);
+        console.error('Erro ao buscar dados:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchStats();
+    fetchData();
   }, []);
 
   return (
@@ -99,9 +109,36 @@ const Index = () => {
             <Button variant="link" className="text-accent font-semibold text-sm">Ver tudo</Button>
           </div>
           <div className="space-y-3">
-            <div className="text-center py-8 bg-white rounded-2xl border border-dashed border-slate-200">
-              <p className="text-sm text-slate-400">Nenhuma atividade recente</p>
-            </div>
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="animate-spin text-accent" />
+              </div>
+            ) : recentActivities.length > 0 ? (
+              recentActivities.map((activity) => (
+                <div 
+                  key={activity.id} 
+                  className="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border border-slate-50 cursor-pointer hover:bg-slate-50 transition-colors"
+                  onClick={() => navigate('/resultado', { state: { analysis: activity.result, image: activity.image_url } })}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-slate-100">
+                      <img src={activity.image_url} alt="Análise" className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900">{activity.clients?.name || 'Cliente'}</h4>
+                      <p className="text-[10px] text-slate-400 font-medium uppercase">
+                        {new Date(activity.created_at).toLocaleDateString('pt-BR')} às {new Date(activity.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight size={18} className="text-slate-300" />
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 bg-white rounded-2xl border border-dashed border-slate-200">
+                <p className="text-sm text-slate-400">Nenhuma atividade recente</p>
+              </div>
+            )}
           </div>
         </section>
       </main>
