@@ -19,27 +19,37 @@ const NewClient = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.name.trim()) {
+      showError('O nome é obrigatório');
+      return;
+    }
+
     setLoading(true);
     
     try {
-      // Remove campos vazios para evitar erros de validação no banco
       const dataToSave = {
-        name: formData.name,
-        ...(formData.email ? { email: formData.email } : {}),
-        ...(formData.phone ? { phone: formData.phone } : {})
+        name: formData.name.trim(),
+        email: formData.email.trim() || null,
+        phone: formData.phone.trim() || null
       };
 
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('clients')
-        .insert([dataToSave]);
+        .insert([dataToSave])
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro detalhado do Supabase:', error);
+        throw error;
+      }
 
       showSuccess('Cliente cadastrado com sucesso!');
       navigate('/clientes');
     } catch (error: any) {
       console.error('Erro ao salvar:', error);
-      showError('Erro ao cadastrar: ' + (error.message || 'Verifique se as tabelas foram criadas no Supabase'));
+      // Exibe a mensagem de erro real vinda do banco de dados
+      const errorMsg = error.message || 'Erro desconhecido';
+      showError(`Erro ao cadastrar: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
@@ -65,6 +75,7 @@ const NewClient = () => {
               required 
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
+              disabled={loading}
             />
           </div>
           
@@ -76,6 +87,7 @@ const NewClient = () => {
               placeholder="maria@exemplo.com" 
               value={formData.email}
               onChange={(e) => setFormData({...formData, email: e.target.value})}
+              disabled={loading}
             />
           </div>
 
@@ -86,10 +98,11 @@ const NewClient = () => {
               placeholder="(11) 99999-9999" 
               value={formData.phone}
               onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              disabled={loading}
             />
           </div>
 
-          <Button type="submit" className="w-full gap-2 h-12 text-lg" disabled={loading}>
+          <Button type="submit" className="w-full gap-2 h-12 text-lg bg-accent hover:bg-accent/90" disabled={loading}>
             {loading ? <Loader2 className="animate-spin" /> : <><Save size={20} /> Salvar Cliente</>}
           </Button>
         </form>
