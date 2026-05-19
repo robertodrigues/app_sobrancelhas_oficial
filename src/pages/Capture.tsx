@@ -17,7 +17,7 @@ const Capture = () => {
   const navigate = useNavigate();
 
   const capture = useCallback(() => {
-    const imageSrc = webcamRef.current?.getScreenshot();
+    const imageSrc = webcamRef.current?.getScreenshot({ width: 1080, height: 1440 });
     if (imageSrc) {
       setCapturedImage(imageSrc);
     }
@@ -42,8 +42,8 @@ const Capture = () => {
       const result = await analyzeEyebrow(capturedImage);
       showSuccess('Análise concluída com sucesso!');
       navigate('/resultado', { state: { analysis: result, image: capturedImage } });
-    } catch (error) {
-      showError('Erro ao analisar imagem. Tente novamente.');
+    } catch (error: any) {
+      showError(error.message || 'Erro ao analisar imagem. Tente novamente.');
       console.error(error);
     } finally {
       setIsAnalyzing(false);
@@ -77,7 +77,7 @@ const Capture = () => {
             <img src={capturedImage} alt="Captura" className="h-full w-full object-cover" />
             {isAnalyzing && (
               <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white p-6 text-center">
-                <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+                <Loader2 className="w-12 h-12 animate-spin text-accent mb-4" />
                 <h2 className="text-xl font-bold mb-2">IA Analisando...</h2>
                 <p className="text-sm text-slate-300">Identificando densidade, simetria e saúde dos fios.</p>
               </div>
@@ -109,7 +109,7 @@ const Capture = () => {
               <RefreshCw className="mr-2 h-4 w-4" /> Repetir
             </Button>
             <Button 
-              className="flex-1 bg-primary hover:bg-primary/90"
+              className="flex-1 bg-accent hover:bg-accent/90"
               onClick={handleConfirm}
               disabled={isAnalyzing}
             >

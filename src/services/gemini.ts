@@ -10,34 +10,41 @@ export const analyzeEyebrow = async (base64Image: string) => {
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const prompt = `
-    Você é um especialista em Tricologia e Design de Sobrancelhas de alto nível. 
-    Analise esta imagem técnica de uma sobrancelha e forneça um diagnóstico detalhado em formato JSON com os seguintes campos:
-    - density: (baixa, média ou alta)
-    - symmetry_score: (0 a 100)
-    - health_status: (descrição curta da saúde dos fios)
-    - recommendations: (lista de 3 recomendações profissionais)
-    - observations: (um parágrafo curto sobre o que foi observado: falhas, direção do crescimento, etc)
+    Você é um especialista em Tricologia e Design de Sobrancelhas. 
+    Analise esta imagem técnica de uma sobrancelha e forneça um diagnóstico detalhado em formato JSON.
+    
+    O JSON deve ter exatamente estes campos:
+    {
+      "density": "baixa" | "média" | "alta",
+      "symmetry_score": número de 0 a 100,
+      "health_status": "string curta",
+      "recommendations": ["string1", "string2", "string3"],
+      "observations": "parágrafo curto"
+    }
 
-    Responda APENAS o JSON, sem formatação markdown.
+    IMPORTANTE: Responda APENAS o objeto JSON puro. Não use blocos de código markdown.
   `;
 
-  const result = await model.generateContent([
-    prompt,
-    {
-      inlineData: {
-        data: cleanBase64,
-        mimeType: "image/jpeg"
-      }
-    }
-  ]);
-
-  const response = await result.response;
-  const text = response.text();
-  
   try {
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          data: cleanBase64,
+          mimeType: "image/jpeg"
+        }
+      }
+    ]);
+
+    const response = await result.response;
+    let text = response.text();
+    
+    // Limpeza de possíveis blocos de código markdown que a IA possa enviar por engano
+    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    
     return JSON.parse(text);
   } catch (e) {
-    console.error("Erro ao parsear resposta do Gemini:", text);
-    throw new Error("Falha ao processar análise da IA");
+    console.error("Erro na análise Gemini:", e);
+    throw new Error("Falha ao processar análise da IA. Verifique a imagem e tente novamente.");
   }
 };
