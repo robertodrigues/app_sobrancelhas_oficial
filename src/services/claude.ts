@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { RegionBBox } from '@/components/camera/ImageAnnotator';
+import { PROMPT_ESPECIALISTA } from '../constants/prompt';
 
 const API_KEY = "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";
 
@@ -36,7 +37,6 @@ export const analyzeWithClaude = async (originalImage: string, bboxes: Record<st
   try {
     const imageContent: any[] = [];
     
-    // Adicionar imagem original
     imageContent.push({
       type: "text",
       text: "Imagem 1: Visão Geral da Sobrancelha"
@@ -46,7 +46,6 @@ export const analyzeWithClaude = async (originalImage: string, bboxes: Record<st
       source: { type: "base64", media_type: "image/jpeg", data: originalImage.split(',')[1] }
     });
 
-    // Processar e adicionar recortes
     for (const [name, box] of Object.entries(bboxes)) {
       const croppedData = await cropImage(originalImage, box);
       imageContent.push({
@@ -59,41 +58,22 @@ export const analyzeWithClaude = async (originalImage: string, bboxes: Record<st
       });
     }
 
-    const systemPrompt = `Você é uma especialista em Tricologia de Sobrancelhas. Analise as imagens fornecidas e gere um relatório técnico no formato JSON.
-
-JSON EXATO:
-{
-  "regioes": {
-    "ponto_inicial": { "descricao": "...", "densidade": "...", "exposicao_pele": "...", "espessura": "...", "tipo_dano": "...", "escala_dano": "...", "prognostico": "..." },
-    "meio": { "descricao": "...", "densidade": "...", "exposicao_pele": "...", "espessura": "...", "tipo_dano": "...", "escala_dano": "...", "prognostico": "..." },
-    "cauda": { "descricao": "...", "densidade": "...", "exposicao_pele": "...", "espessura": "...", "tipo_dano": "...", "escala_dano": "...", "prognostico": "..." }
-  },
-  "melhorias_por_regiao": {
-    "ponto_inicial": "verde/amarelo/vermelho - justificativa",
-    "meio": "verde/amarelo/vermelho - justificativa",
-    "cauda": "verde/amarelo/vermelho - justificativa"
-  },
-  "visao_geral": "...",
-  "resumo_tecnico_geral": "...",
-  "objetivo_tratamento": "...",
-  "alerta_causa_interna": "..."
-}
-
-REGRAS:
-- Use terminologia técnica profissional.
-- Baseie-se nos detalhes dos recortes de alta proximidade.`;
+    imageContent.push({
+      type: "text",
+      text: PROMPT_ESPECIALISTA
+    });
 
     const response = await anthropic.messages.create({
       model: "claude-3-5-sonnet-latest",
       max_tokens: 2000,
-      system: systemPrompt,
       messages: [{ role: "user", content: imageContent }]
     });
 
     const text = response.content[0].type === 'text' ? response.content[0].text : '';
-    const start = text.indexOf('{');
-    const end = text.lastIndexOf('}') + 1;
-    return JSON.parse(text.substring(start, end));
+    const clean = text.replace(/```json|```/g, '').trim();
+    const start = clean.indexOf('{');
+    const end = clean.lastIndexOf('}') + 1;
+    return JSON.parse(clean.substring(start, end));
   } catch (error: any) {
     console.error("Erro Claude:", error);
     throw error;
