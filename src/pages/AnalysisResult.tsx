@@ -105,7 +105,7 @@ const AnalysisResult = () => {
               <Card key={key} className={cn("border shadow-sm rounded-2xl overflow-hidden", getStatusBg(data.statusMelhoria?.cor))}>
                 <CardHeader className="pb-2 flex flex-row items-center justify-between">
                   <CardTitle className="text-sm font-bold capitalize">
-                    {key === 'inicio' ? 'Ponto Inicial' : key === 'meio' ? 'Corpo' : 'Cauda'}
+                    {key === 'inicio' ? 'Ponto Inicial' : key === 'meio' ? 'Meio da Sobrancelha' : 'Cauda da Sobrancelha'}
                   </CardTitle>
                   <div className={cn("w-3 h-3 rounded-full shadow-sm", getStatusColor(data.statusMelhoria?.cor))} />
                 </CardHeader>
