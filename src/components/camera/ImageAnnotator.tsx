@@ -3,9 +3,16 @@ import { Button } from '@/components/ui/button';
 import { Undo2, Check, X, MousePointer2, Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+export interface RegionBBox {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+}
+
 interface ImageAnnotatorProps {
   image: string;
-  onSave: (annotatedImage: string) => void;
+  onSave: (annotatedImage: string, bboxes: Record<string, RegionBBox>) => void;
   onCancel: () => void;
 }
 
@@ -17,7 +24,8 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   const [activeRegion, setActiveRegion] = useState<Region>(null);
   const [brushSize, setBrushSize] = useState(60);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [history, setHistory] = useState<string[]>([]);
+  const [history, setHistory] = useState<{data: string, bboxes: Record<string, RegionBBox>}[]>([]);
+  const [currentBBoxes, setCurrentBBoxes] = useState<Record<string, RegionBBox>>({});
   const imageRef = useRef<HTMLImageElement | null>(null);
 
   const colors = {
@@ -26,31 +34,26 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
     cauda: '#f87171',
   };
 
-  // Inicialização
   useEffect(() => {
     const img = new Image();
     img.src = image;
     img.onload = () => {
       imageRef.current = img;
-      
-      // Configura o canvas principal
       const canvas = mainCanvasRef.current;
       if (!canvas) return;
       canvas.width = img.width;
       canvas.height = img.height;
 
-      // Configura o canvas de desenho (offscreen)
       const drawingCanvas = document.createElement('canvas');
       drawingCanvas.width = img.width;
       drawingCanvas.height = img.height;
       drawingCanvasRef.current = drawingCanvas;
 
       render();
-      setHistory([drawingCanvas.toDataURL()]);
+      setHistory([{ data: drawingCanvas.toDataURL(), bboxes: {} }]);
     };
   }, [image]);
 
-  // Função de Renderização (Combina Imagem + Camada de Desenho)
   const render = () => {
     const canvas = mainCanvasRef.current;
     const drawingCanvas = drawingCanvasRef.current;
@@ -60,15 +63,26 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // 1. Limpa e desenha a imagem original
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0);
-
-    // 2. Desenha a camada de marcação com opacidade FIXA
-    // Isso impede que o acúmulo de traços deixe a imagem opaca
-    ctx.globalAlpha = 0.4; // Transparência total da marcação
+    ctx.globalAlpha = 0.4;
     ctx.drawImage(drawingCanvas, 0, 0);
     ctx.globalAlpha = 1.0;
+  };
+
+  const updateBBox = (region: string, x: number, y: number) => {
+    setCurrentBBoxes(prev => {
+      const current = prev[region] || { minX: x, minY: y, maxX: x, maxY: y };
+      return {
+        ...prev,
+        [region]: {
+          minX: Math.min(current.minX, x - brushSize/2),
+          minY: Math.min(current.minY, y - brushSize/2),
+          maxX: Math.max(current.maxX, x + brushSize/2),
+          maxY: Math.max(current.maxY, y + brushSize/2),
+        }
+      };
+    });
   };
 
   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
@@ -102,13 +116,14 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
       dCtx.strokeStyle = colors[activeRegion];
       dCtx.lineWidth = brushSize;
       dCtx.globalCompositeOperation = 'source-over';
+      updateBBox(activeRegion, x, y);
     }
 
     setIsDrawing(true);
   };
 
   const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDrawing || !drawingCanvasRef.current || !mainCanvasRef.current) return;
+    if (!isDrawing || !drawingCanvasRef.current || !mainCanvasRef.current || !activeRegion) return;
 
     const rect = mainCanvasRef.current.getBoundingClientRect();
     const scaleX = mainCanvasRef.current.width / rect.width;
@@ -130,13 +145,14 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
     if (dCtx) {
       dCtx.lineTo(x, y);
       dCtx.stroke();
-      render(); // Atualiza o canvas principal em tempo real
+      updateBBox(activeRegion, x, y);
+      render();
     }
   };
 
   const stopDrawing = () => {
     if (isDrawing && drawingCanvasRef.current) {
-      setHistory(prev => [...prev, drawingCanvasRef.current!.toDataURL()]);
+      setHistory(prev => [...prev, { data: drawingCanvasRef.current!.toDataURL(), bboxes: { ...currentBBoxes } }]);
     }
     setIsDrawing(false);
   };
@@ -149,13 +165,14 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
     const lastState = newHistory[newHistory.length - 1];
     
     const img = new Image();
-    img.src = lastState;
+    img.src = lastState.data;
     img.onload = () => {
       const dCtx = drawingCanvasRef.current?.getContext('2d');
       if (dCtx) {
         dCtx.clearRect(0, 0, drawingCanvasRef.current!.width, drawingCanvasRef.current!.height);
         dCtx.drawImage(img, 0, 0);
         setHistory(newHistory);
+        setCurrentBBoxes(lastState.bboxes);
         render();
       }
     };
@@ -163,7 +180,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
 
   const handleSave = () => {
     if (mainCanvasRef.current) {
-      onSave(mainCanvasRef.current.toDataURL('image/jpeg', 0.9));
+      onSave(mainCanvasRef.current.toDataURL('image/jpeg', 0.9), currentBBoxes);
     }
   };
 

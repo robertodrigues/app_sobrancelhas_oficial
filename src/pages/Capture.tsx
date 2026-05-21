@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Webcam from 'react-webcam';
 import Navbar from '@/components/layout/Navbar';
 import CameraOverlay from '@/components/camera/CameraOverlay';
-import ImageAnnotator from '@/components/camera/ImageAnnotator';
+import ImageAnnotator, { RegionBBox } from '@/components/camera/ImageAnnotator';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Camera, RefreshCw, Check, ArrowLeft, Upload, Loader2, User, BrainCircuit, Pencil } from 'lucide-react';
@@ -15,6 +15,7 @@ const Capture = () => {
   const [side, setSide] = useState<'left' | 'right'>('right');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [annotatedImage, setAnnotatedImage] = useState<string | null>(null);
+  const [bboxes, setBBoxes] = useState<Record<string, RegionBBox>>({});
   const [isAnnotating, setIsAnnotating] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
@@ -32,7 +33,6 @@ const Capture = () => {
   }, []);
 
   const capture = useCallback(() => {
-    // Reduzido para 800x600 para garantir compatibilidade com as APIs de IA
     const imageSrc = webcamRef.current?.getScreenshot({ width: 800, height: 600 });
     if (imageSrc) {
       setCapturedImage(imageSrc);
@@ -61,7 +61,7 @@ const Capture = () => {
     
     setIsAnalyzing(true);
     try {
-      const result = await performDualAnalysis(imageToAnalyze);
+      const result = await performDualAnalysis(imageToAnalyze, bboxes);
       
       const { error } = await supabase.from('analyses').insert([{
         client_id: selectedClientId,
@@ -85,8 +85,9 @@ const Capture = () => {
     return (
       <ImageAnnotator 
         image={capturedImage} 
-        onSave={(img) => {
+        onSave={(img, boxes) => {
           setAnnotatedImage(img);
+          setBBoxes(boxes);
           setIsAnnotating(false);
         }}
         onCancel={() => setIsAnnotating(false)}
@@ -164,7 +165,7 @@ const Capture = () => {
               <Button 
                 variant="outline" 
                 className="flex-1 bg-transparent border-white text-white hover:bg-white/10"
-                onClick={() => { setCapturedImage(null); setAnnotatedImage(null); }}
+                onClick={() => { setCapturedImage(null); setAnnotatedImage(null); setBBoxes({}); }}
                 disabled={isAnalyzing}
               >
                 <RefreshCw className="mr-2 h-4 w-4" /> Repetir

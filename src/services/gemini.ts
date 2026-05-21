@@ -1,9 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { RegionBBox } from '@/components/camera/ImageAnnotator';
 
 const API_KEY = "AIzaSyCVTE4q3yA29rKa3PmuL-cVkVYlzzeA3OM";
 const genAI = new GoogleGenerativeAI(API_KEY);
 
-export const analyzeEyebrow = async (base64Image: string) => {
+export const analyzeEyebrow = async (base64Image: string, bboxes: Record<string, RegionBBox>) => {
   try {
     const base64Data = base64Image.split(',')[1] || base64Image;
     
@@ -11,7 +12,14 @@ export const analyzeEyebrow = async (base64Image: string) => {
       model: "gemini-1.5-flash",
     });
 
+    const coordsText = Object.entries(bboxes).map(([region, box]) => 
+      `- Região ${region.toUpperCase()}: [x1:${Math.round(box.minX)}, y1:${Math.round(box.minY)}, x2:${Math.round(box.maxX)}, y2:${Math.round(box.maxY)}]`
+    ).join('\n');
+
     const prompt = `Você é uma especialista em Tricologia de Sobrancelhas. Analise a imagem e gere um relatório técnico no formato JSON abaixo.
+
+A imagem possui as seguintes áreas marcadas para análise (coordenadas em pixels):
+${coordsText}
 
 ANÁLISE POR REGIÃO (ponto_inicial/verde, meio/amarelo, cauda/vermelho):
 
@@ -66,7 +74,7 @@ JSON EXATO que você DEVE retornar (sem alterar os campos):
 }
 
 REGRAS:
-- Use % reais baseados na imagem
+- Use % reais baseados na imagem e nas coordenadas fornecidas
 - Linguagem técnica mas acessível para cliente final
 - Se houver qualquer sinal de causa interna (fios ralos generalizados, falhas irregulares), preencha o alerta`;
 

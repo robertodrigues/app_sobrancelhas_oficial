@@ -1,7 +1,7 @@
 import { analyzeEyebrow as analyzeWithGemini } from './gemini';
 import { analyzeWithClaude } from './claude';
+import { RegionBBox } from '@/components/camera/ImageAnnotator';
 
-// Função de fallback para garantir que o usuário nunca fique travado
 const generateMockAnalysis = () => {
   return {
     regioes: {
@@ -16,21 +16,17 @@ const generateMockAnalysis = () => {
   };
 };
 
-export const performDualAnalysis = async (image: string) => {
-  console.log("Iniciando análise...");
+export const performDualAnalysis = async (image: string, bboxes: Record<string, RegionBBox>) => {
+  console.log("Iniciando análise com coordenadas:", bboxes);
   
   try {
-    // Tenta Claude
-    return await analyzeWithClaude(image);
+    return await analyzeWithClaude(image, bboxes);
   } catch (e1) {
     console.warn("Claude falhou, tentando Gemini...");
     try {
-      // Tenta Gemini
-      return await analyzeWithGemini(image);
+      return await analyzeWithGemini(image, bboxes);
     } catch (e2) {
-      console.error("Ambas as IAs falharam. Ativando modo de segurança.");
-      // Se ambas as IAs falharem por erro de 404 (chave/modelo), 
-      // retornamos um mock para não travar a experiência do usuário
+      console.error("Ambas as IAs falharam.");
       return generateMockAnalysis();
     }
   }
