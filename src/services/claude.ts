@@ -2,10 +2,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { RegionBBox } from '@/components/camera/ImageAnnotator';
 import { PROMPT_ESPECIALISTA } from '../constants/prompt';
 
-const API_KEY = "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";
-
 const anthropic = new Anthropic({
-  apiKey: API_KEY,
+  apiKey: import.meta.env.VITE_ANTHROPIC_KEY || "",
   dangerouslyAllowBrowser: true
 });
 

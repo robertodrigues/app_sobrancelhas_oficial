@@ -1,8 +1,6 @@
 import { PROMPT_ESPECIALISTA } from '../constants/prompt';
 import { RegionBBox } from '@/components/camera/ImageAnnotator';
 
-const OPENAI_KEY = "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";
-
 const cropImage = (base64Str: string, bbox: RegionBBox): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -52,7 +50,7 @@ export async function analyzeWithGPT4o(images: {url: string, bboxes: Record<stri
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENAI_KEY}`
+      'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_KEY || ""}`
     },
     body: JSON.stringify({
       model: 'gpt-4o',

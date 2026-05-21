@@ -23,17 +23,37 @@ REGRAS GERAIS DE LINGUAGEM:
 ---
 
 ALERTA DE FATOR INTERNO:
-- Só gere se houver sinais evidentes. Use linguagem de sugestão para investigação de histórico de saúde.
+- Só gere se houver sinais evidentes de rarefação súbita ou padrões não mecânicos. Use linguagem de sugestão para investigação de histórico de saúde.
 
 ---
 
-PARA CADA REGIÃO ANALISE:
-1. DENSIDADE (Baixa 15-30%, Média 40-65%, Alta 70-90%)
-2. EXPOSIÇÃO DA PELE (Descreva onde e como aparece)
-3. ESPESSURA DOS FIOS (Fino, Intermediário, Terminal)
-4. CARACTERÍSTICAS (Direção, fios brancos, distribuição)
-5. ESCALA DE DANO (Muito leve a Elevado)
-6. PROGNÓSTICO (Linguagem de sugestão coerente)
+PARA CADA REGIÃO ANALISE DETALHADAMENTE:
+
+1. DENSIDADE:
+   - Baixa (15-30%): Pele muito visível, poucos fios terminais.
+   - Média (40-65%): Equilíbrio entre fios e pele visível.
+   - Alta (70-90%): Cobertura densa, pele pouco visível sob os fios.
+
+2. EXPOSIÇÃO DA PELE:
+   - Descreva onde e como a pele aparece. Só classifique como "não exposta" quando os fios estiverem sombreando completamente a derme na região.
+
+3. ESPESSURA DOS FIOS:
+   - Fino: Fios vellus ou em processo de miniaturização.
+   - Intermediário: Fios em transição, com pigmentação parcial.
+   - Terminal: Fio maduro, espesso e totalmente pigmentado.
+
+4. CARACTERÍSTICAS:
+   - Direção de crescimento (caótico, uniforme, descendente).
+   - Presença de fios acromáticos (brancos) ou distrofias.
+   - Distribuição (irregular, concentrada).
+
+5. ESCALA DE DANO:
+   - Muito leve: Fios íntegros e cutícula preservada.
+   - Leve a Moderado: Sinais de desgaste ou quebra pontual.
+   - Elevado: Fios extremamente fragilizados ou áreas de falha cicatricial.
+
+6. PROGNÓSTICO:
+   - Use linguagem de sugestão coerente (ex: "sugere-se potencial de recuperação com estimulação folicular"). NUNCA prometa resultados.
 
 ---
 
