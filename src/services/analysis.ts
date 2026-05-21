@@ -1,4 +1,3 @@
-GPT-4o.">
 import { analyzeWithClaude } from './claude';
 import { analyzeWithGPT4o } from './openai';
 import { RegionBBox } from '@/components/camera/ImageAnnotator';
