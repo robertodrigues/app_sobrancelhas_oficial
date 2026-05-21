@@ -45,6 +45,9 @@ const AnalysisResult = () => {
     }
   };
 
+  // Verifica se temos realmente duas imagens para o grid de comparação
+  const hasTwoImages = allImages && Array.isArray(allImages) && allImages.length >= 2;
+
   return (
     <div className="min-h-screen bg-slate-50 pb-24 md:pt-20">
       <Navbar />
@@ -68,7 +71,7 @@ const AnalysisResult = () => {
 
         <div className="space-y-6">
           {/* Imagens Analisadas */}
-          {analysis.isComparativo && allImages ? (
+          {analysis.isComparativo && hasTwoImages ? (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <p className="text-[10px] font-bold text-slate-400 uppercase text-center">Antes</p>
@@ -86,6 +89,11 @@ const AnalysisResult = () => {
           ) : (
             <div className="relative rounded-3xl overflow-hidden shadow-lg border-4 border-white aspect-video">
               <img src={image} alt="Análise" className="w-full h-full object-cover" />
+              {analysis.isComparativo && (
+                <div className="absolute top-4 right-4">
+                  <Badge className="bg-accent text-white border-none shadow-lg">Montagem Técnica</Badge>
+                </div>
+              )}
             </div>
           )}
 
@@ -159,7 +167,6 @@ const AnalysisResult = () => {
                       </div>
                     </div>
 
-                    {/* Detalhes Adicionais Restaurados */}
                     <div className="grid grid-cols-1 gap-2">
                       {data.peleDescricao && (
                         <div className="bg-white/50 p-3 rounded-lg border border-white/50 flex items-start gap-2">
