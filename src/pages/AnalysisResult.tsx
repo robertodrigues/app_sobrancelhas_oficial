@@ -12,7 +12,8 @@ import {
   Target, 
   ShieldCheck, 
   Info,
-  ChevronRight
+  ChevronRight,
+  Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -32,22 +33,20 @@ const AnalysisResult = () => {
     );
   }
 
-  const getStatusColor = (color: string) => {
-    switch (color) {
-      case 'verde': return 'bg-green-500';
-      case 'amarelo': return 'bg-yellow-500';
-      case 'vermelho': return 'bg-red-500';
-      default: return 'bg-slate-400';
-    }
+  const getStatusColor = (statusString: string) => {
+    const lower = statusString.toLowerCase();
+    if (lower.includes('verde')) return 'bg-green-500';
+    if (lower.includes('amarelo')) return 'bg-yellow-500';
+    if (lower.includes('vermelho')) return 'bg-red-500';
+    return 'bg-slate-400';
   };
 
-  const getStatusBg = (color: string) => {
-    switch (color) {
-      case 'verde': return 'bg-green-50 border-green-100';
-      case 'amarelo': return 'bg-yellow-50 border-yellow-100';
-      case 'vermelho': return 'bg-red-50 border-red-100';
-      default: return 'bg-slate-50 border-slate-100';
-    }
+  const getStatusBg = (statusString: string) => {
+    const lower = statusString.toLowerCase();
+    if (lower.includes('verde')) return 'bg-green-50 border-green-100';
+    if (lower.includes('amarelo')) return 'bg-yellow-50 border-yellow-100';
+    if (lower.includes('vermelho')) return 'bg-red-50 border-red-100';
+    return 'bg-slate-50 border-slate-100';
   };
 
   return (
@@ -93,37 +92,56 @@ const AnalysisResult = () => {
               Análise por Região
             </h2>
             
-            {Object.entries(analysis.regioes).map(([key, data]: [string, any]) => (
-              <Card key={key} className={cn("border shadow-sm rounded-2xl overflow-hidden", getStatusBg(data.cor))}>
-                <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                  <CardTitle className="text-sm font-bold capitalize">
-                    {key.replace('_', ' ')}
-                  </CardTitle>
-                  <div className={cn("w-3 h-3 rounded-full shadow-sm", getStatusColor(data.cor))} />
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-sm text-slate-700 leading-relaxed">{data.descricao}</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-white/50 p-2 rounded-lg border border-white/50">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">Densidade</p>
-                      <p className="text-sm font-bold text-slate-900">{data.densidade}</p>
+            {Object.entries(analysis.regioes).map(([key, data]: [string, any]) => {
+              const melhoria = analysis.melhorias_por_regiao?.[key] || '';
+              return (
+                <Card key={key} className={cn("border shadow-sm rounded-2xl overflow-hidden", getStatusBg(melhoria))}>
+                  <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-bold capitalize">
+                      {key.replace('_', ' ')}
+                    </CardTitle>
+                    <div className={cn("w-3 h-3 rounded-full shadow-sm", getStatusColor(melhoria))} />
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-slate-700 leading-relaxed">{data.descricao}</p>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white/50 p-2 rounded-lg border border-white/50">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Densidade</p>
+                        <p className="text-sm font-bold text-slate-900">{data.densidade}</p>
+                      </div>
+                      <div className="bg-white/50 p-2 rounded-lg border border-white/50">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Pele Exposta</p>
+                        <p className="text-sm font-bold text-slate-900">{data.exposicao_pele}</p>
+                      </div>
+                      <div className="bg-white/50 p-2 rounded-lg border border-white/50">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Espessura</p>
+                        <p className="text-sm font-bold text-slate-900">{data.espessura}</p>
+                      </div>
+                      <div className="bg-white/50 p-2 rounded-lg border border-white/50">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Tipo de Dano</p>
+                        <p className="text-sm font-bold text-slate-900">{data.tipo_dano}</p>
+                      </div>
+                      <div className="bg-white/50 p-2 rounded-lg border border-white/50">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Escala de Dano</p>
+                        <p className="text-sm font-bold text-slate-900">{data.escala_dano}</p>
+                      </div>
+                      <div className="bg-white/50 p-2 rounded-lg border border-white/50">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Prognóstico</p>
+                        <p className="text-sm font-bold text-slate-900">{data.prognostico}</p>
+                      </div>
                     </div>
-                    <div className="bg-white/50 p-2 rounded-lg border border-white/50">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">Espessura</p>
-                      <p className="text-sm font-bold text-slate-900">{data.espessura}</p>
-                    </div>
-                    <div className="bg-white/50 p-2 rounded-lg border border-white/50">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">Dano</p>
-                      <p className="text-sm font-bold text-slate-900">{data.dano}</p>
-                    </div>
-                    <div className="bg-white/50 p-2 rounded-lg border border-white/50">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">Prognóstico</p>
-                      <p className="text-sm font-bold text-slate-900">{data.prognostico}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+
+                    {melhoria && (
+                      <div className="pt-2 border-t border-white/30">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Status de Melhoria</p>
+                        <p className="text-xs font-medium text-slate-700">{melhoria}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </section>
 
           {/* Resumo Geral */}
@@ -136,8 +154,12 @@ const AnalysisResult = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <p className="text-xs font-bold text-slate-400 uppercase mb-1">Resumo Técnico</p>
-                <p className="text-sm text-slate-600 leading-relaxed">{analysis.resumo_geral}</p>
+                <p className="text-xs font-bold text-slate-400 uppercase mb-1">Visão Geral</p>
+                <p className="text-sm text-slate-600 leading-relaxed">{analysis.visao_geral}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-400 uppercase mb-1">Resumo Técnico Geral</p>
+                <p className="text-sm text-slate-600 leading-relaxed">{analysis.resumo_tecnico_geral}</p>
               </div>
               <div className="p-4 bg-accent/5 rounded-2xl border border-accent/10">
                 <p className="text-xs font-bold text-accent uppercase mb-1">Objetivo do Tratamento</p>

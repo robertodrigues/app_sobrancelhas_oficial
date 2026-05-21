@@ -11,39 +11,69 @@ export const analyzeWithClaude = async (base64Image: string) => {
   try {
     const base64Data = base64Image.split(',')[1] || base64Image;
 
-    const systemPrompt = `Você é uma assistente especializada em Tricologia de Sobrancelhas.
-Analise a imagem enviada de acordo com as características individuais de cada sobrancelha na foto e gere um relatório técnico completo seguindo exatamente esta estrutura JSON:
+    const systemPrompt = `Você é uma especialista em Tricologia de Sobrancelhas. Analise a imagem e gere um relatório técnico no formato JSON abaixo.
 
+ANÁLISE POR REGIÃO (ponto_inicial/verde, meio/amarelo, cauda/vermelho):
+
+Para cada região, analise:
+DENSIDADE: Baixa (15-30% - pele exposta, poucos fios) | Média (40-65% - fios presentes com falhas) | Alta (70-90% - boa cobertura)
+EXPOSIÇÃO DA PELE: "Sim" ou "Não". Se sim, descreva onde e quanto
+ESPESSURA DOS FIOS: "Fino" (nascendo) | "Intermediário" (crescendo) | "Terminal" (encorpado/calibroso)
+TIPO DE DANO: "Erro de Design" (remoção excessiva - externo) | "Estrutural" (fator interno - hormonal/nutrição) | "Misto" (ambos)
+ESCALA DE DANIFICAÇÃO: "Muito leve (10-15%)" | "Leve (15-40%)" | "Moderado (40-50%)" | "Elevado (65-75%)"
+PROGNÓSTICO: Descreva resposta esperada ao tratamento
+
+JSON EXATO que você DEVE retornar (sem alterar os campos):
 {
   "regioes": {
     "ponto_inicial": {
-      "descricao": "Descrição técnica detalhada (densidade, exposição da pele, espessura dos fios)",
-      "densidade": "Porcentagem estimada (ex: 45%)",
-      "dano": "Tipo e grau de dano (ex: Dano por Erro de Design - Leve 20%)",
-      "espessura": "Classificação predominante (Fio fino, intermediário ou terminal)",
-      "prognostico": "Expectativa de resposta ao tratamento",
-      "cor": "verde, amarelo ou vermelho (baseado na severidade)"
+      "descricao": "texto detalhado",
+      "densidade": "ex: 45% - Média",
+      "exposicao_pele": "Sim - falhas entre os fios",
+      "espessura": "Fino/Intermediário/Terminal",
+      "tipo_dano": "Erro de Design / Estrutural / Misto",
+      "escala_dano": "ex: Moderado (45%)",
+      "prognostico": "texto da expectativa"
     },
-    "meio": { ... mesma estrutura ... },
-    "cauda": { ... mesma estrutura ... }
+    "meio": {
+      "descricao": "texto detalhado",
+      "densidade": "ex: 75% - Alta",
+      "exposicao_pele": "Não",
+      "espessura": "Terminal",
+      "tipo_dano": "Nenhum",
+      "escala_dano": "Nenhuma",
+      "prognostico": "texto da expectativa"
+    },
+    "cauda": {
+      "descricao": "texto detalhado",
+      "densidade": "ex: 20% - Baixa",
+      "exposicao_pele": "Sim - ausência total em pontos",
+      "espessura": "Fino",
+      "tipo_dano": "Misto",
+      "escala_dano": "ex: Elevado (70%)",
+      "prognostico": "texto da expectativa"
+    }
   },
-  "visao_geral": "Visão geral da sobrancelha",
-  "resumo_geral": "Resumo técnico consolidado",
-  "objetivo_tratamento": "Objetivo principal do tratamento",
-  "alerta_causa_interna": "String com alerta se houver indício de causa interna, ou null"
+  "melhorias_por_regiao": {
+    "ponto_inicial": "verde/amarelo/vermelho - justificativa",
+    "meio": "verde/amarelo/vermelho - justificativa",
+    "cauda": "verde/amarelo/vermelho - justificativa"
+  },
+  "visao_geral": "texto da visão geral da sobrancelha",
+  "resumo_tecnico_geral": "texto do resumo consolidado",
+  "objetivo_tratamento": "texto do objetivo",
+  "alerta_causa_interna": "texto do alerta ou null"
 }
 
-Diretrizes de Análise:
-1. DENSIDADE: Baixa (15-30%), Média (40-65%), Alta (70-90%).
-2. ESPESSURA: Fio fino (desenvolvimento), Fio intermediário (crescimento), Fio terminal (calibroso/genético).
-3. DANOS: Erro de Design (externo), Estrutural (interno), ou Misto.
-4. ESCALA DE DANO: Muito leve (10-15%), Leve (15-40%), Moderado (40-50%), Elevado (65-75%).
-
-Use linguagem técnica e profissional.`;
+REGRAS:
+- Use % reais baseados na imagem
+- Linguagem técnica mas acessível para cliente final
+- Se houver qualquer sinal de causa interna (fios ralos generalizados, falhas irregulares), preencha o alerta`;
 
     const response = await anthropic.messages.create({
       model: "claude-3-5-sonnet-latest",
-      max_tokens: 1500,
+      max_tokens: 2000,
+      system: systemPrompt,
       messages: [{
         role: "user",
         content: [
@@ -54,10 +84,6 @@ Use linguagem técnica e profissional.`;
               media_type: "image/jpeg", 
               data: base64Data 
             } 
-          },
-          { 
-            type: "text", 
-            text: systemPrompt 
           }
         ]
       }]
