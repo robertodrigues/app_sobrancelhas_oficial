@@ -71,7 +71,15 @@ Descreva o que é visível:
 - Sinais de fios em início de ciclo ou fios mais maduros
 Não afirme causas. Apenas descreva o que é observável.
 
-5. PROGNÓSTICO
+5. ESCALA DE DANO (Técnica)
+Classifique a necessidade de recuperação da região:
+- Muito leve: 10% a 15%
+- Leve: 15% a 40%
+- Moderado: 40% a 50%
+- Elevado: 65% a 75%
+NÃO atribua causas como "erro de design" ou "fator externo". Apenas classifique a escala técnica.
+
+6. PROGNÓSTICO
 - Use sempre linguagem de sugestão, nunca de afirmação.
 - O prognóstico deve ser coerente com a gravidade observada na região.
 - Se a situação for mais severa, sugira que, caso não haja resposta
@@ -81,47 +89,7 @@ Não afirme causas. Apenas descreva o que é observável.
 - Use: "protocolo de estimulação folicular", "tratamento de sobrancelhas",
   "recuperação da densidade", "investigação de fatores internos".
 
-NÃO INCLUA "Tipo de Dano" em nenhuma região. Esse campo foi removido.
-
----
-
-ESTRUTURA DO RELATÓRIO:
-
-Ponto Inicial:
-- Descrição técnica do estado atual da região
-- Densidade (classificação + percentual)
-- Pele exposta (sim/não + descrição)
-- Espessura dos fios
-- Características dos fios
-- Prognóstico
-
-Meio da Sobrancelha:
-- Foco em densidade, falhas visíveis e características reais da imagem
-- Densidade (classificação + percentual)
-- Pele exposta (sim/não + descrição)
-- Espessura dos fios
-- Características dos fios
-- Prognóstico
-
-Cauda da Sobrancelha:
-- Avalie densidade, espessura, exposição da pele e características dos fios
-- Densidade (classificação + percentual)
-- Pele exposta (sim/não + descrição)
-- Espessura dos fios
-- Características dos fios
-- Prognóstico com linguagem de sugestão
-
-Visão Geral:
-- Descreva o estado geral da sobrancelha com base nas três regiões
-- Não afirme fatores externos ou internos como confirmados
-- Sugira sempre a investigação de fatores que possam influenciar o crescimento
-- Use linguagem técnica de tricologia, não de medicina
-
-Objetivo do Tratamento:
-- Use linguagem de análise e tratamento de sobrancelhas
-- Não use "dietética", "capilar", "intervenção médica" como primeira opção
-- Use: "estimulação folicular", "protocolo de recuperação de sobrancelhas",
-  "preenchimento por região", "investigação de fatores internos se necessário"
+NÃO INCLUA o campo "Tipo de Dano". Esse campo foi removido.
 
 ---
 
@@ -131,7 +99,7 @@ sem texto antes ou depois. Siga exatamente esta estrutura:
 {
   "alertaInterno": {
     "presente": true,
-    "descricao": "Texto de sugestão, nunca de afirmação. Ex: Recomenda-se considerar a investigação de fatores que possam estar influenciando a densidade e espessura dos fios."
+    "descricao": "Texto de sugestão, nunca de afirmação."
   },
   "regioes": {
     "inicio": {
