@@ -34,21 +34,33 @@ const AnalysisResult = () => {
     );
   }
 
-  const getStatusColor = (color: string) => {
-    switch (color?.toLowerCase()) {
-      case 'verde': return 'bg-green-500';
-      case 'amarelo': return 'bg-yellow-500';
-      case 'vermelho': return 'bg-red-500';
-      default: return 'bg-slate-400';
-    }
-  };
-
-  const getStatusBg = (color: string) => {
-    switch (color?.toLowerCase()) {
-      case 'verde': return 'bg-green-50 border-green-100';
-      case 'amarelo': return 'bg-yellow-50 border-yellow-100';
-      case 'vermelho': return 'bg-red-50 border-red-100';
-      default: return 'bg-slate-50 border-slate-100';
+  // Mapeamento fixo de cores por região para garantir o padrão solicitado
+  const getRegionTheme = (key: string) => {
+    switch (key) {
+      case 'inicio':
+        return {
+          dot: 'bg-green-500',
+          bg: 'bg-green-50 border-green-100',
+          label: 'Ponto Inicial'
+        };
+      case 'meio':
+        return {
+          dot: 'bg-yellow-500',
+          bg: 'bg-yellow-50 border-yellow-100',
+          label: 'Meio da Sobrancelha'
+        };
+      case 'cauda':
+        return {
+          dot: 'bg-red-500',
+          bg: 'bg-red-50 border-red-100',
+          label: 'Cauda da Sobrancelha'
+        };
+      default:
+        return {
+          dot: 'bg-slate-400',
+          bg: 'bg-slate-50 border-slate-100',
+          label: key
+        };
     }
   };
 
@@ -101,83 +113,86 @@ const AnalysisResult = () => {
               Análise por Região
             </h2>
             
-            {Object.entries(analysis.regioes).map(([key, data]: [string, any]) => (
-              <Card key={key} className={cn("border shadow-sm rounded-2xl overflow-hidden", getStatusBg(data.statusMelhoria?.cor))}>
-                <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                  <CardTitle className="text-sm font-bold capitalize">
-                    {key === 'inicio' ? 'Ponto Inicial' : key === 'meio' ? 'Meio da Sobrancelha' : 'Cauda da Sobrancelha'}
-                  </CardTitle>
-                  <div className={cn("w-3 h-3 rounded-full shadow-sm", getStatusColor(data.statusMelhoria?.cor))} />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-slate-700 leading-relaxed">{data.descricao}</p>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-white/50 p-2 rounded-lg border border-white/50">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">Densidade</p>
-                      <p className="text-sm font-bold text-slate-900">{data.densidade?.classificacao} ({data.densidade?.percentual}%)</p>
+            {Object.entries(analysis.regioes).map(([key, data]: [string, any]) => {
+              const theme = getRegionTheme(key);
+              return (
+                <Card key={key} className={cn("border shadow-sm rounded-2xl overflow-hidden", theme.bg)}>
+                  <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-bold">
+                      {theme.label}
+                    </CardTitle>
+                    <div className={cn("w-3 h-3 rounded-full shadow-sm", theme.dot)} />
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-slate-700 leading-relaxed">{data.descricao}</p>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white/50 p-2 rounded-lg border border-white/50">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Densidade</p>
+                        <p className="text-sm font-bold text-slate-900">{data.densidade?.classificacao} ({data.densidade?.percentual}%)</p>
+                      </div>
+                      <div className="bg-white/50 p-2 rounded-lg border border-white/50">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Espessura</p>
+                        <p className="text-sm font-bold text-slate-900">{data.espessura}</p>
+                      </div>
+                      <div className="bg-white/50 p-2 rounded-lg border border-white/50">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Pele Exposta</p>
+                        <p className="text-sm font-bold text-slate-900">
+                          {data.peleExposta ? 'Sim' : 'Não'}
+                        </p>
+                      </div>
+                      <div className="bg-white/50 p-2 rounded-lg border border-white/50">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Escala de Dano</p>
+                        <p className="text-sm font-bold text-slate-900">{data.escalaDano?.classificacao} ({data.escalaDano?.percentual}%)</p>
+                      </div>
                     </div>
-                    <div className="bg-white/50 p-2 rounded-lg border border-white/50">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">Espessura</p>
-                      <p className="text-sm font-bold text-slate-900">{data.espessura}</p>
-                    </div>
-                    <div className="bg-white/50 p-2 rounded-lg border border-white/50">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">Pele Exposta</p>
-                      <p className="text-sm font-bold text-slate-900">
-                        {data.peleExposta ? 'Sim' : 'Não'}
-                      </p>
-                    </div>
-                    <div className="bg-white/50 p-2 rounded-lg border border-white/50">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">Escala de Dano</p>
-                      <p className="text-sm font-bold text-slate-900">{data.escalaDano?.classificacao} ({data.escalaDano?.percentual}%)</p>
-                    </div>
-                  </div>
 
-                  {/* Detalhes Adicionais */}
-                  <div className="grid grid-cols-1 gap-2">
-                    {data.peleDescricao && (
-                      <div className="bg-white/50 p-3 rounded-lg border border-white/50 flex items-start gap-2">
-                        <Eye size={14} className="text-slate-400 mt-0.5" />
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase">Exposição da Pele</p>
-                          <p className="text-xs text-slate-700">{data.peleDescricao}</p>
+                    {/* Detalhes Adicionais */}
+                    <div className="grid grid-cols-1 gap-2">
+                      {data.peleDescricao && (
+                        <div className="bg-white/50 p-3 rounded-lg border border-white/50 flex items-start gap-2">
+                          <Eye size={14} className="text-slate-400 mt-0.5" />
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">Exposição da Pele</p>
+                            <p className="text-xs text-slate-700">{data.peleDescricao}</p>
+                          </div>
                         </div>
+                      )}
+                      {data.direcaoFios && (
+                        <div className="bg-white/50 p-3 rounded-lg border border-white/50 flex items-start gap-2">
+                          <MoveUpRight size={14} className="text-slate-400 mt-0.5" />
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">Direção dos Fios</p>
+                            <p className="text-xs text-slate-700">{data.direcaoFios}</p>
+                          </div>
+                        </div>
+                      )}
+                      {data.caracteristicasEspeciais && (
+                        <div className="bg-white/50 p-3 rounded-lg border border-white/50 flex items-start gap-2">
+                          <Info size={14} className="text-slate-400 mt-0.5" />
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">Características dos Fios</p>
+                            <p className="text-xs text-slate-700">{data.caracteristicasEspeciais}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-3 bg-white/40 rounded-xl border border-white/40">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Prognóstico</p>
+                      <p className="text-xs text-slate-700 italic">"{data.prognostico}"</p>
+                    </div>
+
+                    {data.statusMelhoria && (
+                      <div className="pt-2 border-t border-white/30">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Status de Melhoria</p>
+                        <p className="text-xs font-medium text-slate-700">{data.statusMelhoria.descricao}</p>
                       </div>
                     )}
-                    {data.direcaoFios && (
-                      <div className="bg-white/50 p-3 rounded-lg border border-white/50 flex items-start gap-2">
-                        <MoveUpRight size={14} className="text-slate-400 mt-0.5" />
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase">Direção dos Fios</p>
-                          <p className="text-xs text-slate-700">{data.direcaoFios}</p>
-                        </div>
-                      </div>
-                    )}
-                    {data.caracteristicasEspeciais && (
-                      <div className="bg-white/50 p-3 rounded-lg border border-white/50 flex items-start gap-2">
-                        <Info size={14} className="text-slate-400 mt-0.5" />
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase">Características dos Fios</p>
-                          <p className="text-xs text-slate-700">{data.caracteristicasEspeciais}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="p-3 bg-white/40 rounded-xl border border-white/40">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Prognóstico</p>
-                    <p className="text-xs text-slate-700 italic">"{data.prognostico}"</p>
-                  </div>
-
-                  {data.statusMelhoria && (
-                    <div className="pt-2 border-t border-white/30">
-                      <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Status de Melhoria</p>
-                      <p className="text-xs font-medium text-slate-700">{data.statusMelhoria.descricao}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </section>
 
           {/* Resumo Geral */}
