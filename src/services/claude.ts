@@ -1,5 +1,4 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { RegionBBox } from '@/components/camera/ImageAnnotator';
 
 const API_KEY = "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";
 
@@ -8,93 +7,72 @@ const anthropic = new Anthropic({
   dangerouslyAllowBrowser: true
 });
 
-export const analyzeWithClaude = async (base64Image: string, bboxes: Record<string, RegionBBox>) => {
+export const analyzeWithClaude = async (originalImage: string, regions: Record<string, string>) => {
   try {
-    const base64Data = base64Image.split(',')[1] || base64Image;
+    const imageContent: any[] = [];
+    
+    // Adicionar imagem original para contexto
+    imageContent.push({
+      type: "text",
+      text: "Imagem 1: Visão Geral da Sobrancelha"
+    });
+    imageContent.push({
+      type: "image",
+      source: { type: "base64", media_type: "image/jpeg", data: originalImage.split(',')[1] }
+    });
 
-    const coordsText = Object.entries(bboxes).map(([region, box]) => 
-      `- Região ${region.toUpperCase()}: [x1:${Math.round(box.minX)}, y1:${Math.round(box.minY)}, x2:${Math.round(box.maxX)}, y2:${Math.round(box.maxY)}]`
-    ).join('\n');
+    // Adicionar recortes específicos
+    Object.entries(regions).forEach(([name, data], index) => {
+      if (name === 'original') return;
+      imageContent.push({
+        type: "text",
+        text: `Imagem ${index + 2}: Recorte da Região ${name.toUpperCase()}`
+      });
+      imageContent.push({
+        type: "image",
+        source: { type: "base64", media_type: "image/jpeg", data: data.split(',')[1] }
+      });
+    });
 
-    const systemPrompt = `Você é uma especialista em Tricologia de Sobrancelhas. Analise a imagem e gere um relatório técnico no formato JSON abaixo.
+    const systemPrompt = `Você é uma especialista em Tricologia de Sobrancelhas. Analise as imagens fornecidas (Visão Geral + Recortes Específicos) e gere um relatório técnico no formato JSON.
 
-A imagem possui as seguintes áreas marcadas para análise (coordenadas em pixels):
-${coordsText}
+IMPORTANTE: Use os recortes específicos para analisar detalhadamente cada região (Início, Meio, Cauda).
 
-ANÁLISE POR REGIÃO (ponto_inicial/verde, meio/amarelo, cauda/vermelho):
+ANÁLISE POR REGIÃO:
+DENSIDADE: Baixa (15-30%) | Média (40-65%) | Alta (70-90%)
+EXPOSIÇÃO DA PELE: "Sim" ou "Não" + descrição
+ESPESSURA DOS FIOS: "Fino" | "Intermediário" | "Terminal"
+TIPO DE DANO: "Erro de Design" | "Estrutural" | "Misto"
+ESCALA DE DANIFICAÇÃO: % e nível
+PROGNÓSTICO: Expectativa de tratamento
 
-Para cada região, analise:
-DENSIDADE: Baixa (15-30% - pele exposta, poucos fios) | Média (40-65% - fios presentes com falhas) | Alta (70-90% - boa cobertura)
-EXPOSIÇÃO DA PELE: "Sim" ou "Não". Se sim, descreva onde e quanto
-ESPESSURA DOS FIOS: "Fino" (nascendo) | "Intermediário" (crescendo) | "Terminal" (encorpado/calibroso)
-TIPO DE DANO: "Erro de Design" (remoção excessiva - externo) | "Estrutural" (fator interno - hormonal/nutrição) | "Misto" (ambos)
-ESCALA DE DANIFICAÇÃO: "Muito leve (10-15%)" | "Leve (15-40%)" | "Moderado (40-50%)" | "Elevado (65-75%)"
-PROGNÓSTICO: Descreva resposta esperada ao tratamento
-
-JSON EXATO que você DEVE retornar (sem alterar os campos):
+JSON EXATO:
 {
   "regioes": {
-    "ponto_inicial": {
-      "descricao": "texto detalhado",
-      "densidade": "ex: 45% - Média",
-      "exposicao_pele": "Sim - falhas entre os fios",
-      "espessura": "Fino/Intermediário/Terminal",
-      "tipo_dano": "Erro de Design / Estrutural / Misto",
-      "escala_dano": "ex: Moderado (45%)",
-      "prognostico": "texto da expectativa"
-    },
-    "meio": {
-      "descricao": "texto detalhado",
-      "densidade": "ex: 75% - Alta",
-      "exposicao_pele": "Não",
-      "espessura": "Terminal",
-      "tipo_dano": "Nenhum",
-      "escala_dano": "Nenhuma",
-      "prognostico": "texto da expectativa"
-    },
-    "cauda": {
-      "descricao": "texto detalhado",
-      "densidade": "ex: 20% - Baixa",
-      "exposicao_pele": "Sim - ausência total em pontos",
-      "espessura": "Fino",
-      "tipo_dano": "Misto",
-      "escala_dano": "ex: Elevado (70%)",
-      "prognostico": "texto da expectativa"
-    }
+    "ponto_inicial": { "descricao": "...", "densidade": "...", "exposicao_pele": "...", "espessura": "...", "tipo_dano": "...", "escala_dano": "...", "prognostico": "..." },
+    "meio": { ... },
+    "cauda": { ... }
   },
   "melhorias_por_regiao": {
-    "ponto_inicial": "verde/amarelo/vermelho - justificativa",
-    "meio": "verde/amarelo/vermelho - justificativa",
-    "cauda": "verde/amarelo/vermelho - justificativa"
+    "ponto_inicial": "cor - justificativa",
+    "meio": "cor - justificativa",
+    "cauda": "cor - justificativa"
   },
-  "visao_geral": "texto da visão geral da sobrancelha",
-  "resumo_tecnico_geral": "texto do resumo consolidado",
-  "objetivo_tratamento": "texto do objetivo",
-  "alerta_causa_interna": "texto do alerta ou null"
+  "visao_geral": "...",
+  "resumo_tecnico_geral": "...",
+  "objetivo_tratamento": "...",
+  "alerta_causa_interna": "..."
 }
 
 REGRAS:
-- Use % reais baseados na imagem e nas coordenadas fornecidas
-- Linguagem técnica mas acessível para cliente final
-- Se houver qualquer sinal de causa interna (fios ralos generalizados, falhas irregulares), preencha o alerta`;
+- Baseie-se estritamente no que vê nos recortes de alta proximidade.
+- Linguagem técnica profissional.`;
 
     const response = await anthropic.messages.create({
       model: "claude-3-5-sonnet-latest",
       max_tokens: 2000,
       system: systemPrompt,
-      messages: [{
-        role: "user",
-        content: [
-          { 
-            type: "image", 
-            source: { 
-              type: "base64", 
-              media_type: "image/jpeg", 
-              data: base64Data 
-            } 
-          }
-        ]
-      }]
+      messages: [{ role: "user", content: imageContent }]
     });
 
     const text = response.content[0].type === 'text' ? response.content[0].text : '';
