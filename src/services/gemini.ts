@@ -5,9 +5,15 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 
 export const analyzeEyebrow = async (originalImage: string, regions: Record<string, string>) => {
   try {
-    // Atualizado para o modelo mais recente e estável
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+    // Usando o modelo 1.5 Pro para maior estabilidade
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     
+    const generationConfig = {
+      temperature: 0.7,
+      topP: 0.9,
+      topK: 40,
+    };
+
     const promptParts: any[] = [];
     
     promptParts.push("Você é uma especialista em Tricologia de Sobrancelhas. Analise as imagens abaixo (Visão Geral + Recortes Específicos) e gere um relatório técnico JSON.");
@@ -46,7 +52,11 @@ REGRAS:
 - Analise os detalhes microscópicos nos recortes.
 - Use terminologia técnica de tricologia.`);
 
-    const result = await model.generateContent(promptParts);
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: promptParts }],
+      generationConfig,
+    });
+
     const text = result.response.text();
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}') + 1;
@@ -57,12 +67,6 @@ REGRAS:
     throw new Error("Formato de resposta inválido.");
   } catch (error: any) {
     console.error("Erro Gemini:", error);
-    
-    // Tratamento de erro específico para modelo não encontrado
-    if (error.message?.includes('404') || error.message?.includes('not found')) {
-      throw new Error("Modelo Gemini indisponível. Tente novamente ou contate o suporte.");
-    }
-    
     throw new Error("Gemini: " + (error.message || "Erro na API"));
   }
 };
