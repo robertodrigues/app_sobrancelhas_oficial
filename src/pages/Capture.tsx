@@ -17,7 +17,8 @@ import {
   Pencil,
   FileText,
   Columns,
-  Trash2
+  Trash2,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
@@ -126,7 +127,7 @@ const Capture = () => {
         </button>
         <h1 className="font-semibold">
           {analysisMode === 'comparison' 
-            ? `Captura: ${capturedImages.length === 0 ? 'Antes' : 'Depois'}` 
+            ? `Passo ${capturedImages.length + 1} de 2` 
             : 'Captura Técnica'}
         </h1>
         <button onClick={resetFlow} className="p-2 hover:bg-white/10 rounded-full text-red-400">
@@ -171,23 +172,30 @@ const Capture = () => {
         {!currentImage ? (
           <>
             {needsMoreImages ? (
-              <div className="relative w-full h-full">
-                <Webcam 
-                  audio={false} 
-                  ref={webcamRef} 
-                  screenshotFormat="image/jpeg" 
-                  videoConstraints={{ facingMode: 'environment', width: 800, height: 600 }} 
-                  className="h-full w-full object-cover" 
-                />
-                <CameraOverlay side={capturedImages.length === 0 ? "right" : "left"} />
-                
-                {/* Miniatura da foto anterior no modo comparativo */}
+              <div className="relative w-full h-full flex flex-col items-center justify-center">
+                {/* Preview das fotos já capturadas no topo */}
                 {capturedImages.length > 0 && (
-                  <div className="absolute top-4 right-4 w-24 h-32 rounded-xl border-2 border-white/50 overflow-hidden shadow-2xl">
-                    <img src={capturedImages[0].url} className="w-full h-full object-cover opacity-80" />
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-[8px] text-white text-center py-1 uppercase font-bold">Antes</div>
+                  <div className="absolute top-4 left-0 right-0 flex justify-center gap-2 z-20">
+                    {capturedImages.map((img, i) => (
+                      <div key={i} className="w-16 h-20 rounded-lg border-2 border-accent overflow-hidden shadow-lg">
+                        <img src={img.url} className="w-full h-full object-cover" />
+                        <div className="absolute bottom-0 left-0 right-0 bg-accent text-[6px] text-white text-center py-0.5 uppercase font-bold">
+                          {i === 0 ? 'Antes' : 'Depois'}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
+
+                <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center p-8 text-center">
+                  <ImageIcon size={48} className="text-slate-700 mb-4" />
+                  <h3 className="text-white font-bold mb-2">
+                    {analysisMode === 'comparison' && capturedImages.length === 1 
+                      ? 'Agora suba a foto de DEPOIS' 
+                      : 'Suba ou tire a foto'}
+                  </h3>
+                  <p className="text-slate-500 text-sm">Use os botões abaixo para capturar ou fazer upload</p>
+                </div>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-6 p-8 text-center">
@@ -211,9 +219,10 @@ const Capture = () => {
         ) : (
           <div className="relative h-full w-full">
             <img src={currentImage} className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-               <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-white text-xs font-bold border border-white/20">
-                 Foto Capturada - Clique em Marcar
+            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-6 text-center">
+               <div className="bg-accent/90 backdrop-blur-md px-6 py-3 rounded-2xl text-white text-sm font-bold border border-white/20 shadow-2xl">
+                 Foto Carregada com Sucesso!
+                 <p className="text-[10px] opacity-80 mt-1 font-normal uppercase tracking-wider">Clique em "Marcar" para prosseguir</p>
                </div>
             </div>
           </div>
@@ -237,17 +246,20 @@ const Capture = () => {
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
               <button 
                 onClick={() => fileInputRef.current?.click()} 
-                className="w-14 h-14 bg-slate-800 text-white rounded-full flex items-center justify-center border border-slate-700 active:scale-90 transition-transform"
+                className="w-16 h-16 bg-accent text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform"
               >
-                <Upload size={24} />
+                <Upload size={28} />
               </button>
+              <div className="text-slate-500 text-xs font-bold uppercase tracking-widest">OU</div>
               <button 
-                onClick={capture} 
-                className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-transform"
+                onClick={() => {
+                  // Ativa a camera se necessário ou apenas mostra o botão de captura
+                  showError("Use o botão de Upload para as fotos de antes/depois");
+                }} 
+                className="w-16 h-16 bg-slate-800 text-white rounded-full flex items-center justify-center border border-slate-700 opacity-50"
               >
-                <div className="w-16 h-16 border-4 border-slate-900 rounded-full"></div>
+                <Camera size={28} />
               </button>
-              <div className="w-14"></div>
             </div>
           ) : (
             <Button 
@@ -263,16 +275,16 @@ const Capture = () => {
             <div className="flex gap-3">
               <Button 
                 variant="outline" 
-                className="flex-1 bg-transparent border-white text-white h-12" 
+                className="flex-1 bg-transparent border-white text-white h-14 rounded-2xl" 
                 onClick={() => setCurrentImage(null)}
               >
-                <RefreshCw className="mr-2 h-4 w-4" /> Repetir
+                <RefreshCw className="mr-2 h-5 w-5" /> Repetir
               </Button>
               <Button 
-                className="flex-1 bg-accent hover:bg-accent/90 h-12" 
+                className="flex-1 bg-accent hover:bg-accent/90 h-14 rounded-2xl shadow-xl shadow-accent/20" 
                 onClick={() => setIsAnnotating(true)}
               >
-                <Pencil className="mr-2 h-4 w-4" /> Marcar
+                <Pencil className="mr-2 h-5 w-5" /> Marcar
               </Button>
             </div>
           </div>
