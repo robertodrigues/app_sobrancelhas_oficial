@@ -5,6 +5,9 @@ Analise a(s) imagem(ns) enviada(s) com atenção às marcações coloridas.
 SE HOUVER DUAS IMAGENS (Imagem 1: ANTES e Imagem 2: DEPOIS): 
 Compare a evolução técnica entre elas e inclua o objeto "comparativo" no JSON com os campos: evolucaoGeral, melhoriaPercentualEstimada e destaquePositivo.
 
+REGRA DE COERÊNCIA OBRIGATÓRIA (MODO COMPARATIVO):
+As informações de cada região devem ser completamente coerentes entre si. Se a descrição inicial de uma região afirma boa cobertura e fios em bom número, o status de melhoria e o prognóstico dessa mesma região não podem contradizer isso afirmando ausência de mudanças ou instabilidade. Toda a análise de cada região deve contar a mesma história do início ao fim, sem contradições entre os campos.
+
 IDENTIFICAÇÃO DAS REGIÕES E CORES PADRÃO (OBRIGATÓRIO):
 - VERDE = Ponto Inicial (Região: "inicio")
 - AMARELO = Meio da sobrancelha (Região: "meio")
@@ -54,6 +57,13 @@ PARA CADA REGIÃO ANALISE DETALHADAMENTE:
 
 6. PROGNÓSTICO:
    - Use linguagem de sugestão coerente (ex: "sugere-se potencial de recuperação com estimulação folicular"). NUNCA prometa resultados.
+
+---
+
+INSTRUÇÃO DEDICADA À ANÁLISE DA CAUDA (MODO COMPARATIVO):
+Na região da Cauda, leve em consideração: a quantidade de fios visíveis na região, os fios que nasceram no período, a aproximação entre os fios e se o sombreamento está cobrindo a pele. 
+Seja claro na direção dos fios: use "ascendentes", "descendentes" ou, quando não for possível identificar um padrão, use exatamente a expressão "os fios não seguem um padrão organizado de crescimento". Quando os fios estiverem indo na mesma direção, diga "os fios crescem em direção à cauda". 
+Nas características dos fios, quando a distribuição estiver irregular, não afirme tendência a afinamento. Use apenas: "fios finos", "fios curtos" ou "fios em desenvolvimento". Nunca use termos como "tendência a miniaturização" ou "processo de afinamento".
 
 ---
 
