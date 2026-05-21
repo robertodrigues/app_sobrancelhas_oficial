@@ -16,13 +16,11 @@ const cropImage = (base64Str: string, bbox: RegionBBox): Promise<string> => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) return reject('Erro ao criar contexto canvas');
-
       const padding = 40;
       const x = Math.max(0, bbox.minX - padding);
       const y = Math.max(0, bbox.minY - padding);
       const width = Math.min(img.width - x, (bbox.maxX - bbox.minX) + (padding * 2));
       const height = Math.min(img.height - y, (bbox.maxY - bbox.minY) + (padding * 2));
-
       canvas.width = width;
       canvas.height = height;
       ctx.drawImage(img, x, y, width, height, 0, 0, width, height);
@@ -33,35 +31,29 @@ const cropImage = (base64Str: string, bbox: RegionBBox): Promise<string> => {
   });
 };
 
-export const analyzeWithClaude = async (originalImage: string, bboxes: Record<string, RegionBBox>) => {
+export const analyzeWithClaude = async (images: {url: string, bboxes: Record<string, RegionBBox>}[]) => {
   try {
     const imageContent: any[] = [];
     
-    imageContent.push({
-      type: "text",
-      text: "Imagem 1: Visão Geral da Sobrancelha"
-    });
-    imageContent.push({
-      type: "image",
-      source: { type: "base64", media_type: "image/jpeg", data: originalImage.split(',')[1] }
-    });
-
-    for (const [name, box] of Object.entries(bboxes)) {
-      const croppedData = await cropImage(originalImage, box);
-      imageContent.push({
-        type: "text",
-        text: `Imagem de Detalhe: Região ${name.toUpperCase()}`
-      });
+    for (let i = 0; i < images.length; i++) {
+      const label = images.length > 1 ? (i === 0 ? "ANTES" : "DEPOIS") : "VISÃO GERAL";
+      imageContent.push({ type: "text", text: `Imagem ${i + 1}: ${label}` });
       imageContent.push({
         type: "image",
-        source: { type: "base64", media_type: "image/jpeg", data: croppedData.split(',')[1] }
+        source: { type: "base64", media_type: "image/jpeg", data: images[i].url.split(',')[1] }
       });
+
+      for (const [name, box] of Object.entries(images[i].bboxes)) {
+        const croppedData = await cropImage(images[i].url, box);
+        imageContent.push({ type: "text", text: `Detalhe ${label} - Região ${name.toUpperCase()}` });
+        imageContent.push({
+          type: "image",
+          source: { type: "base64", media_type: "image/jpeg", data: croppedData.split(',')[1] }
+        });
+      }
     }
 
-    imageContent.push({
-      type: "text",
-      text: PROMPT_ESPECIALISTA
-    });
+    imageContent.push({ type: "text", text: PROMPT_ESPECIALISTA });
 
     const response = await anthropic.messages.create({
       model: "claude-3-5-sonnet-latest",
@@ -73,7 +65,8 @@ export const analyzeWithClaude = async (originalImage: string, bboxes: Record<st
     const clean = text.replace(/```json|```/g, '').trim();
     const start = clean.indexOf('{');
     const end = clean.lastIndexOf('}') + 1;
-    return JSON.parse(clean.substring(start, end));
+    const result = JSON.parse(clean.substring(start, end));
+    return { ...result, isComparativo: images.length > 1 };
   } catch (error: any) {
     console.error("Erro Claude:", error);
     throw error;

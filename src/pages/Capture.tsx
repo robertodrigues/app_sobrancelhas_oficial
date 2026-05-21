@@ -16,7 +16,8 @@ import {
   BrainCircuit, 
   Pencil,
   FileText,
-  Columns
+  Columns,
+  ArrowRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
@@ -25,10 +26,8 @@ import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
 const Capture = () => {
-  const [side, setSide] = useState<'left' | 'right'>('right');
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [annotatedImage, setAnnotatedImage] = useState<string | null>(null);
-  const [bboxes, setBBoxes] = useState<Record<string, RegionBBox>>({});
+  const [capturedImages, setCapturedImages] = useState<{url: string, bboxes: Record<string, RegionBBox>}[]>([]);
+  const [currentImage, setCurrentImage] = useState<string | null>(null);
   const [isAnnotating, setIsAnnotating] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
@@ -49,66 +48,64 @@ const Capture = () => {
 
   const capture = useCallback(() => {
     const imageSrc = webcamRef.current?.getScreenshot({ width: 800, height: 600 });
-    if (imageSrc) {
-      setCapturedImage(imageSrc);
-    }
+    if (imageSrc) setCurrentImage(imageSrc);
   }, [webcamRef]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setCapturedImage(e.target?.result as string);
-      };
+      reader.onload = (e) => setCurrentImage(e.target?.result as string);
       reader.readAsDataURL(file);
     }
   };
 
   const handleConfirm = async () => {
-    const imageToAnalyze = annotatedImage || capturedImage;
-    if (!imageToAnalyze) return;
-    
     if (!selectedClientId) {
-      showError('Por favor, selecione um cliente antes de analisar.');
+      showError('Por favor, selecione um cliente.');
       return;
     }
     
     setIsAnalyzing(true);
     try {
-      const result = await performDualAnalysis(imageToAnalyze, bboxes);
+      const result = await performDualAnalysis(capturedImages);
       
       const { error } = await supabase.from('analyses').insert([{
         client_id: selectedClientId,
-        image_url: imageToAnalyze,
+        image_url: capturedImages[capturedImages.length - 1].url,
         result: result
       }]);
 
       if (error) throw error;
 
-      showSuccess('Análise concluída com sucesso!');
-      navigate('/resultado', { state: { analysis: result, image: imageToAnalyze } });
+      showSuccess('Análise concluída!');
+      navigate('/resultado', { state: { analysis: result, image: capturedImages[capturedImages.length - 1].url, allImages: capturedImages } });
     } catch (error: any) {
-      console.error("Erro detalhado da análise:", error);
-      showError("Falha na análise: " + (error.message || "Erro desconhecido"));
+      showError("Falha na análise: " + error.message);
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  if (isAnnotating && capturedImage) {
+  const addImageToFlow = (url: string, bboxes: Record<string, RegionBBox>) => {
+    setCapturedImages(prev => [...prev, { url, bboxes }]);
+    setCurrentImage(null);
+    setIsAnnotating(false);
+  };
+
+  if (isAnnotating && currentImage) {
     return (
       <ImageAnnotator 
-        image={capturedImage} 
-        onSave={(img, boxes) => {
-          setAnnotatedImage(img);
-          setBBoxes(boxes);
-          setIsAnnotating(false);
-        }}
+        image={currentImage} 
+        onSave={(img, boxes) => addImageToFlow(img, boxes)}
         onCancel={() => setIsAnnotating(false)}
       />
     );
   }
+
+  const isStepOneDone = capturedImages.length >= 1;
+  const isStepTwoDone = capturedImages.length >= 2;
+  const needsMoreImages = analysisMode === 'comparison' ? capturedImages.length < 2 : capturedImages.length < 1;
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
@@ -116,12 +113,15 @@ const Capture = () => {
         <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/10 rounded-full">
           <ArrowLeft size={24} />
         </button>
-        <h1 className="font-semibold">Captura Técnica</h1>
+        <h1 className="font-semibold">
+          {analysisMode === 'comparison' 
+            ? `Captura: ${capturedImages.length === 0 ? 'Antes' : 'Depois'}` 
+            : 'Captura Técnica'}
+        </h1>
         <div className="w-10"></div>
       </div>
 
       <div className="px-6 py-2 z-10 space-y-3">
-        {/* Seleção de Cliente */}
         <Select onValueChange={setSelectedClientId} value={selectedClientId}>
           <SelectTrigger className="bg-white/10 border-white/20 text-white h-12 rounded-xl">
             <div className="flex items-center gap-2">
@@ -136,100 +136,90 @@ const Capture = () => {
           </SelectContent>
         </Select>
 
-        {/* Seletor de Modo de Análise */}
         <div className="grid grid-cols-2 gap-2 p-1 bg-white/5 backdrop-blur-md rounded-xl border border-white/10">
           <button
-            onClick={() => setAnalysisMode('single')}
-            className={cn(
-              "flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all",
-              analysisMode === 'single' 
-                ? "bg-accent text-white shadow-lg" 
-                : "text-slate-400 hover:text-white"
-            )}
+            onClick={() => { setAnalysisMode('single'); setCapturedImages([]); }}
+            className={cn("flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all", analysisMode === 'single' ? "bg-accent text-white shadow-lg" : "text-slate-400")}
           >
-            <FileText size={14} />
-            Sem Comparações
+            <FileText size={14} /> Sem Comparações
           </button>
           <button
-            onClick={() => setAnalysisMode('comparison')}
-            className={cn(
-              "flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all",
-              analysisMode === 'comparison' 
-                ? "bg-accent text-white shadow-lg" 
-                : "text-slate-400 hover:text-white"
-            )}
+            onClick={() => { setAnalysisMode('comparison'); setCapturedImages([]); }}
+            className={cn("flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all", analysisMode === 'comparison' ? "bg-accent text-white shadow-lg" : "text-slate-400")}
           >
-            <Columns size={14} />
-            Com Comparações
+            <Columns size={14} /> Com Comparações
           </button>
         </div>
       </div>
 
       <div className="flex-1 relative flex items-center justify-center overflow-hidden">
-        {!capturedImage ? (
+        {!currentImage ? (
           <>
-            <Webcam
-              audio={false}
-              ref={webcamRef}
-              screenshotFormat="image/jpeg"
-              videoConstraints={{ facingMode: 'environment', width: 800, height: 600 }}
-              className="h-full w-full object-cover"
-            />
-            <CameraOverlay side={side} />
+            {needsMoreImages ? (
+              <>
+                <Webcam audio={false} ref={webcamRef} screenshotFormat="image/jpeg" videoConstraints={{ facingMode: 'environment', width: 800, height: 600 }} className="h-full w-full object-cover" />
+                <CameraOverlay side="right" />
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-6 p-8 text-center">
+                <div className="flex gap-4">
+                  {capturedImages.map((img, i) => (
+                    <div key={i} className="relative w-32 h-44 rounded-2xl overflow-hidden border-2 border-accent shadow-xl">
+                      <img src={img.url} className="w-full h-full object-cover" />
+                      <div className="absolute bottom-0 left-0 right-0 bg-accent text-white text-[10px] font-bold py-1 uppercase">
+                        {i === 0 ? 'Antes' : 'Depois'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="text-white">
+                  <h3 className="text-xl font-bold">Tudo Pronto!</h3>
+                  <p className="text-slate-400 text-sm">Clique abaixo para iniciar o diagnóstico.</p>
+                </div>
+              </div>
+            )}
+            {isAnalyzing && (
+              <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center text-white z-50">
+                <BrainCircuit className="w-16 h-16 animate-pulse text-accent mb-4" />
+                <h2 className="text-xl font-bold">Analisando Evolução...</h2>
+              </div>
+            )}
           </>
         ) : (
           <div className="relative h-full w-full">
-            <img src={annotatedImage || capturedImage} alt="Captura" className="h-full w-full object-cover" />
-            {isAnalyzing && (
-              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white p-6 text-center">
-                <BrainCircuit className="w-16 h-16 animate-pulse text-accent mb-4" />
-                <h2 className="text-xl font-bold mb-2">Processando Diagnóstico</h2>
-                <p className="text-sm text-slate-300">Aguarde, as IAs estão gerando o relatório técnico...</p>
-              </div>
-            )}
+            <img src={currentImage} className="h-full w-full object-cover" />
           </div>
         )}
       </div>
 
       <div className="bg-slate-900 p-8 flex flex-col items-center gap-6">
-        {!capturedImage ? (
-          <div className="flex items-center gap-8">
-            <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
-            <button onClick={() => fileInputRef.current?.click()} className="w-14 h-14 bg-slate-800 text-white rounded-full flex items-center justify-center border border-slate-700">
-              <Upload size={24} />
-            </button>
-            <button onClick={capture} className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-xl">
-              <div className="w-16 h-16 border-4 border-slate-900 rounded-full"></div>
-            </button>
-            <div className="w-14"></div>
-          </div>
+        {!currentImage ? (
+          needsMoreImages ? (
+            <div className="flex items-center gap-8">
+              <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
+              <button onClick={() => fileInputRef.current?.click()} className="w-14 h-14 bg-slate-800 text-white rounded-full flex items-center justify-center border border-slate-700">
+                <Upload size={24} />
+              </button>
+              <button onClick={capture} className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-xl">
+                <div className="w-16 h-16 border-4 border-slate-900 rounded-full"></div>
+              </button>
+              <div className="w-14"></div>
+            </div>
+          ) : (
+            <Button className="w-full h-14 bg-accent hover:bg-accent/90 text-lg font-bold rounded-2xl" onClick={handleConfirm} disabled={isAnalyzing}>
+              {isAnalyzing ? <Loader2 className="animate-spin" /> : <><Check className="mr-2" /> Gerar Diagnóstico {analysisMode === 'comparison' ? 'Comparativo' : ''}</>}
+            </Button>
+          )
         ) : (
           <div className="flex flex-col gap-4 w-full max-w-xs">
             <div className="flex gap-3">
-              <Button 
-                variant="outline" 
-                className="flex-1 bg-transparent border-white text-white hover:bg-white/10"
-                onClick={() => { setCapturedImage(null); setAnnotatedImage(null); setBBoxes({}); }}
-                disabled={isAnalyzing}
-              >
+              <Button variant="outline" className="flex-1 bg-transparent border-white text-white" onClick={() => setCurrentImage(null)}>
                 <RefreshCw className="mr-2 h-4 w-4" /> Repetir
               </Button>
-              <Button 
-                variant="outline"
-                className="flex-1 bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
-                onClick={() => setIsAnnotating(true)}
-                disabled={isAnalyzing}
-              >
-                <Pencil className="mr-2 h-4 w-4" /> {annotatedImage ? "Editar" : "Marcar"}
+              <Button className="flex-1 bg-accent hover:bg-accent/90" onClick={() => setIsAnnotating(true)}>
+                <Pencil className="mr-2 h-4 w-4" /> Marcar
               </Button>
             </div>
-            <Button 
-              className="w-full h-12 bg-accent hover:bg-accent/90 text-lg font-bold"
-              onClick={handleConfirm}
-              disabled={isAnalyzing}
-            >
-              {isAnalyzing ? <Loader2 className="animate-spin" /> : <><Check className="mr-2 h-4 w-4" /> Analisar Agora</>}
-            </Button>
           </div>
         )}
       </div>
