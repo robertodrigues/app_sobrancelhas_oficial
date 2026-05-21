@@ -6,7 +6,8 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 export const analyzeEyebrow = async (image: string, _regions?: any) => {
   try {
     const base64Data = image.split(',')[1] || image;
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    // Usando o modelo estável para visão
+    const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro-vision" });
     
     const prompt = `Você é uma especialista em Tricologia de Sobrancelhas. Analise esta imagem e gere um relatório técnico no formato JSON exato abaixo.
 
