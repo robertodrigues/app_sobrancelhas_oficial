@@ -5,7 +5,8 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 
 export const analyzeEyebrow = async (originalImage: string, regions: Record<string, string>) => {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Atualizado para o modelo mais recente e estável
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
     
     const promptParts: any[] = [];
     
@@ -56,6 +57,12 @@ REGRAS:
     throw new Error("Formato de resposta inválido.");
   } catch (error: any) {
     console.error("Erro Gemini:", error);
-    throw error;
+    
+    // Tratamento de erro específico para modelo não encontrado
+    if (error.message?.includes('404') || error.message?.includes('not found')) {
+      throw new Error("Modelo Gemini indisponível. Tente novamente ou contate o suporte.");
+    }
+    
+    throw new Error("Gemini: " + (error.message || "Erro na API"));
   }
 };
