@@ -11,8 +11,9 @@ import {
   AlertTriangle, 
   Target, 
   ShieldCheck, 
-  Activity,
-  Cpu
+  Cpu,
+  MoveUpRight,
+  Info
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -103,7 +104,7 @@ const AnalysisResult = () => {
               <Card key={key} className={cn("border shadow-sm rounded-2xl overflow-hidden", getStatusBg(data.statusMelhoria?.cor))}>
                 <CardHeader className="pb-2 flex flex-row items-center justify-between">
                   <CardTitle className="text-sm font-bold capitalize">
-                    {key === 'inicio' ? 'Ponto Inicial' : key === 'meio' ? 'Meio' : 'Cauda'}
+                    {key === 'inicio' ? 'Ponto Inicial' : key === 'meio' ? 'Corpo' : 'Cauda'}
                   </CardTitle>
                   <div className={cn("w-3 h-3 rounded-full shadow-sm", getStatusColor(data.statusMelhoria?.cor))} />
                 </CardHeader>
@@ -127,6 +128,28 @@ const AnalysisResult = () => {
                       <p className="text-[10px] font-bold text-slate-400 uppercase">Escala de Dano</p>
                       <p className="text-sm font-bold text-slate-900">{data.escalaDano?.classificacao} ({data.escalaDano?.percentual}%)</p>
                     </div>
+                  </div>
+
+                  {/* Novos campos: Direção e Características */}
+                  <div className="grid grid-cols-1 gap-2">
+                    {data.direcaoFios && (
+                      <div className="bg-white/50 p-3 rounded-lg border border-white/50 flex items-start gap-2">
+                        <MoveUpRight size={14} className="text-slate-400 mt-0.5" />
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">Direção dos Fios</p>
+                          <p className="text-xs text-slate-700">{data.direcaoFios}</p>
+                        </div>
+                      </div>
+                    )}
+                    {data.caracteristicasEspeciais && (
+                      <div className="bg-white/50 p-3 rounded-lg border border-white/50 flex items-start gap-2">
+                        <Info size={14} className="text-slate-400 mt-0.5" />
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">Características Especiais</p>
+                          <p className="text-xs text-slate-700">{data.caracteristicasEspeciais}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-3 bg-white/40 rounded-xl border border-white/40">
