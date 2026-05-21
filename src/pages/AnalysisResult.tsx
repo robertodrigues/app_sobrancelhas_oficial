@@ -13,7 +13,8 @@ import {
   ShieldCheck, 
   Cpu,
   MoveUpRight,
-  Info
+  Info,
+  Eye
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -121,17 +122,28 @@ const AnalysisResult = () => {
                       <p className="text-sm font-bold text-slate-900">{data.espessura}</p>
                     </div>
                     <div className="bg-white/50 p-2 rounded-lg border border-white/50">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">Pele Exposta</p>
+                      <p className="text-sm font-bold text-slate-900">
+                        {data.peleExposta ? 'Sim' : 'Não'}
+                      </p>
+                    </div>
+                    <div className="bg-white/50 p-2 rounded-lg border border-white/50">
                       <p className="text-[10px] font-bold text-slate-400 uppercase">Tipo de Dano</p>
                       <p className="text-sm font-bold text-slate-900">{data.tipoDano}</p>
                     </div>
-                    <div className="bg-white/50 p-2 rounded-lg border border-white/50">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">Escala de Dano</p>
-                      <p className="text-sm font-bold text-slate-900">{data.escalaDano?.classificacao} ({data.escalaDano?.percentual}%)</p>
-                    </div>
                   </div>
 
-                  {/* Novos campos: Direção e Características */}
+                  {/* Detalhes Adicionais */}
                   <div className="grid grid-cols-1 gap-2">
+                    {data.peleDescricao && (
+                      <div className="bg-white/50 p-3 rounded-lg border border-white/50 flex items-start gap-2">
+                        <Eye size={14} className="text-slate-400 mt-0.5" />
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">Exposição da Pele</p>
+                          <p className="text-xs text-slate-700">{data.peleDescricao}</p>
+                        </div>
+                      </div>
+                    )}
                     {data.direcaoFios && (
                       <div className="bg-white/50 p-3 rounded-lg border border-white/50 flex items-start gap-2">
                         <MoveUpRight size={14} className="text-slate-400 mt-0.5" />
