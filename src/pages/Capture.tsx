@@ -5,11 +5,24 @@ import CameraOverlay from '@/components/camera/CameraOverlay';
 import ImageAnnotator, { RegionBBox } from '@/components/camera/ImageAnnotator';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Camera, RefreshCw, Check, ArrowLeft, Upload, Loader2, User, BrainCircuit, Pencil } from 'lucide-react';
+import { 
+  Camera, 
+  RefreshCw, 
+  Check, 
+  ArrowLeft, 
+  Upload, 
+  Loader2, 
+  User, 
+  BrainCircuit, 
+  Pencil,
+  FileText,
+  Columns
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
 import { performDualAnalysis } from '@/services/analysis';
 import { supabase } from '@/lib/supabase';
+import { cn } from '@/lib/utils';
 
 const Capture = () => {
   const [side, setSide] = useState<'left' | 'right'>('right');
@@ -20,6 +33,8 @@ const Capture = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>("");
+  const [analysisMode, setAnalysisMode] = useState<'single' | 'comparison'>('single');
+  
   const webcamRef = useRef<Webcam>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -105,7 +120,8 @@ const Capture = () => {
         <div className="w-10"></div>
       </div>
 
-      <div className="px-6 py-2 z-10">
+      <div className="px-6 py-2 z-10 space-y-3">
+        {/* Seleção de Cliente */}
         <Select onValueChange={setSelectedClientId} value={selectedClientId}>
           <SelectTrigger className="bg-white/10 border-white/20 text-white h-12 rounded-xl">
             <div className="flex items-center gap-2">
@@ -119,6 +135,34 @@ const Capture = () => {
             ))}
           </SelectContent>
         </Select>
+
+        {/* Seletor de Modo de Análise */}
+        <div className="grid grid-cols-2 gap-2 p-1 bg-white/5 backdrop-blur-md rounded-xl border border-white/10">
+          <button
+            onClick={() => setAnalysisMode('single')}
+            className={cn(
+              "flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all",
+              analysisMode === 'single' 
+                ? "bg-accent text-white shadow-lg" 
+                : "text-slate-400 hover:text-white"
+            )}
+          >
+            <FileText size={14} />
+            Sem Comparações
+          </button>
+          <button
+            onClick={() => setAnalysisMode('comparison')}
+            className={cn(
+              "flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all",
+              analysisMode === 'comparison' 
+                ? "bg-accent text-white shadow-lg" 
+                : "text-slate-400 hover:text-white"
+            )}
+          >
+            <Columns size={14} />
+            Com Comparações
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 relative flex items-center justify-center overflow-hidden">
