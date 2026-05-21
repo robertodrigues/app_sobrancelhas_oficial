@@ -128,8 +128,8 @@ const AnalysisResult = () => {
                       </p>
                     </div>
                     <div className="bg-white/50 p-2 rounded-lg border border-white/50">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">Tipo de Dano</p>
-                      <p className="text-sm font-bold text-slate-900">{data.tipoDano}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">Escala de Dano</p>
+                      <p className="text-sm font-bold text-slate-900">{data.escalaDano?.classificacao} ({data.escalaDano?.percentual}%)</p>
                     </div>
                   </div>
 
@@ -157,7 +157,7 @@ const AnalysisResult = () => {
                       <div className="bg-white/50 p-3 rounded-lg border border-white/50 flex items-start gap-2">
                         <Info size={14} className="text-slate-400 mt-0.5" />
                         <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase">Características Especiais</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">Características dos Fios</p>
                           <p className="text-xs text-slate-700">{data.caracteristicasEspeciais}</p>
                         </div>
                       </div>
