@@ -3,44 +3,24 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const API_KEY = "AIzaSyCVTE4q3yA29rKa3PmuL-cVkVYlzzeA3OM";
 const genAI = new GoogleGenerativeAI(API_KEY);
 
-export const analyzeEyebrow = async (originalImage: string, regions: Record<string, string>) => {
+export const analyzeEyebrow = async (image: string, _regions?: any) => {
   try {
-    // Usando o modelo 1.5 Pro para maior estabilidade
+    const base64Data = image.split(',')[1] || image;
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     
-    const generationConfig = {
-      temperature: 0.7,
-      topP: 0.9,
-      topK: 40,
-    };
+    const prompt = `Você é uma especialista em Tricologia de Sobrancelhas. Analise esta imagem e gere um relatório técnico no formato JSON exato abaixo.
 
-    const promptParts: any[] = [];
-    
-    promptParts.push("Você é uma especialista em Tricologia de Sobrancelhas. Analise as imagens abaixo (Visão Geral + Recortes Específicos) e gere um relatório técnico JSON.");
-    
-    // Adicionar imagem original
-    promptParts.push("Imagem de Visão Geral:");
-    promptParts.push({ inlineData: { data: originalImage.split(',')[1], mimeType: "image/jpeg" } });
-
-    // Adicionar recortes
-    Object.entries(regions).forEach(([name, data]) => {
-      if (name === 'original') return;
-      promptParts.push(`Recorte da Região ${name.toUpperCase()}:`);
-      promptParts.push({ inlineData: { data: data.split(',')[1], mimeType: "image/jpeg" } });
-    });
-
-    promptParts.push(`
-JSON EXATO que você DEVE retornar:
+JSON EXATO:
 {
   "regioes": {
     "ponto_inicial": { "descricao": "...", "densidade": "...", "exposicao_pele": "...", "espessura": "...", "tipo_dano": "...", "escala_dano": "...", "prognostico": "..." },
-    "meio": { ... },
-    "cauda": { ... }
+    "meio": { "descricao": "...", "densidade": "...", "exposicao_pele": "...", "espessura": "...", "tipo_dano": "...", "escala_dano": "...", "prognostico": "..." },
+    "cauda": { "descricao": "...", "densidade": "...", "exposicao_pele": "...", "espessura": "...", "tipo_dano": "...", "escala_dano": "...", "prognostico": "..." }
   },
   "melhorias_por_regiao": {
-    "ponto_inicial": "verde/amarelo/vermelho - justificativa",
-    "meio": "verde/amarelo/vermelho - justificativa",
-    "cauda": "verde/amarelo/vermelho - justificativa"
+    "ponto_inicial": "cor - justificativa",
+    "meio": "cor - justificativa",
+    "cauda": "cor - justificativa"
   },
   "visao_geral": "...",
   "resumo_tecnico_geral": "...",
@@ -49,15 +29,23 @@ JSON EXATO que você DEVE retornar:
 }
 
 REGRAS:
-- Analise os detalhes microscópicos nos recortes.
-- Use terminologia técnica de tricologia.`);
+- Use terminologia técnica.
+- As cores em melhorias_por_regiao devem ser: verde, amarelo ou vermelho.`;
 
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: promptParts }],
-      generationConfig,
-    });
+    // Formato SIMPLES: Imagem + Texto
+    const result = await model.generateContent([
+      {
+        inlineData: {
+          data: base64Data,
+          mimeType: "image/jpeg"
+        }
+      },
+      { text: prompt }
+    ]);
 
-    const text = result.response.text();
+    const response = await result.response;
+    const text = response.text();
+    
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}') + 1;
     
@@ -67,6 +55,6 @@ REGRAS:
     throw new Error("Formato de resposta inválido.");
   } catch (error: any) {
     console.error("Erro Gemini:", error);
-    throw new Error("Gemini: " + (error.message || "Erro na API"));
+    throw error;
   }
 };
