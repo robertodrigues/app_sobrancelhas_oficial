@@ -17,7 +17,7 @@ import {
   Pencil,
   FileText,
   Columns,
-  ArrowRight
+  Trash2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
@@ -79,7 +79,13 @@ const Capture = () => {
       if (error) throw error;
 
       showSuccess('Análise concluída!');
-      navigate('/resultado', { state: { analysis: result, image: capturedImages[capturedImages.length - 1].url, allImages: capturedImages } });
+      navigate('/resultado', { 
+        state: { 
+          analysis: result, 
+          image: capturedImages[capturedImages.length - 1].url, 
+          allImages: capturedImages 
+        } 
+      });
     } catch (error: any) {
       showError("Falha na análise: " + error.message);
     } finally {
@@ -89,6 +95,12 @@ const Capture = () => {
 
   const addImageToFlow = (url: string, bboxes: Record<string, RegionBBox>) => {
     setCapturedImages(prev => [...prev, { url, bboxes }]);
+    setCurrentImage(null);
+    setIsAnnotating(false);
+  };
+
+  const resetFlow = () => {
+    setCapturedImages([]);
     setCurrentImage(null);
     setIsAnnotating(false);
   };
@@ -103,12 +115,11 @@ const Capture = () => {
     );
   }
 
-  const isStepOneDone = capturedImages.length >= 1;
-  const isStepTwoDone = capturedImages.length >= 2;
   const needsMoreImages = analysisMode === 'comparison' ? capturedImages.length < 2 : capturedImages.length < 1;
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
+      {/* Header */}
       <div className="p-4 flex items-center justify-between text-white z-10">
         <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/10 rounded-full">
           <ArrowLeft size={24} />
@@ -118,9 +129,12 @@ const Capture = () => {
             ? `Captura: ${capturedImages.length === 0 ? 'Antes' : 'Depois'}` 
             : 'Captura Técnica'}
         </h1>
-        <div className="w-10"></div>
+        <button onClick={resetFlow} className="p-2 hover:bg-white/10 rounded-full text-red-400">
+          <Trash2 size={20} />
+        </button>
       </div>
 
+      {/* Selectors */}
       <div className="px-6 py-2 z-10 space-y-3">
         <Select onValueChange={setSelectedClientId} value={selectedClientId}>
           <SelectTrigger className="bg-white/10 border-white/20 text-white h-12 rounded-xl">
@@ -152,14 +166,29 @@ const Capture = () => {
         </div>
       </div>
 
+      {/* Main Viewport */}
       <div className="flex-1 relative flex items-center justify-center overflow-hidden">
         {!currentImage ? (
           <>
             {needsMoreImages ? (
-              <>
-                <Webcam audio={false} ref={webcamRef} screenshotFormat="image/jpeg" videoConstraints={{ facingMode: 'environment', width: 800, height: 600 }} className="h-full w-full object-cover" />
-                <CameraOverlay side="right" />
-              </>
+              <div className="relative w-full h-full">
+                <Webcam 
+                  audio={false} 
+                  ref={webcamRef} 
+                  screenshotFormat="image/jpeg" 
+                  videoConstraints={{ facingMode: 'environment', width: 800, height: 600 }} 
+                  className="h-full w-full object-cover" 
+                />
+                <CameraOverlay side={capturedImages.length === 0 ? "right" : "left"} />
+                
+                {/* Miniatura da foto anterior no modo comparativo */}
+                {capturedImages.length > 0 && (
+                  <div className="absolute top-4 right-4 w-24 h-32 rounded-xl border-2 border-white/50 overflow-hidden shadow-2xl">
+                    <img src={capturedImages[0].url} className="w-full h-full object-cover opacity-80" />
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-[8px] text-white text-center py-1 uppercase font-bold">Antes</div>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="flex flex-col items-center gap-6 p-8 text-center">
                 <div className="flex gap-4">
@@ -167,7 +196,7 @@ const Capture = () => {
                     <div key={i} className="relative w-32 h-44 rounded-2xl overflow-hidden border-2 border-accent shadow-xl">
                       <img src={img.url} className="w-full h-full object-cover" />
                       <div className="absolute bottom-0 left-0 right-0 bg-accent text-white text-[10px] font-bold py-1 uppercase">
-                        {i === 0 ? 'Antes' : 'Depois'}
+                        {analysisMode === 'comparison' ? (i === 0 ? 'Antes' : 'Depois') : 'Captura'}
                       </div>
                     </div>
                   ))}
@@ -178,45 +207,71 @@ const Capture = () => {
                 </div>
               </div>
             )}
-            {isAnalyzing && (
-              <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center text-white z-50">
-                <BrainCircuit className="w-16 h-16 animate-pulse text-accent mb-4" />
-                <h2 className="text-xl font-bold">Analisando Evolução...</h2>
-              </div>
-            )}
           </>
         ) : (
           <div className="relative h-full w-full">
             <img src={currentImage} className="h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+               <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-white text-xs font-bold border border-white/20">
+                 Foto Capturada - Clique em Marcar
+               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Loading Overlay */}
+        {isAnalyzing && (
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center text-white z-50">
+            <BrainCircuit className="w-16 h-16 animate-pulse text-accent mb-4" />
+            <h2 className="text-xl font-bold">Analisando Evolução...</h2>
+            <p className="text-slate-400 text-sm mt-2">Isso pode levar alguns segundos</p>
           </div>
         )}
       </div>
 
+      {/* Bottom Controls */}
       <div className="bg-slate-900 p-8 flex flex-col items-center gap-6">
         {!currentImage ? (
           needsMoreImages ? (
             <div className="flex items-center gap-8">
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
-              <button onClick={() => fileInputRef.current?.click()} className="w-14 h-14 bg-slate-800 text-white rounded-full flex items-center justify-center border border-slate-700">
+              <button 
+                onClick={() => fileInputRef.current?.click()} 
+                className="w-14 h-14 bg-slate-800 text-white rounded-full flex items-center justify-center border border-slate-700 active:scale-90 transition-transform"
+              >
                 <Upload size={24} />
               </button>
-              <button onClick={capture} className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-xl">
+              <button 
+                onClick={capture} 
+                className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-transform"
+              >
                 <div className="w-16 h-16 border-4 border-slate-900 rounded-full"></div>
               </button>
               <div className="w-14"></div>
             </div>
           ) : (
-            <Button className="w-full h-14 bg-accent hover:bg-accent/90 text-lg font-bold rounded-2xl" onClick={handleConfirm} disabled={isAnalyzing}>
-              {isAnalyzing ? <Loader2 className="animate-spin" /> : <><Check className="mr-2" /> Gerar Diagnóstico {analysisMode === 'comparison' ? 'Comparativo' : ''}</>}
+            <Button 
+              className="w-full h-14 bg-accent hover:bg-accent/90 text-lg font-bold rounded-2xl shadow-lg shadow-accent/20" 
+              onClick={handleConfirm} 
+              disabled={isAnalyzing}
+            >
+              {isAnalyzing ? <Loader2 className="animate-spin" /> : <><Check className="mr-2" /> Gerar Diagnóstico</>}
             </Button>
           )
         ) : (
           <div className="flex flex-col gap-4 w-full max-w-xs">
             <div className="flex gap-3">
-              <Button variant="outline" className="flex-1 bg-transparent border-white text-white" onClick={() => setCurrentImage(null)}>
+              <Button 
+                variant="outline" 
+                className="flex-1 bg-transparent border-white text-white h-12" 
+                onClick={() => setCurrentImage(null)}
+              >
                 <RefreshCw className="mr-2 h-4 w-4" /> Repetir
               </Button>
-              <Button className="flex-1 bg-accent hover:bg-accent/90" onClick={() => setIsAnnotating(true)}>
+              <Button 
+                className="flex-1 bg-accent hover:bg-accent/90 h-12" 
+                onClick={() => setIsAnnotating(true)}
+              >
                 <Pencil className="mr-2 h-4 w-4" /> Marcar
               </Button>
             </div>
