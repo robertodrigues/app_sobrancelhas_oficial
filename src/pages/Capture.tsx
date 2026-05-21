@@ -69,8 +69,14 @@ const Capture = () => {
     
     setIsAnalyzing(true);
     try {
+      // Passamos o modo para o serviço se necessário, mas o prompt já lidará com isso
       const result = await performDualAnalysis(capturedImages);
       
+      // Se for modo comparação mas só tiver 1 imagem, forçamos a flag no resultado para a UI exibir corretamente
+      if (analysisMode === 'comparison') {
+        result.isComparativo = true;
+      }
+
       const { error } = await supabase.from('analyses').insert([{
         client_id: selectedClientId,
         image_url: capturedImages[capturedImages.length - 1].url,
@@ -116,7 +122,8 @@ const Capture = () => {
     );
   }
 
-  const needsMoreImages = analysisMode === 'comparison' ? capturedImages.length < 2 : capturedImages.length < 1;
+  // Agora permitimos avançar com 1 imagem mesmo no modo comparação (para montagens)
+  const hasAtLeastOneImage = capturedImages.length >= 1;
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
@@ -126,9 +133,7 @@ const Capture = () => {
           <ArrowLeft size={24} />
         </button>
         <h1 className="font-semibold">
-          {analysisMode === 'comparison' 
-            ? `Passo ${capturedImages.length + 1} de 2` 
-            : 'Captura Técnica'}
+          {analysisMode === 'comparison' ? 'Comparação Técnica' : 'Captura Técnica'}
         </h1>
         <button onClick={resetFlow} className="p-2 hover:bg-white/10 rounded-full text-red-400">
           <Trash2 size={20} />
@@ -171,43 +176,38 @@ const Capture = () => {
       <div className="flex-1 relative flex items-center justify-center overflow-hidden">
         {!currentImage ? (
           <>
-            {needsMoreImages ? (
-              <div className="relative w-full h-full flex flex-col items-center justify-center">
-                {/* Preview das fotos já capturadas no topo */}
-                {capturedImages.length > 0 && (
-                  <div className="absolute top-4 left-0 right-0 flex justify-center gap-2 z-20">
-                    {capturedImages.map((img, i) => (
-                      <div key={i} className="w-16 h-20 rounded-lg border-2 border-accent overflow-hidden shadow-lg">
-                        <img src={img.url} className="w-full h-full object-cover" />
-                        <div className="absolute bottom-0 left-0 right-0 bg-accent text-[6px] text-white text-center py-0.5 uppercase font-bold">
-                          {i === 0 ? 'Antes' : 'Depois'}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center p-8 text-center">
-                  <ImageIcon size={48} className="text-slate-700 mb-4" />
-                  <h3 className="text-white font-bold mb-2">
-                    {analysisMode === 'comparison' && capturedImages.length === 1 
-                      ? 'Agora suba a foto de DEPOIS' 
-                      : 'Suba ou tire a foto'}
-                  </h3>
-                  <p className="text-slate-500 text-sm">Use os botões abaixo para capturar ou fazer upload</p>
-                </div>
+            {!hasAtLeastOneImage ? (
+              <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center p-8 text-center">
+                <ImageIcon size={48} className="text-slate-700 mb-4" />
+                <h3 className="text-white font-bold mb-2">Suba a foto para análise</h3>
+                <p className="text-slate-500 text-sm">
+                  {analysisMode === 'comparison' 
+                    ? 'Suba uma montagem (Antes/Depois) ou a foto atual' 
+                    : 'Suba a foto da sobrancelha'}
+                </p>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-6 p-8 text-center">
-                <div className="flex gap-4">
+                <div className="flex gap-4 flex-wrap justify-center">
                   {capturedImages.map((img, i) => (
                     <div key={i} className="relative w-32 h-44 rounded-2xl overflow-hidden border-2 border-accent shadow-xl">
                       <img src={img.url} className="w-full h-full object-cover" />
                       <div className="absolute bottom-0 left-0 right-0 bg-accent text-white text-[10px] font-bold py-1 uppercase">
-                        {analysisMode === 'comparison' ? (i === 0 ? 'Antes' : 'Depois') : 'Captura'}
+                        {analysisMode === 'comparison' ? 'Montagem/Foto' : 'Captura'}
                       </div>
                     </div>
                   ))}
+                  
+                  {/* Botão para adicionar segunda foto se o usuário quiser (opcional) */}
+                  {analysisMode === 'comparison' && capturedImages.length < 2 && (
+                    <button 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-32 h-44 rounded-2xl border-2 border-dashed border-slate-700 flex flex-col items-center justify-center gap-2 text-slate-500 hover:border-accent hover:text-accent transition-colors"
+                    >
+                      <Plus size={24} />
+                      <span className="text-[10px] font-bold uppercase">Add Foto 2</span>
+                    </button>
+                  )}
                 </div>
                 <div className="text-white">
                   <h3 className="text-xl font-bold">Tudo Pronto!</h3>
@@ -221,7 +221,7 @@ const Capture = () => {
             <img src={currentImage} className="h-full w-full object-cover" />
             <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-6 text-center">
                <div className="bg-accent/90 backdrop-blur-md px-6 py-3 rounded-2xl text-white text-sm font-bold border border-white/20 shadow-2xl">
-                 Foto Carregada com Sucesso!
+                 Foto Carregada!
                  <p className="text-[10px] opacity-80 mt-1 font-normal uppercase tracking-wider">Clique em "Marcar" para prosseguir</p>
                </div>
             </div>
@@ -232,8 +232,8 @@ const Capture = () => {
         {isAnalyzing && (
           <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center text-white z-50">
             <BrainCircuit className="w-16 h-16 animate-pulse text-accent mb-4" />
-            <h2 className="text-xl font-bold">Analisando Evolução...</h2>
-            <p className="text-slate-400 text-sm mt-2">Isso pode levar alguns segundos</p>
+            <h2 className="text-xl font-bold">Processando Diagnóstico...</h2>
+            <p className="text-slate-400 text-sm mt-2">Analisando evolução técnica</p>
           </div>
         )}
       </div>
@@ -241,7 +241,7 @@ const Capture = () => {
       {/* Bottom Controls */}
       <div className="bg-slate-900 p-8 flex flex-col items-center gap-6">
         {!currentImage ? (
-          needsMoreImages ? (
+          !hasAtLeastOneImage || (analysisMode === 'comparison' && capturedImages.length < 2) ? (
             <div className="flex items-center gap-8">
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
               <button 
@@ -253,23 +253,14 @@ const Capture = () => {
               <div className="text-slate-500 text-xs font-bold uppercase tracking-widest">OU</div>
               <button 
                 onClick={() => {
-                  // Ativa a camera se necessário ou apenas mostra o botão de captura
-                  showError("Use o botão de Upload para as fotos de antes/depois");
+                  showError("Use o botão de Upload para as fotos");
                 }} 
                 className="w-16 h-16 bg-slate-800 text-white rounded-full flex items-center justify-center border border-slate-700 opacity-50"
               >
                 <Camera size={28} />
               </button>
             </div>
-          ) : (
-            <Button 
-              className="w-full h-14 bg-accent hover:bg-accent/90 text-lg font-bold rounded-2xl shadow-lg shadow-accent/20" 
-              onClick={handleConfirm} 
-              disabled={isAnalyzing}
-            >
-              {isAnalyzing ? <Loader2 className="animate-spin" /> : <><Check className="mr-2" /> Gerar Diagnóstico</>}
-            </Button>
-          )
+          ) : null
         ) : (
           <div className="flex flex-col gap-4 w-full max-w-xs">
             <div className="flex gap-3">
@@ -289,9 +280,23 @@ const Capture = () => {
             </div>
           </div>
         )}
+
+        {/* Botão de Gerar Diagnóstico aparece quando tem pelo menos 1 imagem */}
+        {hasAtLeastOneImage && !currentImage && (
+          <Button 
+            className="w-full h-14 bg-accent hover:bg-accent/90 text-lg font-bold rounded-2xl shadow-lg shadow-accent/20" 
+            onClick={handleConfirm} 
+            disabled={isAnalyzing}
+          >
+            {isAnalyzing ? <Loader2 className="animate-spin" /> : <><Check className="mr-2" /> Gerar Diagnóstico</>}
+          </Button>
+        )}
       </div>
     </div>
   );
 };
+
+// Importação faltante do ícone Plus
+import { Plus } from 'lucide-react';
 
 export default Capture;
