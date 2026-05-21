@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { RegionBBox } from '@/components/camera/ImageAnnotator';
 
 const API_KEY = "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";
 
@@ -7,11 +8,35 @@ const anthropic = new Anthropic({
   dangerouslyAllowBrowser: true
 });
 
-export const analyzeWithClaude = async (originalImage: string, regions: Record<string, string>) => {
+const cropImage = (base64Str: string, bbox: RegionBBox): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject('Erro ao criar contexto canvas');
+
+      const padding = 40;
+      const x = Math.max(0, bbox.minX - padding);
+      const y = Math.max(0, bbox.minY - padding);
+      const width = Math.min(img.width - x, (bbox.maxX - bbox.minX) + (padding * 2));
+      const height = Math.min(img.height - y, (bbox.maxY - bbox.minY) + (padding * 2));
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, x, y, width, height, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', 0.9));
+    };
+    img.onerror = reject;
+    img.src = base64Str;
+  });
+};
+
+export const analyzeWithClaude = async (originalImage: string, bboxes: Record<string, RegionBBox>) => {
   try {
     const imageContent: any[] = [];
     
-    // Adicionar imagem original para contexto
+    // Adicionar imagem original
     imageContent.push({
       type: "text",
       text: "Imagem 1: Visão Geral da Sobrancelha"
@@ -21,42 +46,32 @@ export const analyzeWithClaude = async (originalImage: string, regions: Record<s
       source: { type: "base64", media_type: "image/jpeg", data: originalImage.split(',')[1] }
     });
 
-    // Adicionar recortes específicos
-    Object.entries(regions).forEach(([name, data], index) => {
-      if (name === 'original') return;
+    // Processar e adicionar recortes
+    for (const [name, box] of Object.entries(bboxes)) {
+      const croppedData = await cropImage(originalImage, box);
       imageContent.push({
         type: "text",
-        text: `Imagem ${index + 2}: Recorte da Região ${name.toUpperCase()}`
+        text: `Imagem de Detalhe: Região ${name.toUpperCase()}`
       });
       imageContent.push({
         type: "image",
-        source: { type: "base64", media_type: "image/jpeg", data: data.split(',')[1] }
+        source: { type: "base64", media_type: "image/jpeg", data: croppedData.split(',')[1] }
       });
-    });
+    }
 
-    const systemPrompt = `Você é uma especialista em Tricologia de Sobrancelhas. Analise as imagens fornecidas (Visão Geral + Recortes Específicos) e gere um relatório técnico no formato JSON.
-
-IMPORTANTE: Use os recortes específicos para analisar detalhadamente cada região (Início, Meio, Cauda).
-
-ANÁLISE POR REGIÃO:
-DENSIDADE: Baixa (15-30%) | Média (40-65%) | Alta (70-90%)
-EXPOSIÇÃO DA PELE: "Sim" ou "Não" + descrição
-ESPESSURA DOS FIOS: "Fino" | "Intermediário" | "Terminal"
-TIPO DE DANO: "Erro de Design" | "Estrutural" | "Misto"
-ESCALA DE DANIFICAÇÃO: % e nível
-PROGNÓSTICO: Expectativa de tratamento
+    const systemPrompt = `Você é uma especialista em Tricologia de Sobrancelhas. Analise as imagens fornecidas e gere um relatório técnico no formato JSON.
 
 JSON EXATO:
 {
   "regioes": {
     "ponto_inicial": { "descricao": "...", "densidade": "...", "exposicao_pele": "...", "espessura": "...", "tipo_dano": "...", "escala_dano": "...", "prognostico": "..." },
-    "meio": { ... },
-    "cauda": { ... }
+    "meio": { "descricao": "...", "densidade": "...", "exposicao_pele": "...", "espessura": "...", "tipo_dano": "...", "escala_dano": "...", "prognostico": "..." },
+    "cauda": { "descricao": "...", "densidade": "...", "exposicao_pele": "...", "espessura": "...", "tipo_dano": "...", "escala_dano": "...", "prognostico": "..." }
   },
   "melhorias_por_regiao": {
-    "ponto_inicial": "cor - justificativa",
-    "meio": "cor - justificativa",
-    "cauda": "cor - justificativa"
+    "ponto_inicial": "verde/amarelo/vermelho - justificativa",
+    "meio": "verde/amarelo/vermelho - justificativa",
+    "cauda": "verde/amarelo/vermelho - justificativa"
   },
   "visao_geral": "...",
   "resumo_tecnico_geral": "...",
@@ -65,8 +80,8 @@ JSON EXATO:
 }
 
 REGRAS:
-- Baseie-se estritamente no que vê nos recortes de alta proximidade.
-- Linguagem técnica profissional.`;
+- Use terminologia técnica profissional.
+- Baseie-se nos detalhes dos recortes de alta proximidade.`;
 
     const response = await anthropic.messages.create({
       model: "claude-3-5-sonnet-latest",
