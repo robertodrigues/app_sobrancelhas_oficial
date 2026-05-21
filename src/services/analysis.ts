@@ -12,8 +12,7 @@ export const performDualAnalysis = async (images: {url: string, bboxes: Record<s
   } catch (errClaude: any) {
     console.warn('Claude falhou, tentando GPT-4o...', errClaude.message);
     try {
-      // Fallback simplificado para GPT-4o (apenas a última imagem por enquanto no fallback)
-      const result = await analyzeWithGPT4o(images[images.length - 1].url);
+      const result = await analyzeWithGPT4o(images);
       return { ...result, iaUsada: 'GPT-4o (Fallback)', isComparativo: images.length > 1 };
     } catch (errGPT: any) {
       console.error("Ambas as IAs falharam.");

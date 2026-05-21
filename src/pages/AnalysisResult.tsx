@@ -13,8 +13,10 @@ import {
   ShieldCheck, 
   Cpu,
   TrendingUp,
-  History,
-  CheckCircle2
+  CheckCircle2,
+  Eye,
+  MoveUpRight,
+  Info
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -137,20 +139,68 @@ const AnalysisResult = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <p className="text-sm text-slate-700 leading-relaxed">{data.descricao}</p>
+                    
                     <div className="grid grid-cols-2 gap-2">
                       <div className="bg-white/50 p-2 rounded-lg border border-white/50">
                         <p className="text-[10px] font-bold text-slate-400 uppercase">Densidade</p>
                         <p className="text-sm font-bold text-slate-900">{data.densidade?.classificacao} ({data.densidade?.percentual}%)</p>
                       </div>
                       <div className="bg-white/50 p-2 rounded-lg border border-white/50">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase">Status</p>
-                        <p className="text-xs font-medium text-slate-700">{data.statusMelhoria?.descricao}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Espessura</p>
+                        <p className="text-sm font-bold text-slate-900">{data.espessura}</p>
+                      </div>
+                      <div className="bg-white/50 p-2 rounded-lg border border-white/50">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Pele Exposta</p>
+                        <p className="text-sm font-bold text-slate-900">{data.peleExposta ? 'Sim' : 'Não'}</p>
+                      </div>
+                      <div className="bg-white/50 p-2 rounded-lg border border-white/50">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Escala de Dano</p>
+                        <p className="text-sm font-bold text-slate-900">{data.escalaDano?.classificacao || 'N/A'}</p>
                       </div>
                     </div>
+
+                    {/* Detalhes Adicionais Restaurados */}
+                    <div className="grid grid-cols-1 gap-2">
+                      {data.peleDescricao && (
+                        <div className="bg-white/50 p-3 rounded-lg border border-white/50 flex items-start gap-2">
+                          <Eye size={14} className="text-slate-400 mt-0.5" />
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">Exposição da Pele</p>
+                            <p className="text-xs text-slate-700">{data.peleDescricao}</p>
+                          </div>
+                        </div>
+                      )}
+                      {data.direcaoFios && (
+                        <div className="bg-white/50 p-3 rounded-lg border border-white/50 flex items-start gap-2">
+                          <MoveUpRight size={14} className="text-slate-400 mt-0.5" />
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">Direção dos Fios</p>
+                            <p className="text-xs text-slate-700">{data.direcaoFios}</p>
+                          </div>
+                        </div>
+                      )}
+                      {data.caracteristicasEspeciais && (
+                        <div className="bg-white/50 p-3 rounded-lg border border-white/50 flex items-start gap-2">
+                          <Info size={14} className="text-slate-400 mt-0.5" />
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">Características dos Fios</p>
+                            <p className="text-xs text-slate-700">{data.caracteristicasEspeciais}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
                     <div className="p-3 bg-white/40 rounded-xl border border-white/40">
                       <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Prognóstico</p>
                       <p className="text-xs text-slate-700 italic">"{data.prognostico}"</p>
                     </div>
+
+                    {data.statusMelhoria && (
+                      <div className="pt-2 border-t border-white/30">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Status de Melhoria</p>
+                        <p className="text-xs font-medium text-slate-700">{data.statusMelhoria.descricao}</p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               );

@@ -1,10 +1,52 @@
 import { PROMPT_ESPECIALISTA } from '../constants/prompt';
+import { RegionBBox } from '@/components/camera/ImageAnnotator';
 
 const OPENAI_KEY = "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";
 
-export async function analyzeWithGPT4o(base64Image: string) {
-  const mimeType = "image/jpeg";
-  const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
+const cropImage = (base64Str: string, bbox: RegionBBox): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject('Erro ao criar contexto canvas');
+      const padding = 40;
+      const x = Math.max(0, bbox.minX - padding);
+      const y = Math.max(0, bbox.minY - padding);
+      const width = Math.min(img.width - x, (bbox.maxX - bbox.minX) + (padding * 2));
+      const height = Math.min(img.height - y, (bbox.maxY - bbox.minY) + (padding * 2));
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, x, y, width, height, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', 0.9));
+    };
+    img.onerror = reject;
+    img.src = base64Str;
+  });
+};
+
+export async function analyzeWithGPT4o(images: {url: string, bboxes: Record<string, RegionBBox>}[]) {
+  const content: any[] = [];
+
+  for (let i = 0; i < images.length; i++) {
+    const label = images.length > 1 ? (i === 0 ? "ANTES" : "DEPOIS") : "VISÃO GERAL";
+    content.push({ type: 'text', text: `Imagem ${i + 1}: ${label}` });
+    content.push({
+      type: 'image_url',
+      image_url: { url: images[i].url }
+    });
+
+    for (const [name, box] of Object.entries(images[i].bboxes)) {
+      const croppedData = await cropImage(images[i].url, box);
+      content.push({ type: 'text', text: `Detalhe ${label} - Região ${name.toUpperCase()}` });
+      content.push({
+        type: 'image_url',
+        image_url: { url: croppedData }
+      });
+    }
+  }
+
+  content.push({ type: 'text', text: PROMPT_ESPECIALISTA });
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -17,13 +59,7 @@ export async function analyzeWithGPT4o(base64Image: string) {
       max_tokens: 2000,
       messages: [{
         role: 'user',
-        content: [
-          {
-            type: 'image_url',
-            image_url: { url: `data:${mimeType};base64,${base64Data}` }
-          },
-          { type: 'text', text: PROMPT_ESPECIALISTA }
-        ]
+        content: content
       }]
     })
   });
@@ -36,5 +72,7 @@ export async function analyzeWithGPT4o(base64Image: string) {
   const data = await response.json();
   const text = data.choices[0].message.content;
   const clean = text.replace(/```json|```/g, '').trim();
-  return JSON.parse(clean);
+  const start = clean.indexOf('{');
+  const end = clean.lastIndexOf('}') + 1;
+  return JSON.parse(clean.substring(start, end));
 }
