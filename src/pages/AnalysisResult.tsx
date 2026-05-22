@@ -71,14 +71,23 @@ const AnalysisResult = () => {
 
     setIsGeneratingPdf(true);
     try {
-      // 1. Pré-carregar TODAS as imagens com Promise.all usando new Image()
-      const imgs = Array.from(element.querySelectorAll('img'));
-      await Promise.all(imgs.map(img => {
+      // 1. Pré-carregar TODAS as imagens (incluindo as de background) com Promise.all usando new Image()
+      const urlsToPreload: string[] = [];
+      if (analysis.isComparativo && hasTwoImages) {
+        urlsToPreload.push(allImages[0].url, allImages[1].url);
+      } else if (image) {
+        urlsToPreload.push(image);
+      }
+      if (pdfLogo) {
+        urlsToPreload.push(pdfLogo);
+      }
+
+      await Promise.all(urlsToPreload.map(url => {
         return new Promise((resolve) => {
           const tempImg = new Image();
           tempImg.onload = () => resolve(true);
           tempImg.onerror = () => resolve(false);
-          tempImg.src = img.src;
+          tempImg.src = url;
         });
       }));
 
@@ -154,7 +163,7 @@ const AnalysisResult = () => {
             </div>
           )}
 
-          {/* Imagens Analisadas sem distorção no PDF (Usando Flexbox tradicional compatível com html2canvas) */}
+          {/* Imagens Analisadas sem distorção no PDF (Usando divs com background-image) */}
           {analysis.isComparativo && hasTwoImages ? (
             <div className="flex flex-row justify-between gap-4 w-full">
               <div className="w-[48%] space-y-2">
@@ -163,11 +172,18 @@ const AnalysisResult = () => {
                   className="rounded-2xl shadow-md border-2 border-white p-1"
                   style={{ backgroundColor: 'rgba(2, 6, 23, 0.05)' }}
                 >
-                  <img 
-                    src={allImages[0].url} 
-                    className="w-full h-auto block" 
-                    style={{ display: 'block', width: '100%', height: 'auto', borderRadius: '12px' }} 
-                    alt="Antes" 
+                  <div 
+                    style={{
+                      backgroundImage: `url(${allImages[0].url})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat',
+                      width: '100%',
+                      aspectRatio: '1/1',
+                      borderRadius: '12px',
+                      display: 'block'
+                    }}
+                    aria-label="Antes"
                   />
                 </div>
               </div>
@@ -177,11 +193,18 @@ const AnalysisResult = () => {
                   className="rounded-2xl shadow-md border-2 border-accent p-1"
                   style={{ backgroundColor: 'rgba(2, 6, 23, 0.05)' }}
                 >
-                  <img 
-                    src={allImages[1].url} 
-                    className="w-full h-auto block" 
-                    style={{ display: 'block', width: '100%', height: 'auto', borderRadius: '12px' }} 
-                    alt="Depois" 
+                  <div 
+                    style={{
+                      backgroundImage: `url(${allImages[1].url})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat',
+                      width: '100%',
+                      aspectRatio: '1/1',
+                      borderRadius: '12px',
+                      display: 'block'
+                    }}
+                    aria-label="Depois"
                   />
                 </div>
               </div>
@@ -191,11 +214,18 @@ const AnalysisResult = () => {
               className="relative rounded-3xl shadow-lg border-4 border-white p-2"
               style={{ backgroundColor: 'rgba(2, 6, 23, 0.05)' }}
             >
-              <img 
-                src={image} 
-                alt="Análise" 
-                className="w-full h-auto block" 
-                style={{ display: 'block', width: '100%', height: 'auto', borderRadius: '20px' }} 
+              <div 
+                style={{
+                  backgroundImage: `url(${image})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                  width: '100%',
+                  aspectRatio: '1/1',
+                  borderRadius: '20px',
+                  display: 'block'
+                }}
+                aria-label="Análise"
               />
               {analysis.isComparativo && (
                 <div className="absolute top-4 right-4">
