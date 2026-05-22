@@ -71,12 +71,26 @@ const AnalysisResult = () => {
 
     setIsGeneratingPdf(true);
     try {
-      // Captura o elemento com alta definição
+      // 1. Garantir que todas as imagens estão totalmente carregadas na memória
+      const imgs = element.querySelectorAll('img');
+      await Promise.all(Array.from(imgs).map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
+      }));
+
+      // 2. Pequena pausa para garantir que o navegador calculou o layout final
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // 3. Captura o elemento com alta definição
       const canvas = await html2canvas(element, {
         useCORS: true,
         allowTaint: true,
         scale: 2,
         backgroundColor: pdfBgColor,
+        logging: false,
       });
 
       const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -133,25 +147,40 @@ const AnalysisResult = () => {
             </div>
           )}
 
-          {/* Imagens Analisadas sem distorção no PDF */}
+          {/* Imagens Analisadas sem distorção no PDF (Usando Flexbox tradicional compatível com html2canvas) */}
           {analysis.isComparativo && hasTwoImages ? (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="flex flex-row justify-between gap-4 w-full">
+              <div className="w-[48%] space-y-2">
                 <p className="text-[10px] font-bold text-slate-400 uppercase text-center">Antes</p>
                 <div className="rounded-2xl overflow-hidden shadow-md border-2 border-white bg-slate-950/5 p-1">
-                  <img src={allImages[0].url} className="w-full h-auto rounded-xl block" alt="Antes" />
+                  <img 
+                    src={allImages[0].url} 
+                    className="w-full h-auto rounded-xl block" 
+                    style={{ display: 'block', width: '100%', height: 'auto' }} 
+                    alt="Antes" 
+                  />
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="w-[48%] space-y-2">
                 <p className="text-[10px] font-bold text-accent uppercase text-center">Depois</p>
                 <div className="rounded-2xl overflow-hidden shadow-md border-2 border-accent bg-slate-950/5 p-1">
-                  <img src={allImages[1].url} className="w-full h-auto rounded-xl block" alt="Depois" />
+                  <img 
+                    src={allImages[1].url} 
+                    className="w-full h-auto rounded-xl block" 
+                    style={{ display: 'block', width: '100%', height: 'auto' }} 
+                    alt="Depois" 
+                  />
                 </div>
               </div>
             </div>
           ) : (
             <div className="relative rounded-3xl overflow-hidden shadow-lg border-4 border-white bg-slate-950/5 p-2">
-              <img src={image} alt="Análise" className="w-full h-auto rounded-2xl block" />
+              <img 
+                src={image} 
+                alt="Análise" 
+                className="w-full h-auto rounded-2xl block" 
+                style={{ display: 'block', width: '100%', height: 'auto' }} 
+              />
               {analysis.isComparativo && (
                 <div className="absolute top-4 right-4">
                   <Badge className="bg-accent text-white border-none shadow-lg text-[10px]">Montagem Técnica</Badge>
@@ -211,20 +240,21 @@ const AnalysisResult = () => {
                   <CardContent className="space-y-4">
                     <p className="text-xs text-slate-700 leading-relaxed">{data.descricao}</p>
                     
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-white/50 p-2 rounded-lg border border-white/50">
+                    {/* Substituído Grid por Flexbox tradicional para compatibilidade com html2canvas */}
+                    <div className="flex flex-wrap gap-2 w-full">
+                      <div className="bg-white/50 p-2 rounded-lg border border-white/50 w-[calc(50%-4px)]">
                         <p className="text-[9px] font-bold text-slate-400 uppercase">Densidade</p>
                         <p className="text-xs font-bold text-slate-900">{data.densidade?.classificacao} ({data.densidade?.percentual}%)</p>
                       </div>
-                      <div className="bg-white/50 p-2 rounded-lg border border-white/50">
+                      <div className="bg-white/50 p-2 rounded-lg border border-white/50 w-[calc(50%-4px)]">
                         <p className="text-[9px] font-bold text-slate-400 uppercase">Espessura</p>
                         <p className="text-xs font-bold text-slate-900">{data.espessura}</p>
                       </div>
-                      <div className="bg-white/50 p-2 rounded-lg border border-white/50">
+                      <div className="bg-white/50 p-2 rounded-lg border border-white/50 w-[calc(50%-4px)]">
                         <p className="text-[9px] font-bold text-slate-400 uppercase">Pele Exposta</p>
                         <p className="text-xs font-bold text-slate-900">{data.peleExposta ? 'Sim' : 'Não'}</p>
                       </div>
-                      <div className="bg-white/50 p-2 rounded-lg border border-white/50">
+                      <div className="bg-white/50 p-2 rounded-lg border border-white/50 w-[calc(50%-4px)]">
                         <p className="text-[9px] font-bold text-slate-400 uppercase">Escala de Dano</p>
                         <p className="text-xs font-bold text-slate-900">{data.escalaDano?.classificacao || 'N/A'}</p>
                       </div>
