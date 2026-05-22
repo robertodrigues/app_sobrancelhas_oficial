@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft, 
   Download, 
-  Sparkles, 
   AlertTriangle, 
   Target, 
   ShieldCheck, 
@@ -17,14 +16,31 @@ import {
   CheckCircle2,
   Eye,
   MoveUpRight,
-  Info
+  Info,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { showSuccess, showError } from '@/utils/toast';
 
 const AnalysisResult = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { analysis, image, allImages } = location.state || {};
+  const reportRef = useRef<HTMLDivElement>(null);
+
+  const [pdfLogo, setPdfLogo] = useState<string | null>(null);
+  const [pdfBgColor, setPdfBgColor] = useState('#F8FAFC');
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  // Carregar preferências de Ajuste do localStorage
+  useEffect(() => {
+    const savedLogo = localStorage.getItem('pdf_custom_logo');
+    const savedBg = localStorage.getItem('pdf_custom_bg_color');
+    if (savedLogo) setPdfLogo(savedLogo);
+    if (savedBg) setPdfBgColor(savedBg);
+  }, []);
 
   if (!analysis) {
     return (
@@ -39,21 +55,64 @@ const AnalysisResult = () => {
 
   const getRegionTheme = (key: string) => {
     switch (key) {
-      case 'inicio': return { dot: 'bg-green-500', bg: 'bg-green-50 border-green-100', label: 'Ponto Inicial' };
-      case 'meio': return { dot: 'bg-yellow-500', bg: 'bg-yellow-50 border-yellow-100', label: 'Meio da Sobrancelha' };
-      case 'cauda': return { dot: 'bg-red-500', bg: 'bg-red-50 border-red-100', label: 'Cauda da Sobrancelha' };
-      default: return { dot: 'bg-slate-400', bg: 'bg-slate-50 border-slate-100', label: key };
+      case 'inicio': return { dot: 'bg-green-500', bg: 'bg-green-50/80 border-green-100', label: 'Ponto Inicial' };
+      case 'meio': return { dot: 'bg-yellow-500', bg: 'bg-yellow-50/80 border-yellow-100', label: 'Meio da Sobrancelha' };
+      case 'cauda': return { dot: 'bg-red-500', bg: 'bg-red-50/80 border-red-100', label: 'Cauda da Sobrancelha' };
+      default: return { dot: 'bg-slate-400', bg: 'bg-slate-50/80 border-slate-100', label: key };
     }
   };
 
   const hasTwoImages = allImages && Array.isArray(allImages) && allImages.length >= 2;
 
+  // Função para gerar o PDF com a logo e cor de fundo personalizadas
+  const handleGeneratePdf = async () => {
+    const element = reportRef.current;
+    if (!element) return;
+
+    setIsGeneratingPdf(true);
+    try {
+      // Captura o elemento com alta definição
+      const canvas = await html2canvas(element, {
+        useCORS: true,
+        allowTaint: true,
+        scale: 2,
+        backgroundColor: pdfBgColor,
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210; // Largura A4 em mm
+      const pageHeight = 295; // Altura A4 em mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`relatorio-diagnostico-${analysis.isComparativo ? 'evolucao' : 'tecnico'}.pdf`);
+      showSuccess('Relatório PDF gerado com sucesso!');
+    } catch (error) {
+      console.error(error);
+      showError('Erro ao gerar o PDF.');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 pb-24 md:pt-20">
+    <div style={{ backgroundColor: pdfBgColor }} className="min-h-screen pb-24 md:pt-20 transition-colors duration-300">
       <Navbar />
       <main className="max-w-2xl mx-auto p-6">
         <header className="relative flex flex-col items-center justify-center mb-8 text-center">
-          <button onClick={() => navigate('/')} className="absolute left-0 p-2 hover:bg-slate-200 rounded-full transition-colors">
+          <button onClick={() => navigate('/')} className="absolute left-0 p-2 hover:bg-slate-200/50 rounded-full transition-colors">
             <ArrowLeft size={20} />
           </button>
           <div>
@@ -64,7 +123,16 @@ const AnalysisResult = () => {
           </div>
         </header>
 
-        <div className="space-y-6">
+        {/* Container que será capturado no PDF */}
+        <div ref={reportRef} className="space-y-6 p-4 rounded-3xl">
+          
+          {/* Logo Personalizada no Topo do PDF */}
+          {pdfLogo && (
+            <div className="flex justify-center py-4 border-b border-slate-200/50">
+              <img src={pdfLogo} className="h-16 object-contain" alt="Logo Designer" />
+            </div>
+          )}
+
           {/* Imagens Analisadas */}
           {analysis.isComparativo && hasTwoImages ? (
             <div className="grid grid-cols-2 gap-4">
@@ -135,7 +203,7 @@ const AnalysisResult = () => {
             {Object.entries(analysis.regioes).map(([key, data]: [string, any]) => {
               const theme = getRegionTheme(key);
               return (
-                <Card key={key} className={cn("border shadow-sm rounded-2xl overflow-hidden", theme.bg)}>
+                <Card key={key} className={cn("border shadow-sm rounded-2xl overflow-hidden bg-white/90", theme.bg)}>
                   <CardHeader className="pb-2 flex flex-row items-center justify-between">
                     <CardTitle className="text-xs font-bold uppercase tracking-wider">{theme.label}</CardTitle>
                     <div className={cn("w-2.5 h-2.5 rounded-full shadow-sm", theme.dot)} />
@@ -210,7 +278,7 @@ const AnalysisResult = () => {
           </section>
 
           {/* Resumo Geral */}
-          <Card className="border-none shadow-sm bg-white rounded-3xl">
+          <Card className="border-none shadow-sm bg-white/90 rounded-3xl">
             <CardHeader>
               <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider">
                 <ShieldCheck className="text-accent" size={18} />
@@ -226,8 +294,25 @@ const AnalysisResult = () => {
             </CardContent>
           </Card>
 
-          <Button className="w-full h-14 text-sm gap-2 rounded-2xl shadow-xl shadow-accent/20 bg-accent hover:bg-accent/90 font-bold">
-            <Download size={18} /> Gerar Relatório PDF
+        </div>
+
+        {/* Botão de Gerar PDF */}
+        <div className="mt-6 px-4">
+          <Button 
+            onClick={handleGeneratePdf} 
+            disabled={isGeneratingPdf}
+            className="w-full h-14 text-sm gap-2 rounded-2xl shadow-xl shadow-accent/20 bg-accent hover:bg-accent/90 font-bold"
+          >
+            {isGeneratingPdf ? (
+              <>
+                <Loader2 className="animate-spin" size={18} />
+                Gerando PDF...
+              </>
+            ) : (
+              <>
+                <Download size={18} /> Gerar Relatório PDF
+              </>
+            )}
           </Button>
         </div>
       </main>

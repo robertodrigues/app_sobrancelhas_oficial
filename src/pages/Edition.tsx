@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   Upload, 
   Download, 
@@ -13,12 +14,13 @@ import {
   Image as ImageIcon, 
   Paintbrush, 
   Layers, 
-  Maximize2, 
   RotateCcw,
   Sparkles,
-  Check,
-  Trash2
+  Trash2,
+  Sliders,
+  CreditCard
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
 import html2canvas from 'html2canvas';
 import { cn } from '@/lib/utils';
@@ -29,39 +31,61 @@ const Edition = () => {
   const [afterImg, setAfterImg] = useState<string | null>(null);
   
   // Configurações de Layout
-  const [layoutSize, setLayoutSize] = useState<'feed' | 'story'>('feed'); // feed (1:1) ou story (9:16)
-  const [splitDirection, setSplitDirection] = useState<'horizontal' | 'vertical'>('horizontal'); // horizontal (lado a lado) ou vertical (cima/baixo)
-  const [separationType, setSeparationType] = useState<'straight' | 'faded'>('straight'); // reta ou esfumaçada
+  const [layoutSize, setLayoutSize] = useState<'feed' | 'story'>('feed');
+  const [splitDirection, setSplitDirection] = useState<'horizontal' | 'vertical'>('horizontal');
+  const [separationType, setSeparationType] = useState<'straight' | 'faded'>('straight');
 
   // Configurações de Texto (@)
   const [text, setText] = useState('');
   const [textColor, setTextColor] = useState('#ffffff');
   const [textSize, setTextSize] = useState(16);
-  const [textX, setTextX] = useState(50); // porcentagem
-  const [textY, setTextY] = useState(90); // porcentagem
+  const [textX, setTextX] = useState(50);
+  const [textY, setTextY] = useState(90);
 
-  // Configurações de Logo
+  // Configurações de Logo da Montagem
   const [logoImg, setLogoImg] = useState<string | null>(null);
-  const [logoSize, setLogoSize] = useState(80); // pixels
-  const [logoX, setLogoX] = useState(50); // porcentagem
-  const [logoY, setLogoY] = useState(10); // porcentagem
+  const [logoSize, setLogoSize] = useState(80);
+  const [logoX, setLogoX] = useState(50);
+  const [logoY, setLogoY] = useState(10);
 
   // Caneta Desenho Livre
   const [penColor, setPenColor] = useState('#ff0055');
   const [penWidth, setPenWidth] = useState(4);
   const [isDrawingMode, setIsDrawingMode] = useState(false);
 
+  // --- AJUSTES DO PDF (Salvos no localStorage) ---
+  const [pdfLogo, setPdfLogo] = useState<string | null>(null);
+  const [pdfBgColor, setPdfBgColor] = useState('#F8FAFC');
+
+  // Carregar configurações salvas do PDF
+  useEffect(() => {
+    const savedLogo = localStorage.getItem('pdf_custom_logo');
+    const savedBg = localStorage.getItem('pdf_custom_bg_color');
+    if (savedLogo) setPdfLogo(savedLogo);
+    if (savedBg) setPdfBgColor(savedBg);
+  }, []);
+
+  // Salvar configurações do PDF
+  const savePdfSettings = (logo: string | null, bg: string) => {
+    if (logo) {
+      localStorage.setItem('pdf_custom_logo', logo);
+    } else {
+      localStorage.removeItem('pdf_custom_logo');
+    }
+    localStorage.setItem('pdf_custom_bg_color', bg);
+    showSuccess('Ajustes do PDF salvos com sucesso!');
+  };
+
   // Refs
   const beforeInputRef = useRef<HTMLInputElement>(null);
   const afterInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const pdfLogoInputRef = useRef<HTMLInputElement>(null);
   const collageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Estado de desenho no canvas transparente sobreposto
   const [isDrawing, setIsDrawing] = useState(false);
 
-  // Ajustar tamanho do canvas de desenho quando o layout mudar
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas && collageRef.current) {
@@ -75,20 +99,24 @@ const Edition = () => {
     }
   }, [layoutSize, splitDirection, beforeImg, afterImg]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'before' | 'after' | 'logo') => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'before' | 'after' | 'logo' | 'pdfLogo') => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
-        if (type === 'before') setBeforeImg(event.target?.result as string);
-        if (type === 'after') setAfterImg(event.target?.result as string);
-        if (type === 'logo') setLogoImg(event.target?.result as string);
+        const result = event.target?.result as string;
+        if (type === 'before') setBeforeImg(result);
+        if (type === 'after') setAfterImg(result);
+        if (type === 'logo') setLogoImg(result);
+        if (type === 'pdfLogo') {
+          setPdfLogo(result);
+          savePdfSettings(result, pdfBgColor);
+        }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Funções de Desenho Livre
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawingMode) return;
     const canvas = canvasRef.current;
@@ -153,7 +181,6 @@ const Edition = () => {
     }
   };
 
-  // Exportar Montagem Final
   const exportCollage = async () => {
     if (!beforeImg || !afterImg) {
       showError('Por favor, adicione as fotos de Antes e Depois primeiro.');
@@ -167,7 +194,7 @@ const Edition = () => {
       const canvas = await html2canvas(element, {
         useCORS: true,
         allowTaint: true,
-        scale: 3, // Alta definição para redes sociais
+        scale: 3,
       });
 
       const link = document.createElement('a');
@@ -196,7 +223,7 @@ const Edition = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Preview da Montagem (Esquerda) */}
-          <div className="lg:col-span-7 flex flex-col items-center">
+          <div className="lg:col-span-7 flex flex-col items-center space-y-6">
             <div 
               ref={collageRef}
               className={cn(
@@ -316,11 +343,75 @@ const Edition = () => {
 
             <input type="file" ref={beforeInputRef} onChange={(e) => handleImageUpload(e, 'before')} accept="image/*" className="hidden" />
             <input type="file" ref={afterInputRef} onChange={(e) => handleImageUpload(e, 'after')} accept="image/*" className="hidden" />
+
+            {/* Botão de Créditos integrado na página */}
+            <Button asChild variant="outline" className="w-full max-w-[340px] h-12 rounded-2xl border-dashed border-slate-300 text-slate-600 hover:text-accent hover:border-accent gap-2">
+              <Link to="/creditos">
+                <CreditCard size={16} />
+                Gerenciar Meus Créditos
+              </Link>
+            </Button>
           </div>
 
           {/* Painel de Controle (Direita) */}
           <div className="lg:col-span-5 space-y-6">
             
+            {/* CARD DE AJUSTE (LOGO E FUNDO DO PDF) */}
+            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                  <Sliders size={16} className="text-accent" /> Ajuste do Relatório PDF
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-600">Sua Logo para o PDF</Label>
+                  <div className="flex items-center gap-3">
+                    <Button 
+                      onClick={() => pdfLogoInputRef.current?.click()} 
+                      variant="outline" 
+                      className="h-11 rounded-xl text-xs font-bold border-slate-200 bg-white flex-1"
+                    >
+                      <Upload size={14} className="mr-1.5" /> Subir Logo PDF
+                    </Button>
+                    {pdfLogo && (
+                      <Button 
+                        onClick={() => { setPdfLogo(null); savePdfSettings(null, pdfBgColor); }} 
+                        variant="ghost" 
+                        className="h-11 w-11 rounded-xl text-red-500 hover:bg-red-50 p-0"
+                      >
+                        <Trash2 size={18} />
+                      </Button>
+                    )}
+                  </div>
+                  <input type="file" ref={pdfLogoInputRef} onChange={(e) => handleImageUpload(e, 'pdfLogo')} accept="image/*" className="hidden" />
+                  {pdfLogo && (
+                    <div className="p-2 bg-slate-50 rounded-xl border border-slate-100 flex justify-center">
+                      <img src={pdfLogo} className="h-12 object-contain" alt="Logo PDF Preview" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-600">Cor de Fundo do PDF</Label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="color" 
+                      value={pdfBgColor} 
+                      onChange={(e) => { setPdfBgColor(e.target.value); savePdfSettings(pdfLogo, e.target.value); }}
+                      className="w-11 h-11 rounded-xl border border-slate-200 cursor-pointer"
+                    />
+                    <Input 
+                      value={pdfBgColor} 
+                      onChange={(e) => { setPdfBgColor(e.target.value); savePdfSettings(pdfLogo, e.target.value); }}
+                      placeholder="#F8FAFC"
+                      className="h-11 rounded-xl text-sm font-mono"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Formato e Orientação */}
             <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-4">
               <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
@@ -450,10 +541,10 @@ const Edition = () => {
               )}
             </div>
 
-            {/* Upload de Logo */}
+            {/* Upload de Logo da Montagem */}
             <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-4">
               <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                <ImageIcon size={16} className="text-accent" /> Sua Logomarca
+                <ImageIcon size={16} className="text-accent" /> Sua Logomarca na Montagem
               </h3>
 
               <div className="flex items-center gap-3">
