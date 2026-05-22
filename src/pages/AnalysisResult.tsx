@@ -133,25 +133,25 @@ const AnalysisResult = () => {
             </div>
           )}
 
-          {/* Imagens Analisadas sem distorção */}
+          {/* Imagens Analisadas sem distorção no PDF */}
           {analysis.isComparativo && hasTwoImages ? (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <p className="text-[10px] font-bold text-slate-400 uppercase text-center">Antes</p>
-                <div className="rounded-2xl overflow-hidden shadow-md border-2 border-white bg-slate-950/5 flex items-center justify-center p-1 aspect-[3/4]">
-                  <img src={allImages[0].url} className="max-w-full max-h-full object-contain rounded-xl" alt="Antes" />
+                <div className="rounded-2xl overflow-hidden shadow-md border-2 border-white bg-slate-950/5 p-1">
+                  <img src={allImages[0].url} className="w-full h-auto rounded-xl block" alt="Antes" />
                 </div>
               </div>
               <div className="space-y-2">
                 <p className="text-[10px] font-bold text-accent uppercase text-center">Depois</p>
-                <div className="rounded-2xl overflow-hidden shadow-md border-2 border-accent bg-slate-950/5 flex items-center justify-center p-1 aspect-[3/4]">
-                  <img src={allImages[1].url} className="max-w-full max-h-full object-contain rounded-xl" alt="Depois" />
+                <div className="rounded-2xl overflow-hidden shadow-md border-2 border-accent bg-slate-950/5 p-1">
+                  <img src={allImages[1].url} className="w-full h-auto rounded-xl block" alt="Depois" />
                 </div>
               </div>
             </div>
           ) : (
-            <div className="relative rounded-3xl overflow-hidden shadow-lg border-4 border-white bg-slate-950/5 flex items-center justify-center p-2 min-h-[240px] max-h-[400px]">
-              <img src={image} alt="Análise" className="max-w-full max-h-[380px] object-contain rounded-2xl" />
+            <div className="relative rounded-3xl overflow-hidden shadow-lg border-4 border-white bg-slate-950/5 p-2">
+              <img src={image} alt="Análise" className="w-full h-auto rounded-2xl block" />
               {analysis.isComparativo && (
                 <div className="absolute top-4 right-4">
                   <Badge className="bg-accent text-white border-none shadow-lg text-[10px]">Montagem Técnica</Badge>
