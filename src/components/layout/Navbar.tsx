@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Camera, Users, LayoutDashboard, Sparkles } from 'lucide-react';
+import { Camera, Users, LayoutDashboard, Sparkles, CreditCard, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const Navbar = () => {
@@ -48,11 +48,14 @@ const Navbar = () => {
           <span className="text-[10px] font-bold">Análises</span>
         </Link>
 
-        {/* Perfil ou Config (Placeholder para manter simetria) */}
-        <div className="flex flex-col items-center justify-center gap-1 text-slate-400 opacity-50">
-          <div className="w-6 h-6 rounded-full bg-slate-200" />
-          <span className="text-[10px] font-bold">Perfil</span>
-        </div>
+        {/* Perfil - Comprar Créditos */}
+        <Link to="/creditos" className={cn(
+          "flex flex-col items-center justify-center gap-1 transition-all duration-300",
+          isActive('/creditos') ? "text-accent" : "text-slate-400 hover:text-slate-600"
+        )}>
+          <CreditCard size={22} strokeWidth={isActive('/creditos') ? 2.5 : 2} />
+          <span className="text-[10px] font-bold">Créditos</span>
+        </Link>
 
       </div>
     </nav>
