@@ -346,62 +346,6 @@ const Edition = () => {
           {/* Painel de Controle (Direita) */}
           <div className="lg:col-span-5 space-y-6">
             
-            {/* CARD DE AJUSTE (LOGO E FUNDO DO PDF) */}
-            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                  <Sliders size={16} className="text-accent" /> Ajuste do Relatório PDF
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-600">Sua Logo para o PDF</Label>
-                  <div className="flex items-center gap-3">
-                    <Button 
-                      onClick={() => pdfLogoInputRef.current?.click()} 
-                      variant="outline" 
-                      className="h-11 rounded-xl text-xs font-bold border-slate-200 bg-white flex-1"
-                    >
-                      <Upload size={14} className="mr-1.5" /> Subir Logo PDF
-                    </Button>
-                    {pdfLogo && (
-                      <Button 
-                        onClick={() => { setPdfLogo(null); savePdfSettings(null, pdfBgColor); }} 
-                        variant="ghost" 
-                        className="h-11 w-11 rounded-xl text-red-500 hover:bg-red-50 p-0"
-                      >
-                        <Trash2 size={18} />
-                      </Button>
-                    )}
-                  </div>
-                  <input type="file" ref={pdfLogoInputRef} onChange={(e) => handleImageUpload(e, 'pdfLogo')} accept="image/*" className="hidden" />
-                  {pdfLogo && (
-                    <div className="p-2 bg-slate-50 rounded-xl border border-slate-100 flex justify-center">
-                      <img src={pdfLogo} className="h-12 object-contain" alt="Logo PDF Preview" />
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-600">Cor de Fundo do PDF</Label>
-                  <div className="flex gap-2">
-                    <input 
-                      type="color" 
-                      value={pdfBgColor} 
-                      onChange={(e) => { setPdfBgColor(e.target.value); savePdfSettings(pdfLogo, e.target.value); }}
-                      className="w-11 h-11 rounded-xl border border-slate-200 cursor-pointer"
-                    />
-                    <Input 
-                      value={pdfBgColor} 
-                      onChange={(e) => { setPdfBgColor(e.target.value); savePdfSettings(pdfLogo, e.target.value); }}
-                      placeholder="#F8FAFC"
-                      className="h-11 rounded-xl text-sm font-mono"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Formato e Orientação */}
             <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-4">
               <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
@@ -648,6 +592,62 @@ const Edition = () => {
             >
               <Download size={18} /> Exportar Montagem Final
             </Button>
+
+            {/* CARD DE AJUSTE (LOGO E FUNDO DO PDF) - POSICIONADO ABAIXO DO BOTÃO DE EXPORTAR */}
+            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                  <Sliders size={16} className="text-accent" /> Ajuste do Relatório PDF
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-600">Sua Logo para o PDF</Label>
+                  <div className="flex items-center gap-3">
+                    <Button 
+                      onClick={() => pdfLogoInputRef.current?.click()} 
+                      variant="outline" 
+                      className="h-11 rounded-xl text-xs font-bold border-slate-200 bg-white flex-1"
+                    >
+                      <Upload size={14} className="mr-1.5" /> Subir Logo PDF
+                    </Button>
+                    {pdfLogo && (
+                      <Button 
+                        onClick={() => { setPdfLogo(null); savePdfSettings(null, pdfBgColor); }} 
+                        variant="ghost" 
+                        className="h-11 w-11 rounded-xl text-red-500 hover:bg-red-50 p-0"
+                      >
+                        <Trash2 size={18} />
+                      </Button>
+                    )}
+                  </div>
+                  <input type="file" ref={pdfLogoInputRef} onChange={(e) => handleImageUpload(e, 'pdfLogo')} accept="image/*" className="hidden" />
+                  {pdfLogo && (
+                    <div className="p-2 bg-slate-50 rounded-xl border border-slate-100 flex justify-center">
+                      <img src={pdfLogo} className="h-12 object-contain" alt="Logo PDF Preview" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-600">Cor de Fundo do PDF</Label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="color" 
+                      value={pdfBgColor} 
+                      onChange={(e) => { setPdfBgColor(e.target.value); savePdfSettings(pdfLogo, e.target.value); }}
+                      className="w-11 h-11 rounded-xl border border-slate-200 cursor-pointer"
+                    />
+                    <Input 
+                      value={pdfBgColor} 
+                      onChange={(e) => { setPdfBgColor(e.target.value); savePdfSettings(pdfLogo, e.target.value); }}
+                      placeholder="#F8FAFC"
+                      className="h-11 rounded-xl text-sm font-mono"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
           </div>
 
