@@ -22,7 +22,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   const mainCanvasRef = useRef<HTMLCanvasElement>(null);
   const drawingCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [activeRegion, setActiveRegion] = useState<Region>(null);
-  const [brushSize, setBrushSize] = useState(60);
+  const [brushSize, setBrushSize] = useState(8); // Pincel fino para contorno
   const [isDrawing, setIsDrawing] = useState(false);
   const [history, setHistory] = useState<{data: string, bboxes: Record<string, RegionBBox>}[]>([]);
   const [currentBBoxes, setCurrentBBoxes] = useState<Record<string, RegionBBox>>({});
@@ -65,7 +65,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0);
-    ctx.globalAlpha = 0.4;
+    ctx.globalAlpha = 0.9; // Traço mais visível por ser fino
     ctx.drawImage(drawingCanvas, 0, 0);
     ctx.globalAlpha = 1.0;
   };
@@ -192,7 +192,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
         </Button>
         <div className="text-center">
           <h2 className="font-bold text-sm">Mapeamento Técnico</h2>
-          <p className="text-[10px] text-slate-400 uppercase tracking-widest">Pinte as regiões</p>
+          <p className="text-[10px] text-slate-400 uppercase tracking-widest">Circule as regiões</p>
         </div>
         <Button variant="ghost" size="icon" onClick={handleSave} className="text-green-400">
           <Check size={24} />
@@ -217,7 +217,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
             <div className="bg-black/60 backdrop-blur-md p-6 rounded-3xl text-white text-center border border-white/10">
               <MousePointer2 className="mx-auto mb-3 animate-bounce text-accent" size={32} />
               <p className="text-sm font-bold">Selecione uma cor abaixo</p>
-              <p className="text-xs text-slate-400">e pinte a região da sobrancelha</p>
+              <p className="text-xs text-slate-400">e circule a região da sobrancelha</p>
             </div>
           </div>
         )}
@@ -225,14 +225,14 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
 
       <div className="p-6 bg-slate-900 space-y-6 border-t border-slate-800">
         <div className="flex items-center justify-center gap-6 bg-slate-800/50 p-3 rounded-2xl">
-          <button onClick={() => setBrushSize(30)} className={cn("p-2 rounded-full transition-all", brushSize === 30 ? "bg-accent text-white" : "text-slate-400")}>
-            <Circle size={12} fill="currentColor" />
+          <button onClick={() => setBrushSize(4)} className={cn("p-2 rounded-full transition-all", brushSize === 4 ? "bg-accent text-white" : "text-slate-400")}>
+            <Circle size={8} fill="currentColor" />
           </button>
-          <button onClick={() => setBrushSize(60)} className={cn("p-2 rounded-full transition-all", brushSize === 60 ? "bg-accent text-white" : "text-slate-400")}>
+          <button onClick={() => setBrushSize(8)} className={cn("p-2 rounded-full transition-all", brushSize === 8 ? "bg-accent text-white" : "text-slate-400")}>
+            <Circle size={14} fill="currentColor" />
+          </button>
+          <button onClick={() => setBrushSize(14)} className={cn("p-2 rounded-full transition-all", brushSize === 14 ? "bg-accent text-white" : "text-slate-400")}>
             <Circle size={20} fill="currentColor" />
-          </button>
-          <button onClick={() => setBrushSize(90)} className={cn("p-2 rounded-full transition-all", brushSize === 90 ? "bg-accent text-white" : "text-slate-400")}>
-            <Circle size={28} fill="currentColor" />
           </button>
         </div>
 
