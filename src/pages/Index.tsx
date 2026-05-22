@@ -1,4 +1,3 @@
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import Navbar from "@/components/layout/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -140,7 +139,6 @@ const Index = () => {
           </div>
         </section>
       </main>
-      <MadeWithDyad />
     </div>
   );
 };
