@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
@@ -11,7 +13,6 @@ import {
   AlertTriangle, 
   Target, 
   ShieldCheck, 
-  Cpu,
   TrendingUp,
   CheckCircle2,
   Eye,
@@ -60,11 +61,6 @@ const AnalysisResult = () => {
               {analysis.isComparativo ? 'Relatório de Evolução' : 'Relatório Técnico'}
             </h1>
             <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mt-0.5">Tricologia de Sobrancelhas</p>
-          </div>
-          <div className="absolute right-0">
-            <Badge variant="outline" className="gap-1 py-1 px-2 border-accent/20 bg-accent/5 text-accent text-[10px]">
-              <Cpu size={12} /> {analysis.iaUsada || 'IA'}
-            </Badge>
           </div>
         </header>
 
