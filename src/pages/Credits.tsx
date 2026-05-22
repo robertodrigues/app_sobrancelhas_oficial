@@ -86,6 +86,13 @@ const Credits = () => {
                 <Button 
                   variant="outline" 
                   className="px-3 h-11 rounded-xl border-slate-300 text-xs font-semibold"
+                  onClick={() => setCreditAmount('10')}
+                >
+                  10
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="px-3 h-11 rounded-xl border-slate-300 text-xs font-semibold"
                   onClick={() => setCreditAmount('50')}
                 >
                   50
@@ -96,13 +103,6 @@ const Credits = () => {
                   onClick={() => setCreditAmount('100')}
                 >
                   100
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="px-3 h-11 rounded-xl border-slate-300 text-xs font-semibold"
-                  onClick={() => setCreditAmount('500')}
-                >
-                  500
                 </Button>
               </div>
             </div>
@@ -125,7 +125,7 @@ const Credits = () => {
             <div className="pt-4 border-t border-slate-100">
               <h3 className="text-xs font-bold text-slate-900 mb-3 uppercase tracking-wider">Histórico de Compras</h3>
               <div className="space-y-3">
-                {[50, 100, 500].map(amount => (
+                {[10, 50, 100].map(amount => (
                   <div key={amount} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center">
