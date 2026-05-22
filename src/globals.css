@@ -67,8 +67,12 @@
 }
 
 @layer base {
+  *, *::before, *::after {
+    font-family: 'Poppins', sans-serif !important;
+  }
+
   body {
-    @apply bg-[#F8FAFC] text-slate-900 font-sans;
+    @apply bg-[#F8FAFC] text-slate-900;
     -webkit-tap-highlight-color: transparent;
   }
 
