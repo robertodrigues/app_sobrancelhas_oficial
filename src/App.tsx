@@ -9,7 +9,8 @@ import Clients from "./pages/Clients";
 import NewClient from "./pages/NewClient";
 import AnalysisResult from "./pages/AnalysisResult";
 import NotFound from "./pages/NotFound";
-import Credits from "./pages/Credits"; // Adicione esta linha
+import Credits from "./pages/Credits";
+import Edition from "./pages/Edition"; // Adicione esta linha
 
 const queryClient = new QueryClient();
 
@@ -25,7 +26,8 @@ const App = () => (
           <Route path="/clientes" element={<Clients />} />
           <Route path="/novo-cliente" element={<NewClient />} />
           <Route path="/resultado" element={<AnalysisResult />} />
-          <Route path="/creditos" element={<Credits />} /> {/* Adicione esta linha */}
+          <Route path="/creditos" element={<Credits />} />
+          <Route path="/edicao" element={<Edition />} /> {/* Adicione esta linha */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

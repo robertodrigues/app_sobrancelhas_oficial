@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Camera, Users, LayoutDashboard, CreditCard } from 'lucide-react';
+import { Camera, Users, LayoutDashboard, CreditCard, Paintbrush } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const Navbar = () => {
@@ -9,15 +9,15 @@ const Navbar = () => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 z-50 md:top-0 md:bottom-auto md:border-b md:border-t-0">
-      <div className="max-w-lg mx-auto grid grid-cols-4 items-center h-20 md:h-16">
+      <div className="max-w-lg mx-auto grid grid-cols-5 items-center h-20 md:h-16">
         
         {/* Início */}
         <Link to="/" className={cn(
           "flex flex-col items-center justify-center gap-1 transition-all duration-300",
           isActive('/') ? "text-accent" : "text-slate-400 hover:text-slate-600"
         )}>
-          <LayoutDashboard size={22} strokeWidth={isActive('/') ? 2.5 : 2} />
-          <span className="text-[10px] font-bold">Início</span>
+          <LayoutDashboard size={20} strokeWidth={isActive('/') ? 2.5 : 2} />
+          <span className="text-[9px] font-bold">Início</span>
         </Link>
 
         {/* Clientes */}
@@ -25,8 +25,8 @@ const Navbar = () => {
           "flex flex-col items-center justify-center gap-1 transition-all duration-300",
           isActive('/clientes') ? "text-accent" : "text-slate-400 hover:text-slate-600"
         )}>
-          <Users size={22} strokeWidth={isActive('/clientes') ? 2.5 : 2} />
-          <span className="text-[10px] font-bold">Clientes</span>
+          <Users size={20} strokeWidth={isActive('/clientes') ? 2.5 : 2} />
+          <span className="text-[9px] font-bold">Clientes</span>
         </Link>
 
         {/* Botão Central de Captura */}
@@ -35,17 +35,26 @@ const Navbar = () => {
             to="/captura" 
             className="absolute -top-10 flex items-center justify-center w-16 h-16 bg-accent text-white rounded-full shadow-2xl shadow-accent/40 hover:scale-105 active:scale-95 transition-all border-4 border-white md:relative md:top-0 md:w-12 md:h-12"
           >
-            <Camera size={28} className="md:size-20" />
+            <Camera size={26} />
           </Link>
         </div>
 
-        {/* Perfil - Comprar Créditos */}
+        {/* Edição */}
+        <Link to="/edicao" className={cn(
+          "flex flex-col items-center justify-center gap-1 transition-all duration-300",
+          isActive('/edicao') ? "text-accent" : "text-slate-400 hover:text-slate-600"
+        )}>
+          <Paintbrush size={20} strokeWidth={isActive('/edicao') ? 2.5 : 2} />
+          <span className="text-[9px] font-bold">Edição</span>
+        </Link>
+
+        {/* Créditos */}
         <Link to="/creditos" className={cn(
           "flex flex-col items-center justify-center gap-1 transition-all duration-300",
           isActive('/creditos') ? "text-accent" : "text-slate-400 hover:text-slate-600"
         )}>
-          <CreditCard size={22} strokeWidth={isActive('/creditos') ? 2.5 : 2} />
-          <span className="text-[10px] font-bold">Créditos</span>
+          <CreditCard size={20} strokeWidth={isActive('/creditos') ? 2.5 : 2} />
+          <span className="text-[9px] font-bold">Créditos</span>
         </Link>
 
       </div>
