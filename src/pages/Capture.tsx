@@ -18,6 +18,7 @@ import {
   FileText,
   Columns,
   Trash2,
+  Plus,
   Image as ImageIcon
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -25,6 +26,16 @@ import { showSuccess, showError } from '@/utils/toast';
 import { performDualAnalysis } from '@/services/analysis';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
+
+// Desenho de uma sobrancelha estilizada em SVG
+const EyebrowSVG = ({ className = "w-32 h-12 text-accent" }: { className?: string }) => (
+  <svg viewBox="0 0 100 30" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path 
+      d="M10,22 C25,12 45,8 65,12 C75,14 85,18 90,24 C80,20 70,16 60,15 C40,13 25,17 10,22 Z" 
+      fill="currentColor" 
+    />
+  </svg>
+);
 
 const Capture = () => {
   const [capturedImages, setCapturedImages] = useState<{url: string, bboxes: Record<string, RegionBBox>}[]>([]);
@@ -178,12 +189,29 @@ const Capture = () => {
           <>
             {!hasAtLeastOneImage ? (
               <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center p-8 text-center">
-                <ImageIcon size={48} className="text-slate-700 mb-4" />
+                {/* Quadrado com Desenho de Sobrancelha(s) */}
+                <div className="w-48 h-48 rounded-3xl border-2 border-dashed border-slate-700 bg-slate-800/30 flex flex-col items-center justify-center p-4 mb-6 transition-all duration-300">
+                  {analysisMode === 'single' ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <EyebrowSVG className="w-36 h-14 text-accent" />
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">1 Sobrancelha</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="flex flex-col gap-1 items-center">
+                        <EyebrowSVG className="w-28 h-10 text-slate-500 opacity-60" />
+                        <EyebrowSVG className="w-28 h-10 text-accent" />
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Antes & Depois</span>
+                    </div>
+                  )}
+                </div>
+
                 <h3 className="text-white font-bold mb-2 text-sm">Suba a foto para análise</h3>
-                <p className="text-slate-500 text-xs">
+                <p className="text-slate-500 text-xs max-w-xs">
                   {analysisMode === 'comparison' 
-                    ? 'Suba uma montagem (Antes/Depois) ou a foto atual' 
-                    : 'Suba a foto da sobrancelha'}
+                    ? 'Suba uma montagem contendo o Antes e Depois' 
+                    : 'Suba a foto da sobrancelha atual'}
                 </p>
               </div>
             ) : (
@@ -294,7 +322,5 @@ const Capture = () => {
     </div>
   );
 };
-
-import { Plus } from 'lucide-react';
 
 export default Capture;
