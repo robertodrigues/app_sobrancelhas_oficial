@@ -41,27 +41,25 @@ const Index = () => {
     <div className="min-h-screen bg-[#F8FAFC] pb-28 md:pt-20">
       <Navbar />
       <main className="max-w-4xl mx-auto p-6">
-        <header className="mb-8 flex justify-between items-end">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Olá, Especialista</h1>
-            <p className="text-slate-500 font-medium">Pronta para transformar olhares?</p>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center text-accent">
+        <header className="mb-8 flex flex-col items-center text-center relative">
+          <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center text-accent mb-3">
             <Sparkles size={24} />
           </div>
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Olá, Especialista</h1>
+          <p className="text-xs text-slate-500 font-medium mt-1">Pronta para transformar olhares?</p>
         </header>
 
         <div className="grid grid-cols-2 gap-4 mb-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="border-none shadow-sm bg-white rounded-3xl">
               <CardContent className="p-5">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-3 mx-auto">
                   <Users className="h-5 w-5 text-blue-500" />
                 </div>
-                <div className="text-2xl font-bold text-slate-900">
-                  {loading ? <Loader2 className="animate-spin h-5 w-5" /> : stats.clients}
+                <div className="text-2xl font-bold text-slate-900 text-center">
+                  {loading ? <Loader2 className="animate-spin h-5 w-5 mx-auto" /> : stats.clients}
                 </div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Clientes</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Clientes</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -69,27 +67,27 @@ const Index = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <Card className="border-none shadow-sm bg-white rounded-3xl">
               <CardContent className="p-5">
-                <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center mb-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center mb-3 mx-auto">
                   <FileText className="h-5 w-5 text-purple-500" />
                 </div>
-                <div className="text-2xl font-bold text-slate-900">
-                  {loading ? <Loader2 className="animate-spin h-5 w-5" /> : stats.analyses}
+                <div className="text-2xl font-bold text-slate-900 text-center">
+                  {loading ? <Loader2 className="animate-spin h-5 w-5 mx-auto" /> : stats.analyses}
                 </div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Análises</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Análises</p>
               </CardContent>
             </Card>
           </motion.div>
         </div>
 
         <section className="mb-8">
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Ações Rápidas</h2>
+          <h2 className="text-sm font-bold text-slate-800 mb-4 text-center uppercase tracking-wider">Ações Rápidas</h2>
           <div className="grid grid-cols-2 gap-4">
             <Button asChild variant="ghost" className="h-32 flex flex-col gap-3 bg-white border-none shadow-sm rounded-3xl hover:bg-slate-50 transition-all group">
               <Link to="/novo-cliente">
                 <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-accent group-hover:text-white transition-colors">
                   <Plus size={24} />
                 </div>
-                <span className="font-semibold text-slate-700">Novo Cliente</span>
+                <span className="font-semibold text-slate-700 text-xs">Novo Cliente</span>
               </Link>
             </Button>
             <Button asChild variant="ghost" className="h-32 flex flex-col gap-3 bg-accent text-white shadow-lg shadow-accent/20 rounded-3xl hover:bg-accent/90 transition-all">
@@ -97,7 +95,7 @@ const Index = () => {
                 <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
                   <Camera size={24} />
                 </div>
-                <span className="font-semibold">Nova Captura</span>
+                <span className="font-semibold text-xs">Nova Captura</span>
               </Link>
             </Button>
           </div>
@@ -105,8 +103,8 @@ const Index = () => {
 
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-slate-800">Atividades Recentes</h2>
-            <Button variant="link" className="text-accent font-semibold text-sm">Ver tudo</Button>
+            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Atividades Recentes</h2>
+            <Button variant="link" className="text-accent font-semibold text-xs">Ver tudo</Button>
           </div>
           <div className="space-y-3">
             {loading ? (

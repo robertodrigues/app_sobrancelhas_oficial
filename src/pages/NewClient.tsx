@@ -59,16 +59,19 @@ const NewClient = () => {
     <div className="min-h-screen bg-slate-50 pb-24 md:pt-20">
       <Navbar />
       <main className="max-w-md mx-auto p-6">
-        <header className="flex items-center gap-4 mb-8">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
-            <ArrowLeft size={24} />
+        <header className="relative flex items-center justify-center mb-8 text-center">
+          <button onClick={() => navigate(-1)} className="absolute left-0 p-2 hover:bg-slate-200 rounded-full transition-colors">
+            <ArrowLeft size={20} />
           </button>
-          <h1 className="text-2xl font-bold text-slate-900">Novo Cliente</h1>
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">Novo Cliente</h1>
+            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mt-0.5">Cadastro Técnico</p>
+          </div>
         </header>
 
         <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
           <div className="space-y-2">
-            <Label htmlFor="name">Nome Completo *</Label>
+            <Label htmlFor="name" className="text-xs font-bold text-slate-700">Nome Completo *</Label>
             <Input 
               id="name" 
               placeholder="Ex: Maria Silva" 
@@ -76,11 +79,12 @@ const NewClient = () => {
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
               disabled={loading}
+              className="h-11 rounded-xl text-sm"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="email">E-mail (Opcional)</Label>
+            <Label htmlFor="email" className="text-xs font-bold text-slate-700">E-mail (Opcional)</Label>
             <Input 
               id="email" 
               type="email" 
@@ -88,22 +92,24 @@ const NewClient = () => {
               value={formData.email}
               onChange={(e) => setFormData({...formData, email: e.target.value})}
               disabled={loading}
+              className="h-11 rounded-xl text-sm"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Telefone (Opcional)</Label>
+            <Label htmlFor="phone" className="text-xs font-bold text-slate-700">Telefone (Opcional)</Label>
             <Input 
               id="phone" 
               placeholder="(11) 99999-9999" 
               value={formData.phone}
               onChange={(e) => setFormData({...formData, phone: e.target.value})}
               disabled={loading}
+              className="h-11 rounded-xl text-sm"
             />
           </div>
 
-          <Button type="submit" className="w-full gap-2 h-12 text-lg bg-accent hover:bg-accent/90" disabled={loading}>
-            {loading ? <Loader2 className="animate-spin" /> : <><Save size={20} /> Salvar Cliente</>}
+          <Button type="submit" className="w-full gap-2 h-12 text-sm font-bold bg-accent hover:bg-accent/90 rounded-xl" disabled={loading}>
+            {loading ? <Loader2 className="animate-spin" /> : <><Save size={18} /> Salvar Cliente</>}
           </Button>
         </form>
       </main>
