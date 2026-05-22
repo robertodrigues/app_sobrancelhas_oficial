@@ -71,26 +71,33 @@ const AnalysisResult = () => {
 
     setIsGeneratingPdf(true);
     try {
-      // 1. Garantir que todas as imagens estão totalmente carregadas na memória
-      const imgs = element.querySelectorAll('img');
-      await Promise.all(Array.from(imgs).map(img => {
-        if (img.complete) return Promise.resolve();
-        return new Promise(resolve => {
-          img.onload = resolve;
-          img.onerror = resolve;
+      // 1. Pré-carregar TODAS as imagens com Promise.all usando new Image()
+      const imgs = Array.from(element.querySelectorAll('img'));
+      await Promise.all(imgs.map(img => {
+        return new Promise((resolve) => {
+          const tempImg = new Image();
+          tempImg.onload = () => resolve(true);
+          tempImg.onerror = () => resolve(false);
+          tempImg.src = img.src;
         });
       }));
 
       // 2. Pequena pausa para garantir que o navegador calculou o layout final
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      // 3. Captura o elemento com alta definição
+      // 3. Captura o elemento com alta definição e opções otimizadas para html2canvas
       const canvas = await html2canvas(element, {
         useCORS: true,
         allowTaint: true,
         scale: 2,
         backgroundColor: pdfBgColor,
         logging: false,
+        imageTimeout: 0,
+        onclone: (doc) => {
+          doc.querySelectorAll('img').forEach(img => {
+            img.style.display = 'block';
+          });
+        }
       });
 
       const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -152,34 +159,43 @@ const AnalysisResult = () => {
             <div className="flex flex-row justify-between gap-4 w-full">
               <div className="w-[48%] space-y-2">
                 <p className="text-[10px] font-bold text-slate-400 uppercase text-center">Antes</p>
-                <div className="rounded-2xl overflow-hidden shadow-md border-2 border-white bg-slate-950/5 p-1">
+                <div 
+                  className="rounded-2xl shadow-md border-2 border-white p-1"
+                  style={{ backgroundColor: 'rgba(2, 6, 23, 0.05)' }}
+                >
                   <img 
                     src={allImages[0].url} 
-                    className="w-full h-auto rounded-xl block" 
-                    style={{ display: 'block', width: '100%', height: 'auto' }} 
+                    className="w-full h-auto block" 
+                    style={{ display: 'block', width: '100%', height: 'auto', borderRadius: '12px' }} 
                     alt="Antes" 
                   />
                 </div>
               </div>
               <div className="w-[48%] space-y-2">
                 <p className="text-[10px] font-bold text-accent uppercase text-center">Depois</p>
-                <div className="rounded-2xl overflow-hidden shadow-md border-2 border-accent bg-slate-950/5 p-1">
+                <div 
+                  className="rounded-2xl shadow-md border-2 border-accent p-1"
+                  style={{ backgroundColor: 'rgba(2, 6, 23, 0.05)' }}
+                >
                   <img 
                     src={allImages[1].url} 
-                    className="w-full h-auto rounded-xl block" 
-                    style={{ display: 'block', width: '100%', height: 'auto' }} 
+                    className="w-full h-auto block" 
+                    style={{ display: 'block', width: '100%', height: 'auto', borderRadius: '12px' }} 
                     alt="Depois" 
                   />
                 </div>
               </div>
             </div>
           ) : (
-            <div className="relative rounded-3xl overflow-hidden shadow-lg border-4 border-white bg-slate-950/5 p-2">
+            <div 
+              className="relative rounded-3xl shadow-lg border-4 border-white p-2"
+              style={{ backgroundColor: 'rgba(2, 6, 23, 0.05)' }}
+            >
               <img 
                 src={image} 
                 alt="Análise" 
-                className="w-full h-auto rounded-2xl block" 
-                style={{ display: 'block', width: '100%', height: 'auto' }} 
+                className="w-full h-auto block" 
+                style={{ display: 'block', width: '100%', height: 'auto', borderRadius: '20px' }} 
               />
               {analysis.isComparativo && (
                 <div className="absolute top-4 right-4">
