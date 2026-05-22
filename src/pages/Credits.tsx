@@ -13,10 +13,8 @@ const Credits = () => {
   const [creditAmount, setCreditAmount] = useState('');
   const [currentCredits, setCurrentCredits] = useState(0);
 
-  // Simulação de carregar créditos atuais
   useEffect(() => {
-    // Em uma implementação real, viria da API ou Supabase
-    setCurrentCredits(150); // Exemplo: 150 créditos
+    setCurrentCredits(150);
   }, []);
 
   const handleBuyCredits = async () => {
@@ -29,8 +27,8 @@ const Credits = () => {
     try {
       // Simulação de compra - em produção, integrar com Stripe, PayPal, etc.
       // Exemplo: await stripe.charge(amount);
-      
-      // Simula resposta bem-sucedida
+
+      // Placeholder: Substitua por lógica real de pagamento
       setTimeout(() => {
         showSuccess(`Compra de ${creditAmount} créditos realizada com sucesso!`);
         setCurrentCredits(prev => prev + parseInt(creditAmount));
@@ -89,6 +87,13 @@ const Credits = () => {
                 <Button 
                   variant="outline" 
                   className="px-4 h-12 rounded-xl border-slate-300"
+                  onClick={() => setCreditAmount('10')}
+                >
+                  10
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="px-4 h-12 rounded-xl border-slate-300"
                   onClick={() => setCreditAmount('50')}
                 >
                   50
@@ -99,13 +104,6 @@ const Credits = () => {
                   onClick={() => setCreditAmount('100')}
                 >
                   100
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="px-4 h-12 rounded-xl border-slate-300"
-                  onClick={() => setCreditAmount('500')}
-                >
-                  500
                 </Button>
               </div>
             </div>
@@ -128,7 +126,7 @@ const Credits = () => {
             <div className="pt-4 border-t border-slate-100">
               <h3 className="text-sm font-semibold text-slate-900 mb-3">Histórico de Compras</h3>
               <div className="space-y-3">
-                {[50, 100, 500].map(amount => (
+                {[10, 50, 100].map(amount => (
                   <div key={amount} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center">
