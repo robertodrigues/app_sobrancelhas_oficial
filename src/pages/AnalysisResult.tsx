@@ -227,11 +227,6 @@ const AnalysisResult = () => {
                 }}
                 aria-label="Análise"
               />
-              {analysis.isComparativo && (
-                <div className="absolute top-4 right-4">
-                  <Badge className="bg-accent text-white border-none shadow-lg text-[10px]">Montagem Técnica</Badge>
-                </div>
-              )}
             </div>
           )}
 
