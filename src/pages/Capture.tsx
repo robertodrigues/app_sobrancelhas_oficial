@@ -225,16 +225,6 @@ const Capture = () => {
                       </div>
                     </div>
                   ))}
-                  
-                  {analysisMode === 'comparison' && capturedImages.length < 2 && (
-                    <button 
-                      onClick={() => fileInputRef.current?.click()}
-                      className="w-32 h-44 rounded-2xl border-2 border-dashed border-slate-700 flex flex-col items-center justify-center gap-2 text-slate-500 hover:border-accent hover:text-accent transition-colors"
-                    >
-                      <Plus size={24} />
-                      <span className="text-[10px] font-bold uppercase">Add Foto 2</span>
-                    </button>
-                  )}
                 </div>
                 <div className="text-white">
                   <h3 className="text-sm font-bold">Tudo Pronto!</h3>
@@ -268,7 +258,7 @@ const Capture = () => {
       {/* Bottom Controls */}
       <div className="bg-slate-900 p-8 flex flex-col items-center gap-6">
         {!currentImage ? (
-          !hasAtLeastOneImage || (analysisMode === 'comparison' && capturedImages.length < 2) ? (
+          !hasAtLeastOneImage ? (
             <div className="flex items-center gap-8">
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
               <button 
