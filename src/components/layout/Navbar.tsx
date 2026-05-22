@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Camera, Users, LayoutDashboard, Paintbrush } from 'lucide-react';
+import { Camera, Users, LayoutDashboard, Paintbrush, CreditCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const Navbar = () => {
@@ -9,7 +9,7 @@ const Navbar = () => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 z-50 md:top-0 md:bottom-auto md:border-b md:border-t-0">
-      <div className="max-w-lg mx-auto grid grid-cols-4 items-center h-20 md:h-16">
+      <div className="max-w-lg mx-auto grid grid-cols-5 items-center h-20 md:h-16">
         
         {/* Início */}
         <Link to="/" className={cn(
@@ -46,6 +46,15 @@ const Navbar = () => {
         )}>
           <Paintbrush size={20} strokeWidth={isActive('/edicao') ? 2.5 : 2} />
           <span className="text-[9px] font-bold">Edição</span>
+        </Link>
+
+        {/* Créditos */}
+        <Link to="/creditos" className={cn(
+          "flex flex-col items-center justify-center gap-1 transition-all duration-300",
+          isActive('/creditos') ? "text-accent" : "text-slate-400 hover:text-slate-600"
+        )}>
+          <CreditCard size={20} strokeWidth={isActive('/creditos') ? 2.5 : 2} />
+          <span className="text-[9px] font-bold">Créditos</span>
         </Link>
 
       </div>

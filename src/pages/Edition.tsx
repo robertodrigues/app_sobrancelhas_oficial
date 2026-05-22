@@ -17,10 +17,8 @@ import {
   RotateCcw,
   Sparkles,
   Trash2,
-  Sliders,
-  CreditCard
+  Sliders
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
 import html2canvas from 'html2canvas';
 import { cn } from '@/lib/utils';
@@ -343,14 +341,6 @@ const Edition = () => {
 
             <input type="file" ref={beforeInputRef} onChange={(e) => handleImageUpload(e, 'before')} accept="image/*" className="hidden" />
             <input type="file" ref={afterInputRef} onChange={(e) => handleImageUpload(e, 'after')} accept="image/*" className="hidden" />
-
-            {/* Botão de Créditos integrado na página */}
-            <Button asChild variant="outline" className="w-full max-w-[340px] h-12 rounded-2xl border-dashed border-slate-300 text-slate-600 hover:text-accent hover:border-accent gap-2">
-              <Link to="/creditos">
-                <CreditCard size={16} />
-                Gerenciar Meus Créditos
-              </Link>
-            </Button>
           </div>
 
           {/* Painel de Controle (Direita) */}
