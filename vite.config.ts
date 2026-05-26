@@ -4,8 +4,6 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { fileURLToPath } from "url";
 
-import { nitro } from "nitro/vite";
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
@@ -13,7 +11,7 @@ export default defineConfig({
     host: "::",
     port: 8080,
   },
-  plugins: [dyadComponentTagger(), react(), nitro()],
+  plugins: [dyadComponentTagger(), react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
