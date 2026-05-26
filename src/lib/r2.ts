@@ -1,4 +1,6 @@
-const R2_UPLOAD_ENDPOINT = "/api/uploads/r2";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://app-sobrancelhas-oficial.onrender.com";
+
+const R2_UPLOAD_ENDPOINT = `${API_BASE_URL.replace(/\/$/, "")}/api/uploads/r2`;
 
 export interface UploadR2Response {
   url: string;
