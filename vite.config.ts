@@ -7,11 +7,26 @@ export default defineConfig(() => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      "/api": {
+        target: "http://localhost:3001",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   plugins: [dyadComponentTagger(), react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  optimizeDeps: {
+    exclude: ["@anthropic-ai/sdk"],
+  },
+  build: {
+    rollupOptions: {
+      external: ["@anthropic-ai/sdk"],
     },
   },
 }));
