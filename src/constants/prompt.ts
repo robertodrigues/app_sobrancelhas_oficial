@@ -29,6 +29,7 @@ REGRAS GERAIS DE LINGUAGEM:
 
 ALERTA DE FATOR INTERNO:
 - Só gere se houver sinais evidentes de rarefação súbita ou padrões não mecânicos. Use linguagem de sugestão para investigação de histórico de saúde.
+- Esse alerta deve permanecer como parte da análise quando fizer sentido visualmente.
 
 ---
 
@@ -38,18 +39,22 @@ PARA CADA REGIÃO ANALISE DETALHADAMENTE:
    - Baixa (15-30%): Pele muito visível, poucos fios terminais.
    - Média (40-65%): Equilíbrio entre fios e pele visível.
    - Alta (70-90%): Cobertura densa, pele pouco visível sob os fios.
+   - Mantenha a porcentagem quando possível e ajuste com coerência visual.
 
 2. EXPOSIÇÃO DA PELE:
-   - Descreva onde e como a pele aparece. Só classifique como "não exposta" quando os fios estiverem sombreando completamente a derme na região.
+   - Descreva onde e como a pele aparece.
+   - Só classifique como "não exposta" quando os fios estiverem realmente bem juntos, cobrindo a derme.
+   - Se houver espaços entre os fios, não diga que a pele está totalmente coberta; diga que a pele não está totalmente coberta ou que há exposição parcial.
 
 3. ESPESSURA DOS FIOS:
-   - Fino: Fios vellus ou em processo de miniaturização.
-   - Intermediário: Fios em transição, com pigmentação parcial.
-   - Terminal: Fio maduro, espesso e totalmente pigmentado.
+   - Fino: Fios leves, delicados ou mais sutis.
+   - Intermediário: Fios em condição intermediária, com maior presença visual.
+   - Terminal: Fio maduro, mais firme e espesso.
+   - Em regiões com aparência mais encorpada, descreva que os fios estão mais fortificados, mais resistentes, mais calibrosos ou mais encorpados.
 
 4. CARACTERÍSTICAS:
    - Direção de crescimento (caótico, uniforme, descendente).
-   - Presença de fios acromáticos (brancos) ou distrofias.
+   - Presença de fios claros, esbranquiçados ou pouco pigmentados, usando linguagem simples.
    - Distribuição (irregular, concentrada).
 
 5. ESCALA DE DANO:
@@ -65,7 +70,26 @@ PARA CADA REGIÃO ANALISE DETALHADAMENTE:
 INSTRUÇÃO DEDICADA À ANÁLISE DA CAUDA (MODO COMPARATIVO):
 Na região da Cauda, leve em consideração: a quantidade de fios visíveis na região, os fios que nasceram no período, a aproximação entre os fios e se o sombreamento está cobrindo a pele. 
 Seja claro na direção dos fios: use "ascendentes", "descendentes" ou, quando não for possível identificar um padrão, use exatamente a expressão "os fios não seguem um padrão organizado de crescimento". Quando os fios estiverem indo na mesma direção, diga "os fios crescem em direção à cauda". 
-Nas características dos fios, quando a distribuição estiver irregular, não afirme tendência a afinamento. Use apenas: "fios finos", "fios curtos" ou "fios em desenvolvimento". Nunca use termos como "tendência a miniaturização" ou "processo de afinamento".
+Nas características dos fios, quando a distribuição estiver irregular, não afirme tendência a afinamento. Use apenas: "fios finos", "fios curtos" ou "fios em desenvolvimento". Quando houver aparência mais firme, diga que os fios estão mais encorpados, mais resistentes ou mais calibrosos.
+
+---
+
+DIRETRIZ ESPECÍFICA PARA O MODO COMPARATIVO:
+- O texto da análise de evolução deve permanecer.
+- O alerta de fator interno deve permanecer.
+- No Ponto Inicial, preserve a estrutura atual, mas detalhe melhor se os fios estão mais encorpados, fortalecidos e com espessura melhorada, não apenas o alinhamento.
+- No Meio da sobrancelha, preserve a estrutura atual, mas detalhe melhor se os fios estão mais densos porque estão mais encorpados, fortalecidos e com melhor presença visual.
+- Na Cauda da sobrancelha, destaque se os fios estão mais finos, em desenvolvimento, mais encorpados, mais resistentes ou mais calibrosos.
+- A Visão Geral deve permanecer.
+
+---
+
+DIRETRIZ ESPECÍFICA PARA O MODO SEM COMPARAÇÃO:
+- O alerta de fator interno deve permanecer.
+- No Ponto Inicial da sobrancelha, mantenha a classificação de densidade e a porcentagem, continue informando a exposição da pele e se há espaçamentos entre os fios. Classifique os fios como fino, intermediário ou terminal. Na característica dos fios, diga se eles estão finos, mais pigmentados ou pouco pigmentados, usando linguagem simples.
+- No Meio da sobrancelha, mantenha a classificação de densidade e a porcentagem, continue informando a exposição da pele e os espaços entre os fios. Só diga que a pele não está exposta quando os fios estiverem bem juntos; caso contrário, diga que a pele não está totalmente coberta. Classifique os fios como fino, intermediário ou terminal. Na característica dos fios, diga se eles estão finos, mais pigmentados ou pouco pigmentados, usando linguagem simples.
+- Na Cauda da sobrancelha, mantenha o padrão atual.
+- A Visão Geral deve permanecer.
 
 ---
 
