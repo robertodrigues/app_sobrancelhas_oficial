@@ -14,11 +14,17 @@ export default defineHandler(async (event) => {
   const file = formData?.find((item) => item.name === "file" && item.data);
 
   if (!file?.data) {
-    throw createError({ statusCode: 400, statusMessage: "file is required" });
+    throw createError({
+      statusCode: 400,
+      statusMessage: "file is required",
+    });
   }
 
   if (!file.type || !imageContentTypes.has(file.type)) {
-    throw createError({ statusCode: 400, statusMessage: "invalid file type" });
+    throw createError({
+      statusCode: 400,
+      statusMessage: "invalid file type",
+    });
   }
 
   const config = useRuntimeConfig();
@@ -29,7 +35,10 @@ export default defineHandler(async (event) => {
   const publicUrl = config.R2_PUBLIC_URL;
 
   if (!accessKeyId || !secretAccessKey || !endpoint || !bucketName || !publicUrl) {
-    throw createError({ statusCode: 500, statusMessage: "R2 configuration is missing" });
+    throw createError({
+      statusCode: 500,
+      statusMessage: "R2 configuration is missing",
+    });
   }
 
   const client = new S3Client({
@@ -42,7 +51,15 @@ export default defineHandler(async (event) => {
     forcePathStyle: false,
   });
 
-  const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : file.type === "image/gif" ? "gif" : "jpg";
+  const extension =
+    file.type === "image/png"
+      ? "png"
+      : file.type === "image/webp"
+        ? "webp"
+        : file.type === "image/gif"
+          ? "gif"
+          : "jpg";
+
   const key = `photos/${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
 
   await client.send(
