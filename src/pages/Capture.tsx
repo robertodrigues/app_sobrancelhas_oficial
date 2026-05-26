@@ -32,7 +32,7 @@ const EyebrowSVG = ({ className = "w-32 h-12 text-accent" }: { className?: strin
   </svg>
 );
 
-const MAX_UPLOAD_DIMENSION = 4096;
+const MAX_UPLOAD_DIMENSION = 8192;
 
 const resizeImageIfNeeded = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -292,7 +292,7 @@ const Capture = () => {
           </>
         ) : (
           <div className="relative h-full w-full">
-            <img src={currentImage} className="h-full w-full object-cover" />
+            <img src={currentImage} className="h-full w-full object-contain" />
             <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-6 text-center">
                <div className="bg-accent/90 backdrop-blur-md px-6 py-3 rounded-2xl text-white text-xs font-bold border border-white/20 shadow-2xl">
                  Foto Carregada!
