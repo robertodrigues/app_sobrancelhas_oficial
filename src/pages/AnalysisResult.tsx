@@ -64,14 +64,12 @@ const AnalysisResult = () => {
 
   const hasTwoImages = allImages && Array.isArray(allImages) && allImages.length >= 2;
 
-  // Função para gerar o PDF com a logo e cor de fundo personalizadas
   const handleGeneratePdf = async () => {
     const element = reportRef.current;
     if (!element) return;
 
     setIsGeneratingPdf(true);
     try {
-      // 1. Pré-carregar TODAS as imagens (incluindo as de background) com Promise.all usando new Image()
       const urlsToPreload: string[] = [];
       if (analysis.isComparativo && hasTwoImages) {
         urlsToPreload.push(allImages[0].url, allImages[1].url);
@@ -85,45 +83,47 @@ const AnalysisResult = () => {
       await Promise.all(urlsToPreload.map(url => {
         return new Promise((resolve) => {
           const tempImg = new Image();
+          tempImg.crossOrigin = 'anonymous';
           tempImg.onload = () => resolve(true);
           tempImg.onerror = () => resolve(false);
           tempImg.src = url;
         });
       }));
 
-      // 2. Pequena pausa para garantir que o navegador calculou o layout final
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      // 3. Captura o elemento com alta definição e opções otimizadas para html2canvas
       const canvas = await html2canvas(element, {
         useCORS: true,
         allowTaint: true,
-        scale: 2,
+        scale: 4,
         backgroundColor: pdfBgColor,
         logging: false,
         imageTimeout: 0,
+        removeContainer: true,
+        foreignObjectRendering: false,
         onclone: (doc) => {
           doc.querySelectorAll('img').forEach(img => {
             img.style.display = 'block';
+            img.style.imageRendering = 'auto';
           });
         }
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210; // Largura A4 em mm
-      const pageHeight = 295; // Altura A4 em mm
+      const imgWidth = 210;
+      const pageHeight = 295;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       let heightLeft = imgHeight;
       let position = 0;
 
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
       heightLeft -= pageHeight;
 
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
         heightLeft -= pageHeight;
       }
 
@@ -153,84 +153,53 @@ const AnalysisResult = () => {
           </div>
         </header>
 
-        {/* Container que será capturado no PDF */}
         <div ref={reportRef} className="space-y-6 p-4 rounded-3xl">
           
-          {/* Logo Personalizada no Topo do PDF */}
           {pdfLogo && (
             <div className="flex justify-center py-4 border-b border-slate-200/50">
               <img src={pdfLogo} className="h-16 object-contain" alt="Logo Designer" />
             </div>
           )}
 
-          {/* Imagens Analisadas sem distorção no PDF (Usando divs com background-image) */}
           {analysis.isComparativo && hasTwoImages ? (
             <div className="flex flex-row justify-between gap-4 w-full">
               <div className="w-[48%] space-y-2">
                 <p className="text-[10px] font-bold text-slate-400 uppercase text-center">Antes</p>
-                <div 
-                  className="rounded-2xl shadow-md border-2 border-white p-1"
-                  style={{ backgroundColor: 'rgba(2, 6, 23, 0.05)' }}
-                >
-                  <div 
-                    style={{
-                      backgroundImage: `url(${allImages[0].url})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      backgroundRepeat: 'no-repeat',
-                      width: '100%',
-                      aspectRatio: '1/1',
-                      borderRadius: '12px',
-                      display: 'block'
-                    }}
-                    aria-label="Antes"
+                <div className="rounded-2xl shadow-md border-2 border-white p-1" style={{ backgroundColor: 'rgba(2, 6, 23, 0.05)' }}>
+                  <img
+                    src={allImages[0].url}
+                    crossOrigin="anonymous"
+                    className="w-full aspect-square rounded-[12px] object-cover block"
+                    alt="Antes"
+                    style={{ imageRendering: 'auto' }}
                   />
                 </div>
               </div>
               <div className="w-[48%] space-y-2">
                 <p className="text-[10px] font-bold text-accent uppercase text-center">Depois</p>
-                <div 
-                  className="rounded-2xl shadow-md border-2 border-accent p-1"
-                  style={{ backgroundColor: 'rgba(2, 6, 23, 0.05)' }}
-                >
-                  <div 
-                    style={{
-                      backgroundImage: `url(${allImages[1].url})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      backgroundRepeat: 'no-repeat',
-                      width: '100%',
-                      aspectRatio: '1/1',
-                      borderRadius: '12px',
-                      display: 'block'
-                    }}
-                    aria-label="Depois"
+                <div className="rounded-2xl shadow-md border-2 border-accent p-1" style={{ backgroundColor: 'rgba(2, 6, 23, 0.05)' }}>
+                  <img
+                    src={allImages[1].url}
+                    crossOrigin="anonymous"
+                    className="w-full aspect-square rounded-[12px] object-cover block"
+                    alt="Depois"
+                    style={{ imageRendering: 'auto' }}
                   />
                 </div>
               </div>
             </div>
           ) : (
-            <div 
-              className="relative rounded-3xl shadow-lg border-4 border-white p-2"
-              style={{ backgroundColor: 'rgba(2, 6, 23, 0.05)' }}
-            >
-              <div 
-                style={{
-                  backgroundImage: `url(${image})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
-                  width: '100%',
-                  aspectRatio: '1/1',
-                  borderRadius: '20px',
-                  display: 'block'
-                }}
-                aria-label="Análise"
+            <div className="relative rounded-3xl shadow-lg border-4 border-white p-2" style={{ backgroundColor: 'rgba(2, 6, 23, 0.05)' }}>
+              <img
+                src={image}
+                crossOrigin="anonymous"
+                className="w-full aspect-square rounded-[20px] object-cover block"
+                alt="Análise"
+                style={{ imageRendering: 'auto' }}
               />
             </div>
           )}
 
-          {/* Status de Comparação */}
           {analysis.isComparativo && analysis.comparativo && (
             <Card className="border-none shadow-lg bg-accent text-white rounded-3xl overflow-hidden">
               <CardContent className="p-6">
@@ -252,7 +221,6 @@ const AnalysisResult = () => {
             </Card>
           )}
 
-          {/* Alerta de Causa Interna */}
           {analysis.alertaInterno?.presente && (
             <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex gap-3 items-start">
               <AlertTriangle className="text-amber-600 shrink-0" size={18} />
@@ -263,7 +231,6 @@ const AnalysisResult = () => {
             </div>
           )}
 
-          {/* Análise por Região */}
           <section className="space-y-4">
             <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
               <Target size={18} className="text-accent" />
@@ -281,7 +248,6 @@ const AnalysisResult = () => {
                   <CardContent className="space-y-4">
                     <p className="text-xs text-slate-700 leading-relaxed">{data.descricao}</p>
                     
-                    {/* Substituído Grid por Flexbox tradicional para compatibilidade com html2canvas */}
                     <div className="flex flex-wrap gap-2 w-full">
                       <div className="bg-white/50 p-2 rounded-lg border border-white/50 w-[calc(50%-4px)]">
                         <p className="text-[9px] font-bold text-slate-400 uppercase">Densidade</p>
@@ -348,7 +314,6 @@ const AnalysisResult = () => {
             })}
           </section>
 
-          {/* Resumo Geral */}
           <Card className="border-none shadow-sm bg-white/90 rounded-3xl">
             <CardHeader>
               <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider">
@@ -367,7 +332,6 @@ const AnalysisResult = () => {
 
         </div>
 
-        {/* Botão de Gerar PDF */}
         <div className="mt-6 px-4">
           <Button 
             onClick={handleGeneratePdf} 
