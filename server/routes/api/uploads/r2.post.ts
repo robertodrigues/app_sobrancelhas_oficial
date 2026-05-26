@@ -12,7 +12,7 @@ const imageContentTypes = new Set([
 export default defineHandler(async (event) => {
   const formData = await readMultipartFormData(event);
 
-  if (!formData || formData.length === 0) {
+  if (!formData?.length) {
     throw createError({
       statusCode: 400,
       statusMessage: "Nenhum arquivo foi enviado.",
@@ -56,7 +56,6 @@ export default defineHandler(async (event) => {
       accessKeyId,
       secretAccessKey,
     },
-    forcePathStyle: false,
   });
 
   const extension =
