@@ -172,12 +172,17 @@ const Capture = () => {
 
     setIsPreparingImage(true);
     try {
-      const url = currentImage || (currentImageFile ? (await uploadPhotoToR2(currentImageFile)).url : null);
-      if (!url) {
+      const uploadedUrl = currentImageFile
+        ? (await uploadPhotoToR2(currentImageFile)).url
+        : currentImage;
+
+      if (!uploadedUrl) {
         showError('Não foi possível carregar a imagem.');
         return;
       }
-      setCurrentImage(url);
+
+      setCurrentImage(uploadedUrl);
+      setCurrentImageFile(null);
       setIsAnnotating(true);
     } catch (error: any) {
       showError(error.message || 'Não foi possível enviar a foto.');
