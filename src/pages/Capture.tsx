@@ -157,13 +157,17 @@ const Capture = () => {
   };
 
   const handleAnnotateImage = async () => {
-    if (!currentImageFile) {
+    if (!currentImageFile && !currentImage) {
       showError('Selecione uma imagem antes de marcar.');
       return;
     }
 
     try {
-      const { url } = await uploadPhotoToR2(currentImageFile);
+      const url = currentImage || (currentImageFile ? (await uploadPhotoToR2(currentImageFile)).url : null);
+      if (!url) {
+        showError('Não foi possível carregar a imagem.');
+        return;
+      }
       setCurrentImage(url);
       setIsAnnotating(true);
     } catch (error: any) {
