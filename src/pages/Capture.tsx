@@ -21,6 +21,7 @@ import { showSuccess, showError } from '@/utils/toast';
 import { performDualAnalysis } from '@/services/analysis';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
+import { uploadPhotoToR2 } from '@/lib/r2';
 
 // Desenho de uma sobrancelha estilizada em SVG
 const EyebrowSVG = ({ className = "w-32 h-12 text-accent" }: { className?: string }) => (
@@ -35,6 +36,7 @@ const EyebrowSVG = ({ className = "w-32 h-12 text-accent" }: { className?: strin
 const Capture = () => {
   const [capturedImages, setCapturedImages] = useState<{url: string, bboxes: Record<string, RegionBBox>}[]>([]);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
+  const [currentImageFile, setCurrentImageFile] = useState<File | null>(null);
   const [isAnnotating, setIsAnnotating] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
@@ -65,7 +67,10 @@ const Capture = () => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => setCurrentImage(e.target?.result as string);
+      reader.onload = (e) => {
+        setCurrentImage(e.target?.result as string);
+        setCurrentImageFile(file);
+      };
       reader.readAsDataURL(file);
     }
   };
@@ -73,6 +78,11 @@ const Capture = () => {
   const handleConfirm = async () => {
     if (!selectedClientId) {
       showError('Por favor, selecione um cliente.');
+      return;
+    }
+
+    if (capturedImages.length === 0) {
+      showError('Adicione ao menos uma imagem.');
       return;
     }
     
@@ -107,15 +117,32 @@ const Capture = () => {
     }
   };
 
-  const addImageToFlow = (url: string, bboxes: Record<string, RegionBBox>) => {
+  const addImageToFlow = async (url: string, bboxes: Record<string, RegionBBox>) => {
     setCapturedImages(prev => [...prev, { url, bboxes }]);
     setCurrentImage(null);
+    setCurrentImageFile(null);
     setIsAnnotating(false);
+  };
+
+  const handleAnnotateImage = async () => {
+    if (!currentImageFile) {
+      showError('Selecione uma imagem antes de marcar.');
+      return;
+    }
+
+    try {
+      const { url } = await uploadPhotoToR2(currentImageFile);
+      setCurrentImage(url);
+      setIsAnnotating(true);
+    } catch (error: any) {
+      showError(error.message || 'Não foi possível enviar a foto.');
+    }
   };
 
   const resetFlow = () => {
     setCapturedImages([]);
     setCurrentImage(null);
+    setCurrentImageFile(null);
     setIsAnnotating(false);
   };
 
@@ -187,7 +214,6 @@ const Capture = () => {
           <>
             {!hasAtLeastOneImage ? (
               <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center p-8 text-center">
-                {/* Quadrado com Desenho de Sobrancelha(s) */}
                 <div className="w-48 h-48 rounded-3xl border-2 border-dashed border-slate-700 bg-slate-800/30 flex flex-col items-center justify-center p-4 mb-6 transition-all duration-300">
                   {analysisMode === 'single' ? (
                     <div className="flex flex-col items-center gap-2">
@@ -243,7 +269,6 @@ const Capture = () => {
           </div>
         )}
 
-        {/* Loading Overlay */}
         {isAnalyzing && (
           <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center text-white z-50">
             <BrainCircuit className="w-16 h-16 animate-pulse text-accent mb-4" />
@@ -253,7 +278,6 @@ const Capture = () => {
         )}
       </div>
 
-      {/* Bottom Controls */}
       <div className="bg-slate-900 p-8 flex flex-col items-center gap-6">
         {!currentImage ? (
           !hasAtLeastOneImage ? (
@@ -276,7 +300,6 @@ const Capture = () => {
             </div>
           ) : null
         ) : (
-
           <div className="flex flex-col gap-4 w-full max-w-xs">
             <div className="flex gap-3">
               <Button 
@@ -288,7 +311,7 @@ const Capture = () => {
               </Button>
               <Button 
                 className="flex-1 bg-accent hover:bg-accent/90 h-14 rounded-2xl shadow-xl shadow-accent/20 text-xs" 
-                onClick={() => setIsAnnotating(true)}
+                onClick={handleAnnotateImage}
               >
                 <Pencil className="mr-2 h-4 w-4" /> Marcar
               </Button>
@@ -296,7 +319,6 @@ const Capture = () => {
           </div>
         )}
 
-        {/* Botão de Gerar Diagnóstico aparece quando tem pelo menos 1 imagem */}
         {hasAtLeastOneImage && !currentImage && (
           <Button 
             className="w-full h-14 bg-accent hover:bg-accent/90 text-sm font-bold rounded-2xl shadow-lg shadow-accent/20" 
