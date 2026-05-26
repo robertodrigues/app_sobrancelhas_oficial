@@ -1,6 +1,10 @@
 import { RegionBBox } from '@/components/camera/ImageAnnotator';
 import { PROMPT_ESPECIALISTA } from '../constants/prompt';
 
+type AnthropicMessageContent =
+  | { type: 'text'; text: string }
+  | { type: 'image'; source: { type: 'base64'; media_type: 'image/jpeg'; data: string } };
+
 const cropImage = (base64Str: string, bbox: RegionBBox): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -23,29 +27,37 @@ const cropImage = (base64Str: string, bbox: RegionBBox): Promise<string> => {
   });
 };
 
-export const analyzeWithClaude = async (images: {url: string, bboxes: Record<string, RegionBBox>}[]) => {
+export const analyzeWithClaude = async (images: { url: string; bboxes: Record<string, RegionBBox> }[]) => {
   try {
-    const imageContent: any[] = [];
-    
+    const content: AnthropicMessageContent[] = [];
+
     for (let i = 0; i < images.length; i++) {
-      const label = images.length > 1 ? (i === 0 ? "ANTES" : "DEPOIS") : "VISÃO GERAL";
-      imageContent.push({ type: "text", text: `Imagem ${i + 1}: ${label}` });
-      imageContent.push({
-        type: "image",
-        source: { type: "base64", media_type: "image/jpeg", data: images[i].url.split(',')[1] }
+      const label = images.length > 1 ? (i === 0 ? 'ANTES' : 'DEPOIS') : 'VISÃO GERAL';
+      content.push({ type: 'text', text: `Imagem ${i + 1}: ${label}` });
+      content.push({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: 'image/jpeg',
+          data: images[i].url.split(',')[1],
+        },
       });
 
       for (const [name, box] of Object.entries(images[i].bboxes)) {
         const croppedData = await cropImage(images[i].url, box);
-        imageContent.push({ type: "text", text: `Detalhe ${label} - Região ${name.toUpperCase()}` });
-        imageContent.push({
-          type: "image",
-          source: { type: "base64", media_type: "image/jpeg", data: croppedData.split(',')[1] }
+        content.push({ type: 'text', text: `Detalhe ${label} - Região ${name.toUpperCase()}` });
+        content.push({
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: 'image/jpeg',
+            data: croppedData.split(',')[1],
+          },
         });
       }
     }
 
-    imageContent.push({ type: "text", text: PROMPT_ESPECIALISTA });
+    content.push({ type: 'text', text: PROMPT_ESPECIALISTA });
 
     const response = await fetch('/api/anthropic', {
       method: 'POST',
@@ -55,7 +67,8 @@ export const analyzeWithClaude = async (images: {url: string, bboxes: Record<str
       body: JSON.stringify({
         model: 'claude-3-5-sonnet-latest',
         max_tokens: 2000,
-        messages: [{ role: 'user', content: imageContent }],
+        temperature: 0,
+        messages: [{ role: 'user', content }],
       }),
     });
 
@@ -71,7 +84,7 @@ export const analyzeWithClaude = async (images: {url: string, bboxes: Record<str
     const result = JSON.parse(clean.substring(start, end));
     return { ...result, isComparativo: images.length > 1 };
   } catch (error: any) {
-    console.error("Erro Claude:", error);
+    console.error('Erro Claude:', error);
     throw error;
   }
 };

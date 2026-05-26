@@ -2,18 +2,28 @@ const express = require('express');
 const { Anthropic } = require('@anthropic-ai/sdk');
 
 const app = express();
-const anthropic = new Anthropic();
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
 
-app.use(express.json());
+app.use(express.json({ limit: '20mb' }));
 
 app.post('/api/anthropic', async (req, res) => {
   try {
-    const { prompt } = req.body;
-    const response = await anthropic.generateText({
-      prompt: prompt,
-      max_tokens: 1000,
-      temperature: 0.7
+    const {
+      model,
+      messages,
+      max_tokens,
+      temperature,
+    } = req.body;
+
+    const response = await anthropic.messages.create({
+      model,
+      messages,
+      max_tokens,
+      temperature,
     });
+
     res.json(response);
   } catch (error) {
     console.error('Erro na API da Anthropic:', error);
