@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const { Anthropic } = require('@anthropic-ai/sdk');
 
 const app = express();
@@ -6,6 +7,7 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+app.use(cors());
 app.use(express.json({ limit: '20mb' }));
 
 app.post('/api/anthropic', async (req, res) => {
