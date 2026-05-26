@@ -1,25 +1,20 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import Webcam from 'react-webcam';
-import Navbar from '@/components/layout/Navbar';
-import CameraOverlay from '@/components/camera/CameraOverlay';
 import ImageAnnotator, { RegionBBox } from '@/components/camera/ImageAnnotator';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Camera, 
-  RefreshCw, 
-  Check, 
-  ArrowLeft, 
-  Upload, 
-  Loader2, 
-  User, 
-  BrainCircuit, 
+import {
+  Camera,
+  RefreshCw,
+  Check,
+  ArrowLeft,
+  Upload,
+  Loader2,
+  User,
+  BrainCircuit,
   Pencil,
   FileText,
   Columns,
-  Trash2,
-  Plus,
-  Image as ImageIcon
+  Trash2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
@@ -46,8 +41,11 @@ const Capture = () => {
   const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [analysisMode, setAnalysisMode] = useState<'single' | 'comparison'>('single');
   
-  const webcamRef = useRef<Webcam>(null);
+  const webcamRef = useRef<any>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -261,24 +259,24 @@ const Capture = () => {
           !hasAtLeastOneImage ? (
             <div className="flex items-center gap-8">
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
-              <button 
-                onClick={() => fileInputRef.current?.click()} 
+              <input type="file" ref={cameraInputRef} onChange={handleFileUpload} accept="image/*" capture="environment" className="hidden" />
+              <button
+                onClick={() => fileInputRef.current?.click()}
                 className="w-16 h-16 bg-accent text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform"
               >
                 <Upload size={28} />
               </button>
               <div className="text-slate-500 text-xs font-bold uppercase tracking-widest">OU</div>
-              <button 
-                onClick={() => {
-                  showError("Use o botão de Upload para as fotos");
-                }} 
-                className="w-16 h-16 bg-slate-800 text-white rounded-full flex items-center justify-center border border-slate-700 opacity-50"
+              <button
+                onClick={() => cameraInputRef.current?.click()}
+                className="w-16 h-16 bg-slate-800 text-white rounded-full flex items-center justify-center border border-slate-700 active:scale-90 transition-transform"
               >
                 <Camera size={28} />
               </button>
             </div>
           ) : null
         ) : (
+
           <div className="flex flex-col gap-4 w-full max-w-xs">
             <div className="flex gap-3">
               <Button 
