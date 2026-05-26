@@ -23,7 +23,6 @@ import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { uploadPhotoToR2 } from '@/lib/r2';
 
-// Desenho de uma sobrancelha estilizada em SVG
 const EyebrowSVG = ({ className = "w-32 h-12 text-accent" }: { className?: string }) => (
   <svg viewBox="0 0 100 30" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
     <path 
@@ -32,6 +31,42 @@ const EyebrowSVG = ({ className = "w-32 h-12 text-accent" }: { className?: strin
     />
   </svg>
 );
+
+const MAX_UPLOAD_DIMENSION = 4096;
+
+const resizeImageIfNeeded = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const needsResize = img.width > MAX_UPLOAD_DIMENSION || img.height > MAX_UPLOAD_DIMENSION;
+        const scale = needsResize
+          ? Math.min(MAX_UPLOAD_DIMENSION / img.width, MAX_UPLOAD_DIMENSION / img.height)
+          : 1;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Erro ao criar contexto da imagem.'));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.98));
+      };
+      img.onerror = () => reject(new Error('Não foi possível carregar a imagem.'));
+      img.src = event.target?.result as string;
+    };
+
+    reader.onerror = () => reject(new Error('Não foi possível ler o arquivo.'));
+    reader.readAsDataURL(file);
+  });
+};
 
 const Capture = () => {
   const [capturedImages, setCapturedImages] = useState<{url: string, bboxes: Record<string, RegionBBox>}[]>([]);
@@ -59,19 +94,16 @@ const Capture = () => {
   }, []);
 
   const capture = useCallback(() => {
-    const imageSrc = webcamRef.current?.getScreenshot({ width: 800, height: 600 });
+    const imageSrc = webcamRef.current?.getScreenshot({ width: 1920, height: 1080 });
     if (imageSrc) setCurrentImage(imageSrc);
   }, [webcamRef]);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setCurrentImage(e.target?.result as string);
-        setCurrentImageFile(file);
-      };
-      reader.readAsDataURL(file);
+      const optimizedImage = await resizeImageIfNeeded(file);
+      setCurrentImage(optimizedImage);
+      setCurrentImageFile(file);
     }
   };
 
@@ -160,7 +192,6 @@ const Capture = () => {
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
-      {/* Header */}
       <div className="p-4 flex items-center justify-between text-white z-10 relative">
         <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/10 rounded-full">
           <ArrowLeft size={20} />
@@ -176,7 +207,6 @@ const Capture = () => {
         </button>
       </div>
 
-      {/* Selectors */}
       <div className="px-6 py-2 z-10 space-y-3">
         <Select onValueChange={setSelectedClientId} value={selectedClientId}>
           <SelectTrigger className="bg-white/10 border-white/20 text-white h-12 rounded-xl">
@@ -208,7 +238,6 @@ const Capture = () => {
         </div>
       </div>
 
-      {/* Main Viewport */}
       <div className="flex-1 relative flex items-center justify-center overflow-hidden">
         {!currentImage ? (
           <>
