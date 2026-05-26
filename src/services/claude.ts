@@ -1,11 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { RegionBBox } from '@/components/camera/ImageAnnotator';
 import { PROMPT_ESPECIALISTA } from '../constants/prompt';
-
-const anthropic = new Anthropic({
-  apiKey: import.meta.env.VITE_ANTHROPIC_KEY || "",
-  dangerouslyAllowBrowser: true
-});
 
 const cropImage = (base64Str: string, bbox: RegionBBox): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -53,13 +47,24 @@ export const analyzeWithClaude = async (images: {url: string, bboxes: Record<str
 
     imageContent.push({ type: "text", text: PROMPT_ESPECIALISTA });
 
-    const response = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-latest",
-      max_tokens: 2000,
-      messages: [{ role: "user", content: imageContent }]
+    const response = await fetch('/api/anthropic', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-sonnet-latest',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: imageContent }],
+      }),
     });
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : '';
+    if (!response.ok) {
+      throw new Error('Erro ao chamar o proxy da Anthropic');
+    }
+
+    const data = await response.json();
+    const text = data?.content?.[0]?.type === 'text' ? data.content[0].text : '';
     const clean = text.replace(/```json|```/g, '').trim();
     const start = clean.indexOf('{');
     const end = clean.lastIndexOf('}') + 1;
