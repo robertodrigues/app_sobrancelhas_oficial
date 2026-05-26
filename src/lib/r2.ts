@@ -15,8 +15,8 @@ export async function uploadPhotoToR2(file: File): Promise<UploadR2Response> {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => null);
-    throw new Error(error?.message || error?.statusMessage || "Erro ao enviar foto para o servidor.");
+    const errorText = await response.text();
+    throw new Error(errorText || "Erro ao enviar foto para o servidor.");
   }
 
   return response.json();

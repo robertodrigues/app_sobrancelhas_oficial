@@ -11,19 +11,27 @@ const imageContentTypes = new Set([
 
 export default defineHandler(async (event) => {
   const formData = await readMultipartFormData(event);
-  const file = formData?.find((item) => item.name === "file" && item.data);
+
+  if (!formData || formData.length === 0) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Nenhum arquivo foi enviado.",
+    });
+  }
+
+  const file = formData.find((item) => item.name === "file" && item.data);
 
   if (!file?.data) {
     throw createError({
       statusCode: 400,
-      statusMessage: "file is required",
+      statusMessage: "O campo 'file' é obrigatório.",
     });
   }
 
   if (!file.type || !imageContentTypes.has(file.type)) {
     throw createError({
       statusCode: 400,
-      statusMessage: "invalid file type",
+      statusMessage: `Tipo de arquivo inválido: ${file.type || "desconhecido"}.`,
     });
   }
 
@@ -37,7 +45,7 @@ export default defineHandler(async (event) => {
   if (!accessKeyId || !secretAccessKey || !endpoint || !bucketName || !publicUrl) {
     throw createError({
       statusCode: 500,
-      statusMessage: "R2 configuration is missing",
+      statusMessage: "As variáveis do R2 não estão configuradas.",
     });
   }
 
