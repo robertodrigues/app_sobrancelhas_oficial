@@ -22,7 +22,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   const mainCanvasRef = useRef<HTMLCanvasElement>(null);
   const drawingCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [activeRegion, setActiveRegion] = useState<Region>(null);
-  const [brushSize, setBrushSize] = useState(8); // Pincel fino para contorno
+  const [brushSize, setBrushSize] = useState(8);
   const [isDrawing, setIsDrawing] = useState(false);
   const [history, setHistory] = useState<{data: string, bboxes: Record<string, RegionBBox>}[]>([]);
   const [currentBBoxes, setCurrentBBoxes] = useState<Record<string, RegionBBox>>({});
@@ -36,21 +36,29 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
 
   useEffect(() => {
     const img = new Image();
+    img.crossOrigin = 'anonymous';
     img.src = image;
+
     img.onload = () => {
       imageRef.current = img;
       const canvas = mainCanvasRef.current;
       if (!canvas) return;
-      canvas.width = img.width;
-      canvas.height = img.height;
+
+      canvas.width = img.naturalWidth || img.width;
+      canvas.height = img.naturalHeight || img.height;
 
       const drawingCanvas = document.createElement('canvas');
-      drawingCanvas.width = img.width;
-      drawingCanvas.height = img.height;
+      drawingCanvas.width = canvas.width;
+      drawingCanvas.height = canvas.height;
       drawingCanvasRef.current = drawingCanvas;
 
-      render();
+      setCurrentBBoxes({});
       setHistory([{ data: drawingCanvas.toDataURL(), bboxes: {} }]);
+      render();
+    };
+
+    img.onerror = () => {
+      console.error('Erro ao carregar imagem para anotação');
     };
   }, [image]);
 
@@ -64,8 +72,8 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
     if (!ctx) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0);
-    ctx.globalAlpha = 0.9; // Traço mais visível por ser fino
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 0.9;
     ctx.drawImage(drawingCanvas, 0, 0);
     ctx.globalAlpha = 1.0;
   };
@@ -76,20 +84,18 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
       return {
         ...prev,
         [region]: {
-          minX: Math.min(current.minX, x - brushSize/2),
-          minY: Math.min(current.minY, y - brushSize/2),
-          maxX: Math.max(current.maxX, x + brushSize/2),
-          maxY: Math.max(current.maxY, y + brushSize/2),
+          minX: Math.min(current.minX, x - brushSize / 2),
+          minY: Math.min(current.minY, y - brushSize / 2),
+          maxX: Math.max(current.maxX, x + brushSize / 2),
+          maxY: Math.max(current.maxY, y + brushSize / 2),
         }
       };
     });
   };
 
-  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!activeRegion || !drawingCanvasRef.current) return;
-    
+  const getPointerPosition = (e: React.MouseEvent | React.TouchEvent) => {
     const canvas = mainCanvasRef.current;
-    if (!canvas) return;
+    if (!canvas) return null;
 
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
@@ -104,19 +110,28 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
       clientY = e.clientY;
     }
 
-    const x = (clientX - rect.left) * scaleX;
-    const y = (clientY - rect.top) * scaleY;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY,
+    };
+  };
+
+  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!activeRegion || !drawingCanvasRef.current) return;
+    
+    const position = getPointerPosition(e);
+    if (!position) return;
 
     const dCtx = drawingCanvasRef.current.getContext('2d');
     if (dCtx) {
       dCtx.beginPath();
-      dCtx.moveTo(x, y);
+      dCtx.moveTo(position.x, position.y);
       dCtx.lineCap = 'round';
       dCtx.lineJoin = 'round';
       dCtx.strokeStyle = colors[activeRegion];
       dCtx.lineWidth = brushSize;
       dCtx.globalCompositeOperation = 'source-over';
-      updateBBox(activeRegion, x, y);
+      updateBBox(activeRegion, position.x, position.y);
     }
 
     setIsDrawing(true);
@@ -125,27 +140,14 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   const draw = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isDrawing || !drawingCanvasRef.current || !mainCanvasRef.current || !activeRegion) return;
 
-    const rect = mainCanvasRef.current.getBoundingClientRect();
-    const scaleX = mainCanvasRef.current.width / rect.width;
-    const scaleY = mainCanvasRef.current.height / rect.height;
-
-    let clientX, clientY;
-    if ('touches' in e) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
-    }
-
-    const x = (clientX - rect.left) * scaleX;
-    const y = (clientY - rect.top) * scaleY;
+    const position = getPointerPosition(e);
+    if (!position) return;
 
     const dCtx = drawingCanvasRef.current.getContext('2d');
     if (dCtx) {
-      dCtx.lineTo(x, y);
+      dCtx.lineTo(position.x, position.y);
       dCtx.stroke();
-      updateBBox(activeRegion, x, y);
+      updateBBox(activeRegion, position.x, position.y);
       render();
     }
   };
