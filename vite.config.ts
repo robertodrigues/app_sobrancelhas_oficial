@@ -22,11 +22,11 @@ export default defineConfig(() => ({
     },
   },
   optimizeDeps: {
-    exclude: ["@anthropic-ai/sdk"],
+    exclude: ["@anthropic-ai/sdk", "standardwebhooks"],
   },
   build: {
     rollupOptions: {
-      external: ["@anthropic-ai/sdk"],
+      external: ["@anthropic-ai/sdk", "standardwebhooks"],
     },
   },
 }));
