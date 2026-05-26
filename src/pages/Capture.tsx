@@ -77,6 +77,7 @@ const Capture = () => {
   const [clients, setClients] = useState<any[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [analysisMode, setAnalysisMode] = useState<'single' | 'comparison'>('single');
+  const [isPreparingImage, setIsPreparingImage] = useState(false);
   
   const webcamRef = useRef<any>(null);
 
@@ -100,10 +101,17 @@ const Capture = () => {
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
+    if (!file) return;
+
+    setIsPreparingImage(true);
+    try {
       const optimizedImage = await resizeImageIfNeeded(file);
       setCurrentImage(optimizedImage);
       setCurrentImageFile(file);
+    } catch (error: any) {
+      showError(error.message || 'Não foi possível carregar a foto.');
+    } finally {
+      setIsPreparingImage(false);
     }
   };
 
@@ -162,6 +170,7 @@ const Capture = () => {
       return;
     }
 
+    setIsPreparingImage(true);
     try {
       const url = currentImage || (currentImageFile ? (await uploadPhotoToR2(currentImageFile)).url : null);
       if (!url) {
@@ -172,6 +181,8 @@ const Capture = () => {
       setIsAnnotating(true);
     } catch (error: any) {
       showError(error.message || 'Não foi possível enviar a foto.');
+    } finally {
+      setIsPreparingImage(false);
     }
   };
 
@@ -302,6 +313,13 @@ const Capture = () => {
           </div>
         )}
 
+        {isPreparingImage && (
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-md flex flex-col items-center justify-center text-white z-50">
+            <Loader2 className="w-10 h-10 animate-spin text-accent mb-3" />
+            <h2 className="text-sm font-bold">Preparando imagem...</h2>
+          </div>
+        )}
+
         {isAnalyzing && (
           <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center text-white z-50">
             <BrainCircuit className="w-16 h-16 animate-pulse text-accent mb-4" />
@@ -345,6 +363,7 @@ const Capture = () => {
               <Button 
                 className="flex-1 bg-accent hover:bg-accent/90 h-14 rounded-2xl shadow-xl shadow-accent/20 text-xs" 
                 onClick={handleAnnotateImage}
+                disabled={isPreparingImage}
               >
                 <Pencil className="mr-2 h-4 w-4" /> Marcar
               </Button>
