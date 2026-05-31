@@ -29,9 +29,9 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   const imageRef = useRef<HTMLImageElement | null>(null);
 
   const colors = {
-    ponto_inicial: '#4ade80',
-    meio: '#facc15',
-    cauda: '#f87171',
+    ponto_inicial: '#8FAF8A', // Verde menta
+    meio: '#D4C9B5',          // Bege areia
+    cauda: '#4A7A5C',         // Verde sage
   };
 
   useEffect(() => {
@@ -187,21 +187,21 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   };
 
   return (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col">
-      <div className="p-4 flex items-center justify-between bg-slate-900 text-white">
-        <Button variant="ghost" size="icon" onClick={onCancel}>
+    <div className="fixed inset-0 bg-[#1C3A2B] z-50 flex flex-col text-[#E8DECE]">
+      <div className="p-4 flex items-center justify-between bg-[#1C3A2B] border-b border-[#4A7A5C]/30 text-[#E8DECE] pt-6">
+        <Button variant="ghost" size="icon" onClick={onCancel} className="text-[#E8DECE] hover:bg-white/10">
           <X size={24} />
         </Button>
         <div className="text-center">
-          <h2 className="font-bold text-sm">Mapeamento Técnico</h2>
-          <p className="text-[10px] text-slate-400 uppercase tracking-widest">Circule as regiões</p>
+          <h2 className="font-heading text-base font-normal text-[#E8DECE]">Mapeamento Técnico</h2>
+          <p className="font-label-category text-[9px] text-[#8FAF8A]">Circule as regiões</p>
         </div>
-        <Button variant="ghost" size="icon" onClick={handleSave} className="text-green-400">
+        <Button variant="ghost" size="icon" onClick={handleSave} className="text-[#8FAF8A] hover:bg-white/10">
           <Check size={24} />
         </Button>
       </div>
 
-      <div className="flex-1 relative overflow-hidden flex items-center justify-center bg-slate-950">
+      <div className="flex-1 relative overflow-hidden flex items-center justify-center bg-[#1C3A2B]/90">
         <canvas
           ref={mainCanvasRef}
           onMouseDown={startDrawing}
@@ -216,24 +216,24 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
         
         {!activeRegion && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="bg-black/60 backdrop-blur-md p-6 rounded-3xl text-white text-center border border-white/10">
-              <MousePointer2 className="mx-auto mb-3 animate-bounce text-accent" size={32} />
-              <p className="text-sm font-bold">Selecione uma cor abaixo</p>
-              <p className="text-xs text-slate-400">e circule a região da sobrancelha</p>
+            <div className="bg-[#1C3A2B]/90 backdrop-blur-md p-6 rounded-3xl text-center border border-[#4A7A5C] max-w-xs">
+              <MousePointer2 className="mx-auto mb-3 animate-bounce text-[#8FAF8A]" size={32} />
+              <p className="font-heading text-base font-normal text-[#E8DECE]">Selecione uma cor abaixo</p>
+              <p className="font-body text-xs text-[#8FAF8A] mt-1">e circule a região correspondente na sobrancelha</p>
             </div>
           </div>
         )}
       </div>
 
-      <div className="p-6 bg-slate-900 space-y-6 border-t border-slate-800">
-        <div className="flex items-center justify-center gap-6 bg-slate-800/50 p-3 rounded-2xl">
-          <button onClick={() => setBrushSize(4)} className={cn("p-2 rounded-full transition-all", brushSize === 4 ? "bg-accent text-white" : "text-slate-400")}>
+      <div className="p-6 bg-[#1C3A2B] space-y-6 border-t border-[#4A7A5C]/30">
+        <div className="flex items-center justify-center gap-6 bg-[#3D6B52]/50 border border-[#4A7A5C] p-3 rounded-2xl">
+          <button onClick={() => setBrushSize(4)} className={cn("p-2 rounded-full transition-all", brushSize === 4 ? "bg-[#4A7A5C] text-[#E8DECE]" : "text-[#8FAF8A]/70")}>
             <Circle size={8} fill="currentColor" />
           </button>
-          <button onClick={() => setBrushSize(8)} className={cn("p-2 rounded-full transition-all", brushSize === 8 ? "bg-accent text-white" : "text-slate-400")}>
+          <button onClick={() => setBrushSize(8)} className={cn("p-2 rounded-full transition-all", brushSize === 8 ? "bg-[#4A7A5C] text-[#E8DECE]" : "text-[#8FAF8A]/70")}>
             <Circle size={14} fill="currentColor" />
           </button>
-          <button onClick={() => setBrushSize(14)} className={cn("p-2 rounded-full transition-all", brushSize === 14 ? "bg-accent text-white" : "text-slate-400")}>
+          <button onClick={() => setBrushSize(14)} className={cn("p-2 rounded-full transition-all", brushSize === 14 ? "bg-[#4A7A5C] text-[#E8DECE]" : "text-[#8FAF8A]/70")}>
             <Circle size={20} fill="currentColor" />
           </button>
         </div>
@@ -243,33 +243,33 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
             onClick={() => setActiveRegion('ponto_inicial')}
             className={cn(
               "flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all",
-              activeRegion === 'ponto_inicial' ? "border-green-500 bg-green-500/20" : "border-slate-700 bg-slate-800/50"
+              activeRegion === 'ponto_inicial' ? "border-[#8FAF8A] bg-[#8FAF8A]/20" : "border-[#4A7A5C] bg-[#3D6B52]/30"
             )}
           >
-            <div className="w-6 h-6 rounded-full bg-green-500" />
-            <span className="text-[10px] font-bold text-white uppercase">Início</span>
+            <div className="w-6 h-6 rounded-full bg-[#8FAF8A]" />
+            <span className="font-label-category text-[9px] text-[#E8DECE]">Início</span>
           </button>
           
           <button
             onClick={() => setActiveRegion('meio')}
             className={cn(
               "flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all",
-              activeRegion === 'meio' ? "border-yellow-500 bg-yellow-500/20" : "border-slate-700 bg-slate-800/50"
+              activeRegion === 'meio' ? "border-[#D4C9B5] bg-[#D4C9B5]/20" : "border-[#4A7A5C] bg-[#3D6B52]/30"
             )}
           >
-            <div className="w-6 h-6 rounded-full bg-yellow-500" />
-            <span className="text-[10px] font-bold text-white uppercase">Meio</span>
+            <div className="w-6 h-6 rounded-full bg-[#D4C9B5]" />
+            <span className="font-label-category text-[9px] text-[#E8DECE]">Meio</span>
           </button>
 
           <button
             onClick={() => setActiveRegion('cauda')}
             className={cn(
               "flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all",
-              activeRegion === 'cauda' ? "border-red-500 bg-red-500/20" : "border-slate-700 bg-slate-800/50"
+              activeRegion === 'cauda' ? "border-[#4A7A5C] bg-[#4A7A5C]/20" : "border-[#4A7A5C] bg-[#3D6B52]/30"
             )}
           >
-            <div className="w-6 h-6 rounded-full bg-red-500" />
-            <span className="text-[10px] font-bold text-white uppercase">Cauda</span>
+            <div className="w-6 h-6 rounded-full bg-[#4A7A5C]" />
+            <span className="font-label-category text-[9px] text-[#E8DECE]">Cauda</span>
           </button>
         </div>
 
@@ -277,9 +277,9 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
           variant="outline"
           onClick={undo}
           disabled={history.length <= 1}
-          className="w-full h-14 gap-2 rounded-2xl border-slate-700 bg-slate-800/50 text-white hover:bg-slate-700 disabled:opacity-30"
+          className="btn-elha-outline w-full h-14 gap-2 border-[#4A7A5C] text-[#E8DECE] hover:bg-[#3D6B52]/50 disabled:opacity-30"
         >
-          <Undo2 size={20} />
+          <Undo2 size={18} />
           Desfazer Último Traço
         </Button>
       </div>

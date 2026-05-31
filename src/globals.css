@@ -4,81 +4,160 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 37 31% 94%; /* Bege linho #F5F0E8 */
+    --foreground: 150 35% 17%; /* Verde floresta #1C3A2B */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 37 33% 86%; /* Creme suave #E8DECE */
+    --card-foreground: 150 35% 17%; /* Verde floresta #1C3A2B */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 37 31% 94%;
+    --popover-foreground: 150 35% 17%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 150 35% 17%; /* Verde floresta #1C3A2B */
+    --primary-foreground: 37 33% 86%; /* Creme suave #E8DECE */
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 142 24% 38%; /* Verde sage #4A7A5C */
+    --secondary-foreground: 37 31% 94%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 39 25% 77%; /* Bege areia #D4C9B5 */
+    --muted-foreground: 142 24% 38%;
 
-    --accent: 243 75% 59%; /* Indigo/Accent original */
-    --accent-foreground: 210 40% 98%;
+    --accent: 142 24% 38%; /* Verde sage #4A7A5C */
+    --accent-foreground: 37 31% 94%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 39 25% 77%; /* Bege areia #D4C9B5 */
+    --input: 39 25% 77%;
+    --ring: 150 35% 17%;
 
-    --radius: 1rem;
+    --radius: 16px; /* Border-radius de cards: 16px */
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 150 35% 17%;
+    --foreground: 37 33% 86%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 150 35% 17%;
+    --card-foreground: 37 33% 86%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 150 35% 17%;
+    --popover-foreground: 37 33% 86%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 37 33% 86%;
+    --primary-foreground: 150 35% 17%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 142 24% 38%;
+    --secondary-foreground: 37 33% 86%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 142 24% 38%;
+    --muted-foreground: 37 33% 86%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 142 24% 38%;
+    --accent-foreground: 37 33% 86%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 37 33% 86%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 142 24% 38%;
+    --input: 142 24% 38%;
+    --ring: 37 33% 86%;
   }
 }
 
 @layer base {
   *, *::before, *::after {
-    font-family: 'Poppins', sans-serif !important;
+    font-family: 'Inter', sans-serif;
   }
 
   body {
-    @apply bg-[#F8FAFC] text-slate-900;
+    @apply bg-[#F5F0E8] text-[#1C3A2B];
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
     -webkit-tap-highlight-color: transparent;
   }
 
   ::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* Custom Typography Classes */
+.font-brand-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  letter-spacing: 12px;
+}
+
+.font-heading {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+}
+
+.font-body {
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+.font-label-category {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+/* Custom Buttons */
+.btn-elha-primary {
+  background-color: #1C3A2B;
+  color: #E8DECE;
+  border-radius: 99px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-elha-primary:hover {
+  background-color: #2a543f;
+  opacity: 0.95;
+}
+
+.btn-elha-outline {
+  background-color: transparent;
+  color: #1C3A2B;
+  border: 1px solid #1C3A2B;
+  border-radius: 99px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-elha-outline:hover {
+  background-color: rgba(28, 58, 43, 0.05);
+}
+
+/* Custom Tags / Pills */
+.tag-elha {
+  background-color: #EAF3DE;
+  color: #3B6D11;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .glass-card {

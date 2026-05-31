@@ -35,7 +35,7 @@ const Edition = () => {
 
   // Configurações de Texto (@)
   const [text, setText] = useState('');
-  const [textColor, setTextColor] = useState('#ffffff');
+  const [textColor, setTextColor] = useState('#E8DECE');
   const [textSize, setTextSize] = useState(16);
   const [textX, setTextX] = useState(50);
   const [textY, setTextY] = useState(90);
@@ -47,13 +47,13 @@ const Edition = () => {
   const [logoY, setLogoY] = useState(10);
 
   // Caneta Desenho Livre
-  const [penColor, setPenColor] = useState('#ff0055');
+  const [penColor, setPenColor] = useState('#8FAF8A');
   const [penWidth, setPenWidth] = useState(4);
   const [isDrawingMode, setIsDrawingMode] = useState(false);
 
   // --- AJUSTES DO PDF (Salvos no localStorage) ---
   const [pdfLogo, setPdfLogo] = useState<string | null>(null);
-  const [pdfBgColor, setPdfBgColor] = useState('#F8FAFC');
+  const [pdfBgColor, setPdfBgColor] = useState('#F5F0E8');
 
   // Carregar configurações salvas do PDF
   useEffect(() => {
@@ -207,15 +207,15 @@ const Edition = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-28 md:pt-20">
+    <div className="min-h-screen bg-[#F5F0E8] text-[#1C3A2B] pb-28 md:pt-20">
       <Navbar />
       <main className="max-w-4xl mx-auto p-6">
-        <header className="mb-8 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center text-accent mb-3 mx-auto">
+        <header className="mb-8 text-center pt-4">
+          <div className="w-12 h-12 rounded-2xl bg-[#4A7A5C]/10 flex items-center justify-center text-[#4A7A5C] mb-3 mx-auto">
             <Sparkles size={24} />
           </div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Edição de Antes & Depois</h1>
-          <p className="text-xs text-slate-500 font-medium mt-1">Crie montagens profissionais para suas redes sociais</p>
+          <h1 className="font-heading text-2xl font-normal text-[#1C3A2B] tracking-tight">Edição de Antes & Depois</h1>
+          <p className="font-body text-xs text-[#4A7A5C] font-light mt-1">Crie montagens profissionais para suas redes sociais</p>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -225,7 +225,7 @@ const Edition = () => {
             <div 
               ref={collageRef}
               className={cn(
-                "relative overflow-hidden bg-slate-950 shadow-2xl rounded-3xl border-4 border-white transition-all duration-300 flex",
+                "relative overflow-hidden bg-[#1C3A2B] shadow-2xl rounded-2xl border-4 border-[#E8DECE] transition-all duration-300 flex",
                 layoutSize === 'feed' ? "w-full aspect-square max-w-[400px]" : "w-full aspect-[9/16] max-w-[340px]",
                 splitDirection === 'vertical' ? "flex-col" : "flex-row"
               )}
@@ -235,12 +235,12 @@ const Edition = () => {
                 {beforeImg ? (
                   <img src={beforeImg} className="w-full h-full object-cover" alt="Antes" />
                 ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 bg-slate-900/50 p-4 text-center">
-                    <ImageIcon size={32} className="mb-2 text-slate-600" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Foto Antes</span>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-[#8FAF8A] bg-[#1C3A2B]/80 p-4 text-center">
+                    <ImageIcon size={32} className="mb-2 text-[#8FAF8A]/60" />
+                    <span className="font-label-category text-[10px] text-[#E8DECE]">Foto Antes</span>
                   </div>
                 )}
-                <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                <div className="absolute top-3 left-3 bg-[#1C3A2B]/80 backdrop-blur-md text-[#E8DECE] font-label-category text-[9px] px-2.5 py-1 rounded-full">
                   Antes
                 </div>
               </div>
@@ -248,7 +248,7 @@ const Edition = () => {
               {/* Linha de Separação */}
               {separationType === 'straight' ? (
                 <div className={cn(
-                  "bg-white z-10 shadow-lg",
+                  "bg-[#E8DECE] z-10 shadow-lg",
                   splitDirection === 'horizontal' ? "w-1 h-full" : "h-1 w-full"
                 )} />
               ) : (
@@ -265,12 +265,12 @@ const Edition = () => {
                 {afterImg ? (
                   <img src={afterImg} className="w-full h-full object-cover" alt="Depois" />
                 ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 bg-slate-900/50 p-4 text-center">
-                    <ImageIcon size={32} className="mb-2 text-slate-600" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Foto Depois</span>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-[#8FAF8A] bg-[#1C3A2B]/80 p-4 text-center">
+                    <ImageIcon size={32} className="mb-2 text-[#8FAF8A]/60" />
+                    <span className="font-label-category text-[10px] text-[#E8DECE]">Foto Depois</span>
                   </div>
                 )}
-                <div className="absolute top-3 right-3 bg-accent text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                <div className="absolute top-3 right-3 bg-[#4A7A5C] text-[#E8DECE] font-label-category text-[9px] px-2.5 py-1 rounded-full">
                   Depois
                 </div>
               </div>
@@ -326,14 +326,14 @@ const Edition = () => {
               <Button 
                 onClick={() => beforeInputRef.current?.click()} 
                 variant="outline" 
-                className="flex-1 h-11 rounded-xl text-xs font-bold border-slate-200 bg-white"
+                className="btn-elha-outline flex-1 h-11"
               >
                 <Upload size={14} className="mr-1.5" /> Add Antes
               </Button>
               <Button 
                 onClick={() => afterInputRef.current?.click()} 
                 variant="outline" 
-                className="flex-1 h-11 rounded-xl text-xs font-bold border-slate-200 bg-white"
+                className="btn-elha-outline flex-1 h-11"
               >
                 <Upload size={14} className="mr-1.5" /> Add Depois
               </Button>
@@ -347,25 +347,25 @@ const Edition = () => {
           <div className="lg:col-span-5 space-y-6">
             
             {/* Formato e Orientação */}
-            <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                <Layers size={16} className="text-accent" /> Layout & Formato
+            <div className="bg-[#E8DECE] p-5 rounded-2xl shadow-sm border border-[#D4C9B5] space-y-4">
+              <h3 className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
+                <Layers size={16} className="text-[#4A7A5C]" /> Layout & Formato
               </h3>
               
               <div className="space-y-3">
-                <Label className="text-xs font-bold text-slate-600">Tamanho da Edição</Label>
+                <Label className="font-label-category text-[10px] text-[#1C3A2B]">Tamanho da Edição</Label>
                 <div className="grid grid-cols-2 gap-2">
                   <Button 
                     variant={layoutSize === 'feed' ? 'default' : 'outline'} 
                     onClick={() => setLayoutSize('feed')}
-                    className="h-11 rounded-xl text-xs font-bold"
+                    className={cn("h-11 rounded-xl text-xs font-bold", layoutSize === 'feed' ? "btn-elha-primary" : "btn-elha-outline")}
                   >
                     Feed (1:1)
                   </Button>
                   <Button 
                     variant={layoutSize === 'story' ? 'default' : 'outline'} 
                     onClick={() => setLayoutSize('story')}
-                    className="h-11 rounded-xl text-xs font-bold"
+                    className={cn("h-11 rounded-xl text-xs font-bold", layoutSize === 'story' ? "btn-elha-primary" : "btn-elha-outline")}
                   >
                     Story (9:16)
                   </Button>
@@ -373,19 +373,19 @@ const Edition = () => {
               </div>
 
               <div className="space-y-3">
-                <Label className="text-xs font-bold text-slate-600">Orientação da Divisão</Label>
+                <Label className="font-label-category text-[10px] text-[#1C3A2B]">Orientação da Divisão</Label>
                 <div className="grid grid-cols-2 gap-2">
                   <Button 
                     variant={splitDirection === 'horizontal' ? 'default' : 'outline'} 
                     onClick={() => setSplitDirection('horizontal')}
-                    className="h-11 rounded-xl text-xs font-bold"
+                    className={cn("h-11 rounded-xl text-xs font-bold", splitDirection === 'horizontal' ? "btn-elha-primary" : "btn-elha-outline")}
                   >
                     Lado a Lado
                   </Button>
                   <Button 
                     variant={splitDirection === 'vertical' ? 'default' : 'outline'} 
                     onClick={() => setSplitDirection('vertical')}
-                    className="h-11 rounded-xl text-xs font-bold"
+                    className={cn("h-11 rounded-xl text-xs font-bold", splitDirection === 'vertical' ? "btn-elha-primary" : "btn-elha-outline")}
                   >
                     Cima e Baixo
                   </Button>
@@ -393,19 +393,19 @@ const Edition = () => {
               </div>
 
               <div className="space-y-3">
-                <Label className="text-xs font-bold text-slate-600">Linha de Separação</Label>
+                <Label className="font-label-category text-[10px] text-[#1C3A2B]">Linha de Separação</Label>
                 <div className="grid grid-cols-2 gap-2">
                   <Button 
                     variant={separationType === 'straight' ? 'default' : 'outline'} 
                     onClick={() => setSeparationType('straight')}
-                    className="h-11 rounded-xl text-xs font-bold"
+                    className={cn("h-11 rounded-xl text-xs font-bold", separationType === 'straight' ? "btn-elha-primary" : "btn-elha-outline")}
                   >
                     Linha Reta
                   </Button>
                   <Button 
                     variant={separationType === 'faded' ? 'default' : 'outline'} 
                     onClick={() => setSeparationType('faded')}
-                    className="h-11 rounded-xl text-xs font-bold"
+                    className={cn("h-11 rounded-xl text-xs font-bold", separationType === 'faded' ? "btn-elha-primary" : "btn-elha-outline")}
                   >
                     Esfumaçada
                   </Button>
@@ -414,19 +414,19 @@ const Edition = () => {
             </div>
 
             {/* Marca d'água / Texto */}
-            <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                <Type size={16} className="text-accent" /> Texto / Marca d'água
+            <div className="bg-[#E8DECE] p-5 rounded-2xl shadow-sm border border-[#D4C9B5] space-y-4">
+              <h3 className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
+                <Type size={16} className="text-[#4A7A5C]" /> Texto / Marca d'água
               </h3>
 
               <div className="space-y-2">
-                <Label htmlFor="watermark" className="text-xs font-bold text-slate-600">Seu @ ou Nome</Label>
+                <Label htmlFor="watermark" className="font-label-category text-[10px] text-[#1C3A2B]">Seu @ ou Nome</Label>
                 <Input 
                   id="watermark" 
                   placeholder="Ex: @suasobrancelha" 
                   value={text} 
                   onChange={(e) => setText(e.target.value)}
-                  className="h-11 rounded-xl text-sm"
+                  className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] placeholder-[#4A7A5C]/70 h-11 rounded-xl text-sm focus-visible:ring-[#1C3A2B]"
                 />
               </div>
 
@@ -434,23 +434,23 @@ const Edition = () => {
                 <div className="space-y-4 pt-2">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] font-bold text-slate-500 uppercase">Cor do Texto</Label>
+                      <Label className="font-label-category text-[9px] text-[#4A7A5C]">Cor do Texto</Label>
                       <div className="flex gap-2">
                         <input 
                           type="color" 
                           value={textColor} 
                           onChange={(e) => setTextColor(e.target.value)}
-                          className="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer"
+                          className="w-10 h-10 rounded-lg border border-[#D4C9B5] cursor-pointer"
                         />
                         <Input 
                           value={textColor} 
                           onChange={(e) => setTextColor(e.target.value)}
-                          className="h-10 rounded-lg text-xs font-mono"
+                          className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] h-10 rounded-lg text-xs font-mono"
                         />
                       </div>
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] font-bold text-slate-500 uppercase">Tamanho</Label>
+                      <Label className="font-label-category text-[9px] text-[#4A7A5C]">Tamanho</Label>
                       <Slider 
                         value={[textSize]} 
                         onValueChange={(val) => setTextSize(val[0])} 
@@ -463,12 +463,12 @@ const Edition = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold text-slate-500 uppercase">Posição Horizontal (X)</Label>
+                    <Label className="font-label-category text-[9px] text-[#4A7A5C]">Posição Horizontal (X)</Label>
                     <Slider value={[textX]} onValueChange={(val) => setTextX(val[0])} min={5} max={95} />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold text-slate-500 uppercase">Posição Vertical (Y)</Label>
+                    <Label className="font-label-category text-[9px] text-[#4A7A5C]">Posição Vertical (Y)</Label>
                     <Slider value={[textY]} onValueChange={(val) => setTextY(val[0])} min={5} max={95} />
                   </div>
                 </div>
@@ -476,16 +476,16 @@ const Edition = () => {
             </div>
 
             {/* Upload de Logo da Montagem */}
-            <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                <ImageIcon size={16} className="text-accent" /> Sua Logomarca na Montagem
+            <div className="bg-[#E8DECE] p-5 rounded-2xl shadow-sm border border-[#D4C9B5] space-y-4">
+              <h3 className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
+                <ImageIcon size={16} className="text-[#4A7A5C]" /> Sua Logomarca na Montagem
               </h3>
 
               <div className="flex items-center gap-3">
                 <Button 
                   onClick={() => logoInputRef.current?.click()} 
                   variant="outline" 
-                  className="h-11 rounded-xl text-xs font-bold border-slate-200 bg-white flex-1"
+                  className="btn-elha-outline flex-1 h-11"
                 >
                   <Upload size={14} className="mr-1.5" /> Subir Logo PNG
                 </Button>
@@ -504,7 +504,7 @@ const Edition = () => {
               {logoImg && (
                 <div className="space-y-4 pt-2">
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-slate-500 uppercase">Tamanho da Logo</Label>
+                    <Label className="font-label-category text-[9px] text-[#4A7A5C]">Tamanho da Logo</Label>
                     <Slider 
                       value={[logoSize]} 
                       onValueChange={(val) => setLogoSize(val[0])} 
@@ -515,12 +515,12 @@ const Edition = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold text-slate-500 uppercase">Posição Horizontal (X)</Label>
+                    <Label className="font-label-category text-[9px] text-[#4A7A5C]">Posição Horizontal (X)</Label>
                     <Slider value={[logoX]} onValueChange={(val) => setLogoX(val[0])} min={5} max={95} />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold text-slate-500 uppercase">Posição Vertical (Y)</Label>
+                    <Label className="font-label-category text-[9px] text-[#4A7A5C]">Posição Vertical (Y)</Label>
                     <Slider value={[logoY]} onValueChange={(val) => setLogoY(val[0])} min={5} max={95} />
                   </div>
                 </div>
@@ -528,15 +528,15 @@ const Edition = () => {
             </div>
 
             {/* Caneta Desenho Livre */}
-            <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+            <div className="bg-[#E8DECE] p-5 rounded-2xl shadow-sm border border-[#D4C9B5] space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                  <Paintbrush size={16} className="text-accent" /> Caneta de Marcação
+                <h3 className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
+                  <Paintbrush size={16} className="text-[#4A7A5C]" /> Caneta de Marcação
                 </h3>
                 <Button 
                   variant={isDrawingMode ? 'default' : 'outline'} 
                   onClick={() => setIsDrawingMode(!isDrawingMode)}
-                  className="h-8 rounded-lg text-[10px] font-bold uppercase px-3"
+                  className={cn("h-8 rounded-lg text-[10px] font-bold uppercase px-3", isDrawingMode ? "btn-elha-primary" : "btn-elha-outline")}
                 >
                   {isDrawingMode ? 'Ativa' : 'Ativar'}
                 </Button>
@@ -546,23 +546,23 @@ const Edition = () => {
                 <div className="space-y-4 pt-2">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] font-bold text-slate-500 uppercase">Cor da Caneta</Label>
+                      <Label className="font-label-category text-[9px] text-[#4A7A5C]">Cor da Caneta</Label>
                       <div className="flex gap-2">
                         <input 
                           type="color" 
                           value={penColor} 
                           onChange={(e) => setPenColor(e.target.value)}
-                          className="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer"
+                          className="w-10 h-10 rounded-lg border border-[#D4C9B5] cursor-pointer"
                         />
                         <Input 
                           value={penColor} 
                           onChange={(e) => setPenColor(e.target.value)}
-                          className="h-10 rounded-lg text-xs font-mono"
+                          className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] h-10 rounded-lg text-xs font-mono"
                         />
                       </div>
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] font-bold text-slate-500 uppercase">Espessura</Label>
+                      <Label className="font-label-category text-[9px] text-[#4A7A5C]">Espessura</Label>
                       <Slider 
                         value={[penWidth]} 
                         onValueChange={(val) => setPenWidth(val[0])} 
@@ -588,26 +588,26 @@ const Edition = () => {
             {/* Botão de Exportar */}
             <Button 
               onClick={exportCollage}
-              className="w-full h-14 bg-accent hover:bg-accent/90 text-white font-bold rounded-2xl shadow-xl shadow-accent/20 flex items-center justify-center gap-2 text-sm"
+              className="btn-elha-primary w-full h-14"
             >
-              <Download size={18} /> Exportar Montagem Final
+              <Download size={14} className="mr-1.5" /> Exportar Montagem Final
             </Button>
 
-            {/* CARD DE AJUSTE (LOGO E FUNDO DO PDF) - POSICIONADO ABAIXO DO BOTÃO DE EXPORTAR */}
-            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
+            {/* CARD DE AJUSTE (LOGO E FUNDO DO PDF) */}
+            <Card className="border border-[#D4C9B5] bg-[#E8DECE] rounded-2xl overflow-hidden">
               <CardHeader className="pb-3">
-                <CardTitle className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                  <Sliders size={16} className="text-accent" /> Ajuste do Relatório PDF
+                <CardTitle className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
+                  <Sliders size={16} className="text-[#4A7A5C]" /> Ajuste do Relatório PDF
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-600">Sua Logo para o PDF</Label>
+                  <Label className="font-label-category text-[10px] text-[#1C3A2B]">Sua Logo para o PDF</Label>
                   <div className="flex items-center gap-3">
                     <Button 
                       onClick={() => pdfLogoInputRef.current?.click()} 
                       variant="outline" 
-                      className="h-11 rounded-xl text-xs font-bold border-slate-200 bg-white flex-1"
+                      className="btn-elha-outline flex-1 h-11"
                     >
                       <Upload size={14} className="mr-1.5" /> Subir Logo PDF
                     </Button>
@@ -623,26 +623,26 @@ const Edition = () => {
                   </div>
                   <input type="file" ref={pdfLogoInputRef} onChange={(e) => handleImageUpload(e, 'pdfLogo')} accept="image/*" className="hidden" />
                   {pdfLogo && (
-                    <div className="p-2 bg-slate-50 rounded-xl border border-slate-100 flex justify-center">
+                    <div className="p-2 bg-[#F5F0E8] rounded-xl border border-[#D4C9B5] flex justify-center">
                       <img src={pdfLogo} className="h-12 object-contain" alt="Logo PDF Preview" />
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-600">Cor de Fundo do PDF</Label>
+                  <Label className="font-label-category text-[10px] text-[#1C3A2B]">Cor de Fundo do PDF</Label>
                   <div className="flex gap-2">
                     <input 
                       type="color" 
                       value={pdfBgColor} 
                       onChange={(e) => { setPdfBgColor(e.target.value); savePdfSettings(pdfLogo, e.target.value); }}
-                      className="w-11 h-11 rounded-xl border border-slate-200 cursor-pointer"
+                      className="w-11 h-11 rounded-xl border border-[#D4C9B5] cursor-pointer"
                     />
                     <Input 
                       value={pdfBgColor} 
                       onChange={(e) => { setPdfBgColor(e.target.value); savePdfSettings(pdfLogo, e.target.value); }}
-                      placeholder="#F8FAFC"
-                      className="h-11 rounded-xl text-sm font-mono"
+                      placeholder="#F5F0E8"
+                      className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] h-11 rounded-xl text-sm font-mono focus-visible:ring-[#1C3A2B]"
                     />
                   </div>
                 </div>

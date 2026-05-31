@@ -11,7 +11,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Poppins", "sans-serif"],
+        sans: ["Inter", "sans-serif"],
+        cormorant: ["Cormorant Garamond", "serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -19,6 +20,17 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        elha: {
+          forest: "#1C3A2B",
+          sage: "#4A7A5C",
+          mint: "#8FAF8A",
+          linen: "#F5F0E8",
+          sand: "#D4C9B5",
+          cream: "#E8DECE",
+          sageDark: "#3D6B52",
+          tagBg: "#EAF3DE",
+          tagText: "#3B6D11",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",

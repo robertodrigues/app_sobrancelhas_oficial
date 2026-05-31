@@ -23,7 +23,7 @@ import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { uploadPhotoToR2 } from '@/lib/r2';
 
-const EyebrowSVG = ({ className = "w-32 h-12 text-accent" }: { className?: string }) => (
+const EyebrowSVG = ({ className = "w-32 h-12 text-[#8FAF8A]" }: { className?: string }) => (
   <svg viewBox="0 0 100 30" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
     <path 
       d="M10,22 C25,12 45,8 65,12 C75,14 85,18 90,24 C80,20 70,16 60,15 C40,13 25,17 10,22 Z" 
@@ -211,16 +211,16 @@ const Capture = () => {
   const hasAtLeastOneImage = capturedImages.length >= 1;
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
-      <div className="p-4 flex items-center justify-between text-white z-10 relative">
-        <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/10 rounded-full">
+    <div className="min-h-screen bg-[#1C3A2B] flex flex-col text-[#E8DECE]">
+      <div className="p-4 flex items-center justify-between z-10 relative pt-6">
+        <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/10 rounded-full text-[#E8DECE]">
           <ArrowLeft size={20} />
         </button>
         <div className="text-center">
-          <h1 className="text-base font-bold">
+          <h1 className="font-heading text-lg font-normal text-[#E8DECE]">
             {analysisMode === 'comparison' ? 'Comparação Técnica' : 'Captura Técnica'}
           </h1>
-          <p className="text-[9px] text-slate-400 uppercase tracking-wider mt-0.5">Diagnóstico Capilar</p>
+          <p className="font-label-category text-[9px] text-[#8FAF8A] mt-0.5">Diagnóstico Capilar</p>
         </div>
         <button onClick={resetFlow} className="p-2 hover:bg-white/10 rounded-full text-red-400">
           <Trash2 size={18} />
@@ -229,29 +229,29 @@ const Capture = () => {
 
       <div className="px-6 py-2 z-10 space-y-3">
         <Select onValueChange={setSelectedClientId} value={selectedClientId}>
-          <SelectTrigger className="bg-white/10 border-white/20 text-white h-12 rounded-xl">
+          <SelectTrigger className="bg-[#3D6B52] border-[#4A7A5C] text-[#E8DECE] h-12 rounded-xl focus:ring-[#8FAF8A]">
             <div className="flex items-center gap-2">
-              <User size={18} className="text-accent" />
+              <User size={18} className="text-[#8FAF8A]" />
               <SelectValue placeholder="Selecionar Cliente" />
             </div>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-[#3D6B52] border-[#4A7A5C] text-[#E8DECE]">
             {clients.map(client => (
-              <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+              <SelectItem key={client.id} value={client.id} className="focus:bg-[#4A7A5C] focus:text-[#E8DECE]">{client.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <div className="grid grid-cols-2 gap-2 p-1 bg-white/5 backdrop-blur-md rounded-xl border border-white/10">
+        <div className="grid grid-cols-2 gap-2 p-1 bg-[#3D6B52]/50 backdrop-blur-md rounded-xl border border-[#4A7A5C]">
           <button
             onClick={() => { setAnalysisMode('single'); setCapturedImages([]); }}
-            className={cn("flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all", analysisMode === 'single' ? "bg-accent text-white shadow-lg" : "text-slate-400")}
+            className={cn("flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all", analysisMode === 'single' ? "bg-[#4A7A5C] text-[#E8DECE] shadow-lg" : "text-[#8FAF8A]/70")}
           >
             <FileText size={14} /> Sem Comparações
           </button>
           <button
             onClick={() => { setAnalysisMode('comparison'); setCapturedImages([]); }}
-            className={cn("flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all", analysisMode === 'comparison' ? "bg-accent text-white shadow-lg" : "text-slate-400")}
+            className={cn("flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all", analysisMode === 'comparison' ? "bg-[#4A7A5C] text-[#E8DECE] shadow-lg" : "text-[#8FAF8A]/70")}
           >
             <Columns size={14} /> Com Comparações
           </button>
@@ -262,26 +262,26 @@ const Capture = () => {
         {!currentImage ? (
           <>
             {!hasAtLeastOneImage ? (
-              <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center p-8 text-center">
-                <div className="w-48 h-48 rounded-3xl border-2 border-dashed border-slate-700 bg-slate-800/30 flex flex-col items-center justify-center p-4 mb-6 transition-all duration-300">
+              <div className="w-full h-full bg-[#1C3A2B] flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-48 h-48 rounded-3xl border-2 border-dashed border-[#4A7A5C] bg-[#3D6B52]/30 flex flex-col items-center justify-center p-4 mb-6 transition-all duration-300">
                   {analysisMode === 'single' ? (
                     <div className="flex flex-col items-center gap-2">
-                      <EyebrowSVG className="w-36 h-14 text-accent" />
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">1 Sobrancelha</span>
+                      <EyebrowSVG className="w-36 h-14 text-[#8FAF8A]" />
+                      <span className="font-label-category text-[10px] text-[#8FAF8A]">1 Sobrancelha</span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center gap-3">
                       <div className="flex flex-col gap-1 items-center">
-                        <EyebrowSVG className="w-28 h-10 text-slate-500 opacity-60" />
-                        <EyebrowSVG className="w-28 h-10 text-accent" />
+                        <EyebrowSVG className="w-28 h-10 text-[#8FAF8A]/40" />
+                        <EyebrowSVG className="w-28 h-10 text-[#8FAF8A]" />
                       </div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Antes & Depois</span>
+                      <span className="font-label-category text-[10px] text-[#8FAF8A]">Antes & Depois</span>
                     </div>
                   )}
                 </div>
 
-                <h3 className="text-white font-bold mb-2 text-sm">Suba a foto para análise</h3>
-                <p className="text-slate-500 text-xs max-w-xs">
+                <h3 className="font-heading text-lg font-normal text-[#E8DECE] mb-2">Suba a foto para análise</h3>
+                <p className="font-body text-[#8FAF8A] text-xs max-w-xs">
                   {analysisMode === 'comparison' 
                     ? 'Suba uma montagem contendo o Antes e Depois' 
                     : 'Suba a foto da sobrancelha atual'}
@@ -291,17 +291,17 @@ const Capture = () => {
               <div className="flex flex-col items-center gap-6 p-8 text-center">
                 <div className="flex gap-4 flex-wrap justify-center">
                   {capturedImages.map((img, i) => (
-                    <div key={i} className="relative w-32 h-44 rounded-2xl overflow-hidden border-2 border-accent shadow-xl">
+                    <div key={i} className="relative w-32 h-44 rounded-2xl overflow-hidden border-2 border-[#4A7A5C] shadow-xl">
                       <img src={img.url} className="w-full h-full object-cover" />
-                      <div className="absolute bottom-0 left-0 right-0 bg-accent text-white text-[10px] font-bold py-1 uppercase">
+                      <div className="absolute bottom-0 left-0 right-0 bg-[#4A7A5C] text-[#E8DECE] font-label-category text-[9px] py-1">
                         {analysisMode === 'comparison' ? 'Montagem/Foto' : 'Captura'}
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="text-white">
-                  <h3 className="text-sm font-bold">Tudo Pronto!</h3>
-                  <p className="text-slate-400 text-xs">Clique abaixo para iniciar o diagnóstico.</p>
+                <div className="text-[#E8DECE]">
+                  <h3 className="font-heading text-base font-normal">Tudo Pronto!</h3>
+                  <p className="font-body text-[#8FAF8A] text-xs">Clique abaixo para iniciar o diagnóstico.</p>
                 </div>
               </div>
             )}
@@ -310,7 +310,7 @@ const Capture = () => {
           <div className="relative h-full w-full">
             <img src={currentImage} className="h-full w-full object-contain" />
             <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-6 text-center">
-               <div className="bg-accent/90 backdrop-blur-md px-6 py-3 rounded-2xl text-white text-xs font-bold border border-white/20 shadow-2xl">
+               <div className="bg-[#4A7A5C]/90 backdrop-blur-md px-6 py-3 rounded-2xl text-[#E8DECE] text-xs font-bold border border-[#8FAF8A]/20 shadow-2xl">
                  Foto Carregada!
                  <p className="text-[9px] opacity-80 mt-1 font-normal uppercase tracking-wider">Clique em "Marcar" para prosseguir</p>
                </div>
@@ -320,21 +320,21 @@ const Capture = () => {
 
         {isPreparingImage && (
           <div className="absolute inset-0 bg-black/70 backdrop-blur-md flex flex-col items-center justify-center text-white z-50">
-            <Loader2 className="w-10 h-10 animate-spin text-accent mb-3" />
+            <Loader2 className="w-10 h-10 animate-spin text-[#8FAF8A] mb-3" />
             <h2 className="text-sm font-bold">Preparando imagem...</h2>
           </div>
         )}
 
         {isAnalyzing && (
           <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center text-white z-50">
-            <BrainCircuit className="w-16 h-16 animate-pulse text-accent mb-4" />
+            <BrainCircuit className="w-16 h-16 animate-pulse text-[#8FAF8A] mb-4" />
             <h2 className="text-base font-bold">Processando Diagnóstico...</h2>
             <p className="text-slate-400 text-xs mt-2">Analisando evolução técnica</p>
           </div>
         )}
       </div>
 
-      <div className="bg-slate-900 p-8 flex flex-col items-center gap-6">
+      <div className="bg-[#1C3A2B] p-8 flex flex-col items-center gap-6 border-t border-[#4A7A5C]/30">
         {!currentImage ? (
           !hasAtLeastOneImage ? (
             <div className="flex items-center gap-8">
@@ -342,14 +342,14 @@ const Capture = () => {
               <input type="file" ref={cameraInputRef} onChange={handleFileUpload} accept="image/*" capture="environment" className="hidden" />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="w-16 h-16 bg-accent text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+                className="w-16 h-16 bg-[#4A7A5C] text-[#E8DECE] rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform"
               >
                 <Upload size={28} />
               </button>
-              <div className="text-slate-500 text-xs font-bold uppercase tracking-widest">OU</div>
+              <div className="text-[#8FAF8A] text-xs font-bold uppercase tracking-widest">OU</div>
               <button
                 onClick={() => cameraInputRef.current?.click()}
-                className="w-16 h-16 bg-slate-800 text-white rounded-full flex items-center justify-center border border-slate-700 active:scale-90 transition-transform"
+                className="w-16 h-16 bg-[#3D6B52] text-[#E8DECE] rounded-full flex items-center justify-center border border-[#4A7A5C] active:scale-90 transition-transform"
               >
                 <Camera size={28} />
               </button>
@@ -360,13 +360,13 @@ const Capture = () => {
             <div className="flex gap-3">
               <Button 
                 variant="outline" 
-                className="flex-1 bg-transparent border-white text-white h-14 rounded-2xl text-xs" 
+                className="btn-elha-outline flex-1 bg-transparent border-[#E8DECE] text-[#E8DECE] h-14" 
                 onClick={() => setCurrentImage(null)}
               >
                 <RefreshCw className="mr-2 h-4 w-4" /> Repetir
               </Button>
               <Button 
-                className="flex-1 bg-accent hover:bg-accent/90 h-14 rounded-2xl shadow-xl shadow-accent/20 text-xs" 
+                className="btn-elha-primary flex-1 h-14" 
                 onClick={handleAnnotateImage}
                 disabled={isPreparingImage}
               >
@@ -378,7 +378,7 @@ const Capture = () => {
 
         {hasAtLeastOneImage && !currentImage && (
           <Button 
-            className="w-full h-14 bg-accent hover:bg-accent/90 text-sm font-bold rounded-2xl shadow-lg shadow-accent/20" 
+            className="btn-elha-primary w-full h-14" 
             onClick={handleConfirm} 
             disabled={isAnalyzing}
           >

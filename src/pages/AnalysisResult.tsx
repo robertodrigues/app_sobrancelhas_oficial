@@ -5,7 +5,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft, 
   Download, 
@@ -31,7 +30,7 @@ const AnalysisResult = () => {
   const reportRef = useRef<HTMLDivElement>(null);
 
   const [pdfLogo, setPdfLogo] = useState<string | null>(null);
-  const [pdfBgColor, setPdfBgColor] = useState('#F8FAFC');
+  const [pdfBgColor, setPdfBgColor] = useState('#F5F0E8');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   // Carregar preferências de Ajuste do localStorage
@@ -44,10 +43,10 @@ const AnalysisResult = () => {
 
   if (!analysis) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F0E8] text-[#1C3A2B]">
         <div className="text-center p-6">
-          <p className="mb-4 text-slate-600 text-sm">Nenhuma análise encontrada.</p>
-          <Button onClick={() => navigate('/')} className="rounded-xl">Voltar ao Início</Button>
+          <p className="mb-4 font-body text-sm text-[#4A7A5C]">Nenhuma análise encontrada.</p>
+          <Button onClick={() => navigate('/')} className="btn-elha-primary px-6 h-11">Voltar ao Início</Button>
         </div>
       </div>
     );
@@ -55,10 +54,46 @@ const AnalysisResult = () => {
 
   const getRegionTheme = (key: string) => {
     switch (key) {
-      case 'inicio': return { dot: 'bg-green-500', bg: 'bg-green-50/80 border-green-100', label: 'Ponto Inicial' };
-      case 'meio': return { dot: 'bg-yellow-500', bg: 'bg-yellow-50/80 border-yellow-100', label: 'Meio da Sobrancelha' };
-      case 'cauda': return { dot: 'bg-red-500', bg: 'bg-red-50/80 border-red-100', label: 'Cauda da Sobrancelha' };
-      default: return { dot: 'bg-slate-400', bg: 'bg-slate-50/80 border-slate-100', label: key };
+      case 'inicio': return { 
+        type: 'sage',
+        bg: 'bg-[#3D6B52]', 
+        labelColor: 'text-[#8FAF8A]', 
+        valueColor: 'text-[#E8DECE]', 
+        subColor: 'text-[#6B9A7C]', 
+        progressBg: 'bg-white/10', 
+        progressFill: 'bg-[#8FAF8A]',
+        label: 'Ponto Inicial' 
+      };
+      case 'meio': return { 
+        type: 'claro',
+        bg: 'bg-[#F5F0E8] border border-[#D4C9B5]', 
+        labelColor: 'text-[#7A9E8A]', 
+        valueColor: 'text-[#1C3A2B]', 
+        subColor: 'text-[#7A9060]', 
+        progressBg: 'bg-[#D4C9B5]', 
+        progressFill: 'bg-[#4A7A5C]',
+        label: 'Meio da Sobrancelha' 
+      };
+      case 'cauda': return { 
+        type: 'escuro',
+        bg: 'bg-[#1C3A2B]', 
+        labelColor: 'text-[#8FAF8A]', 
+        valueColor: 'text-[#E8DECE]', 
+        subColor: 'text-[#6B9A7C]', 
+        progressBg: 'bg-white/10', 
+        progressFill: 'bg-[#8FAF8A]',
+        label: 'Cauda da Sobrancelha' 
+      };
+      default: return { 
+        type: 'creme',
+        bg: 'bg-[#E8DECE]', 
+        labelColor: 'text-[#1C3A2B]/60', 
+        valueColor: 'text-[#1C3A2B]', 
+        subColor: 'text-[#1C3A2B]/80', 
+        progressBg: 'bg-[#D4C9B5]', 
+        progressFill: 'bg-[#1C3A2B]',
+        label: key 
+      };
     }
   };
 
@@ -138,25 +173,25 @@ const AnalysisResult = () => {
   };
 
   return (
-    <div style={{ backgroundColor: pdfBgColor }} className="min-h-screen pb-24 md:pt-20 transition-colors duration-300">
+    <div style={{ backgroundColor: pdfBgColor }} className="min-h-screen pb-24 md:pt-20 transition-colors duration-300 text-[#1C3A2B]">
       <Navbar />
       <main className="max-w-2xl mx-auto p-6">
-        <header className="relative flex flex-col items-center justify-center mb-8 text-center">
-          <button onClick={() => navigate('/')} className="absolute left-0 p-2 hover:bg-slate-200/50 rounded-full transition-colors">
+        <header className="relative flex flex-col items-center justify-center mb-8 text-center pt-4">
+          <button onClick={() => navigate('/')} className="absolute left-0 p-2 hover:bg-[#E8DECE] rounded-full transition-colors text-[#1C3A2B]">
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-slate-900">
+            <h1 className="font-heading text-2xl font-normal text-[#1C3A2B]">
               {analysis.isComparativo ? 'Relatório de Evolução' : 'Relatório Técnico'}
             </h1>
-            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mt-0.5">Tricologia de Sobrancelhas</p>
+            <p className="font-label-category text-[10px] text-[#4A7A5C] mt-0.5">Tricologia de Sobrancelhas</p>
           </div>
         </header>
 
         <div ref={reportRef} className="space-y-6 p-4 rounded-3xl">
           
           {pdfLogo && (
-            <div className="flex justify-center py-4 border-b border-slate-200/50">
+            <div className="flex justify-center py-4 border-b border-[#D4C9B5]/50">
               <img src={pdfLogo} className="h-16 object-contain" alt="Logo Designer" />
             </div>
           )}
@@ -164,8 +199,8 @@ const AnalysisResult = () => {
           {analysis.isComparativo && hasTwoImages ? (
             <div className="flex flex-row justify-between gap-4 w-full">
               <div className="w-[48%] space-y-2">
-                <p className="text-[10px] font-bold text-slate-400 uppercase text-center">Antes</p>
-                <div className="rounded-2xl shadow-md border-2 border-white p-1" style={{ backgroundColor: 'rgba(2, 6, 23, 0.05)' }}>
+                <p className="font-label-category text-[10px] text-[#4A7A5C] text-center">Antes</p>
+                <div className="rounded-2xl shadow-md border-2 border-[#E8DECE] p-1 bg-[#1C3A2B]/5">
                   <img
                     src={allImages[0].url}
                     crossOrigin="anonymous"
@@ -176,8 +211,8 @@ const AnalysisResult = () => {
                 </div>
               </div>
               <div className="w-[48%] space-y-2">
-                <p className="text-[10px] font-bold text-accent uppercase text-center">Depois</p>
-                <div className="rounded-2xl shadow-md border-2 border-accent p-1" style={{ backgroundColor: 'rgba(2, 6, 23, 0.05)' }}>
+                <p className="font-label-category text-[10px] text-[#4A7A5C] text-center">Depois</p>
+                <div className="rounded-2xl shadow-md border-2 border-[#4A7A5C] p-1 bg-[#1C3A2B]/5">
                   <img
                     src={allImages[1].url}
                     crossOrigin="anonymous"
@@ -189,7 +224,7 @@ const AnalysisResult = () => {
               </div>
             </div>
           ) : (
-            <div className="relative rounded-3xl shadow-lg border-4 border-white p-2" style={{ backgroundColor: 'rgba(2, 6, 23, 0.05)' }}>
+            <div className="relative rounded-3xl shadow-lg border-4 border-[#E8DECE] p-2 bg-[#1C3A2B]/5">
               <img
                 src={image}
                 crossOrigin="anonymous"
@@ -201,131 +236,151 @@ const AnalysisResult = () => {
           )}
 
           {analysis.isComparativo && analysis.comparativo && (
-            <Card className="border-none shadow-lg bg-accent text-white rounded-3xl overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
+            <Card className="border-none shadow-lg bg-[#1C3A2B] text-[#E8DECE] rounded-3xl overflow-hidden">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <TrendingUp size={20} />
-                    <h3 className="font-bold text-base">Análise de Evolução</h3>
+                    <TrendingUp size={20} className="text-[#8FAF8A]" />
+                    <h3 className="font-heading text-lg font-normal">Análise de Evolução</h3>
                   </div>
-                  <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-bold">
+                  <div className="tag-elha">
                     +{analysis.comparativo.melhoriaPercentualEstimada}% Melhoria
                   </div>
                 </div>
-                <p className="text-xs text-white/90 leading-relaxed mb-4">{analysis.comparativo.evolucaoGeral}</p>
+                <p className="font-body text-xs text-[#E8DECE]/90 leading-relaxed">{analysis.comparativo.evolucaoGeral}</p>
                 <div className="bg-white/10 p-3 rounded-xl flex items-start gap-2">
-                  <CheckCircle2 size={16} className="shrink-0 mt-0.5" />
-                  <p className="text-[11px] font-medium">Destaque: {analysis.comparativo.destaquePositivo}</p>
+                  <CheckCircle2 size={16} className="shrink-0 mt-0.5 text-[#8FAF8A]" />
+                  <p className="font-body text-[11px] font-medium">Destaque: {analysis.comparativo.destaquePositivo}</p>
                 </div>
               </CardContent>
             </Card>
           )}
 
           {analysis.alertaInterno?.presente && (
-            <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex gap-3 items-start">
-              <AlertTriangle className="text-amber-600 shrink-0" size={18} />
+            <div className="bg-[#EAF3DE] border border-[#8FAF8A] p-4 rounded-2xl flex gap-3 items-start">
+              <AlertTriangle className="text-[#3B6D11] shrink-0" size={18} />
               <div>
-                <p className="text-[10px] font-bold text-amber-800 uppercase">Alerta de Fator Interno</p>
-                <p className="text-xs text-amber-700 mt-0.5">{analysis.alertaInterno.descricao}</p>
+                <p className="font-label-category text-[10px] text-[#3B6D11]">Alerta de Fator Interno</p>
+                <p className="font-body text-xs text-[#3B6D11] mt-0.5">{analysis.alertaInterno.descricao}</p>
               </div>
             </div>
           )}
 
           <section className="space-y-4">
-            <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
-              <Target size={18} className="text-accent" />
+            <h2 className="font-label-category text-xs font-medium text-[#1C3A2B] flex items-center gap-2">
+              <Target size={18} className="text-[#4A7A5C]" />
               Diagnóstico por Região
             </h2>
             
             {Object.entries(analysis.regioes).map(([key, data]: [string, any]) => {
               const theme = getRegionTheme(key);
+              const percent = data.densidade?.percentual || 50;
               return (
-                <Card key={key} className={cn("border shadow-sm rounded-2xl overflow-hidden bg-white/90", theme.bg)}>
-                  <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                    <CardTitle className="text-xs font-bold uppercase tracking-wider">{theme.label}</CardTitle>
-                    <div className={cn("w-2.5 h-2.5 rounded-full shadow-sm", theme.dot)} />
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-xs text-slate-700 leading-relaxed">{data.descricao}</p>
+                <Card key={key} className={cn("border-none shadow-sm rounded-2xl overflow-hidden p-6", theme.bg)}>
+                  <div className="space-y-4">
+                    {/* Label */}
+                    <p className={cn("text-[10px] font-normal uppercase tracking-[3px]", theme.labelColor)}>
+                      {theme.label}
+                    </p>
                     
-                    <div className="flex flex-wrap gap-2 w-full">
-                      <div className="bg-white/50 p-2 rounded-lg border border-white/50 w-[calc(50%-4px)]">
-                        <p className="text-[9px] font-bold text-slate-400 uppercase">Densidade</p>
-                        <p className="text-xs font-bold text-slate-900">{data.densidade?.classificacao} ({data.densidade?.percentual}%)</p>
+                    {/* Valor */}
+                    <h3 className={cn("font-heading text-3xl font-medium tracking-[1px]", theme.valueColor)}>
+                      {data.densidade?.classificacao || 'Densidade'} ({percent}%)
+                    </h3>
+
+                    {/* Subtítulo */}
+                    <p className={cn("text-xs font-light leading-relaxed", theme.subColor)}>
+                      {data.descricao}
+                    </p>
+
+                    {/* Barra de progresso */}
+                    <div className="space-y-1.5">
+                      <div className={cn("w-full h-1 rounded-full overflow-hidden", theme.progressBg)}>
+                        <div 
+                          className={cn("h-full rounded-full", theme.progressFill)} 
+                          style={{ width: `${percent}%` }}
+                        />
                       </div>
-                      <div className="bg-white/50 p-2 rounded-lg border border-white/50 w-[calc(50%-4px)]">
-                        <p className="text-[9px] font-bold text-slate-400 uppercase">Espessura</p>
-                        <p className="text-xs font-bold text-slate-900">{data.espessura}</p>
+                      <div className="flex justify-between text-[9px] opacity-80">
+                        <span className={theme.labelColor}>Densidade Estimada</span>
+                        <span className={theme.valueColor}>{percent}%</span>
                       </div>
-                      <div className="bg-white/50 p-2 rounded-lg border border-white/50 w-[calc(50%-4px)]">
-                        <p className="text-[9px] font-bold text-slate-400 uppercase">Pele Exposta</p>
-                        <p className="text-xs font-bold text-slate-900">{data.peleExposta ? 'Sim' : 'Não'}</p>
+                    </div>
+
+                    {/* Outros Detalhes */}
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-black/5">
+                      <div className="p-2 rounded-lg bg-black/5">
+                        <p className={cn("text-[9px] font-medium uppercase tracking-[1px]", theme.labelColor)}>Espessura</p>
+                        <p className={cn("text-xs font-medium", theme.valueColor)}>{data.espessura}</p>
                       </div>
-                      <div className="bg-white/50 p-2 rounded-lg border border-white/50 w-[calc(50%-4px)]">
-                        <p className="text-[9px] font-bold text-slate-400 uppercase">Escala de Dano</p>
-                        <p className="text-xs font-bold text-slate-900">{data.escalaDano?.classificacao || 'N/A'}</p>
+                      <div className="p-2 rounded-lg bg-black/5">
+                        <p className={cn("text-[9px] font-medium uppercase tracking-[1px]", theme.labelColor)}>Pele Exposta</p>
+                        <p className={cn("text-xs font-medium", theme.valueColor)}>{data.peleExposta ? 'Sim' : 'Não'}</p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 gap-2">
                       {data.peleDescricao && (
-                        <div className="bg-white/50 p-3 rounded-lg border border-white/50 flex items-start gap-2">
-                          <Eye size={14} className="text-slate-400 mt-0.5" />
+                        <div className="bg-black/5 p-3 rounded-lg flex items-start gap-2">
+                          <Eye size={14} className={cn("mt-0.5", theme.labelColor)} />
                           <div>
-                            <p className="text-[9px] font-bold text-slate-400 uppercase">Exposição da Pele</p>
-                            <p className="text-xs text-slate-700">{data.peleDescricao}</p>
+                            <p className={cn("text-[9px] font-medium uppercase tracking-[1px]", theme.labelColor)}>Exposição da Pele</p>
+                            <p className={cn("text-xs", theme.valueColor)}>{data.peleDescricao}</p>
                           </div>
                         </div>
                       )}
                       {data.direcaoFios && (
-                        <div className="bg-white/50 p-3 rounded-lg border border-white/50 flex items-start gap-2">
-                          <MoveUpRight size={14} className="text-slate-400 mt-0.5" />
+                        <div className="bg-black/5 p-3 rounded-lg flex items-start gap-2">
+                          <MoveUpRight size={14} className={cn("mt-0.5", theme.labelColor)} />
                           <div>
-                            <p className="text-[9px] font-bold text-slate-400 uppercase">Direção dos Fios</p>
-                            <p className="text-xs text-slate-700">{data.direcaoFios}</p>
+                            <p className={cn("text-[9px] font-medium uppercase tracking-[1px]", theme.labelColor)}>Direção dos Fios</p>
+                            <p className={cn("text-xs", theme.valueColor)}>{data.direcaoFios}</p>
                           </div>
                         </div>
                       )}
                       {data.caracteristicasEspeciais && (
-                        <div className="bg-white/50 p-3 rounded-lg border border-white/50 flex items-start gap-2">
-                          <Info size={14} className="text-slate-400 mt-0.5" />
+                        <div className="bg-black/5 p-3 rounded-lg flex items-start gap-2">
+                          <Info size={14} className={cn("mt-0.5", theme.labelColor)} />
                           <div>
-                            <p className="text-[9px] font-bold text-slate-400 uppercase">Características dos Fios</p>
-                            <p className="text-xs text-slate-700">{data.caracteristicasEspeciais}</p>
+                            <p className={cn("text-[9px] font-medium uppercase tracking-[1px]", theme.labelColor)}>Características dos Fios</p>
+                            <p className={cn("text-xs", theme.valueColor)}>{data.caracteristicasEspeciais}</p>
                           </div>
                         </div>
                       )}
                     </div>
 
-                    <div className="p-3 bg-white/40 rounded-xl border border-white/40">
-                      <p className="text-[9px] font-bold text-slate-500 uppercase mb-1">Prognóstico</p>
-                      <p className="text-xs text-slate-700 italic">"{data.prognostico}"</p>
-                    </div>
-
-                    {data.statusMelhoria && (
-                      <div className="pt-2 border-t border-white/30">
-                        <p className="text-[9px] font-bold text-slate-500 uppercase mb-1">Status de Melhoria</p>
-                        <p className="text-xs font-medium text-slate-700">{data.statusMelhoria.descricao}</p>
+                    {data.prognostico && (
+                      <div className="p-3 bg-black/5 rounded-xl">
+                        <p className={cn("text-[9px] font-medium uppercase tracking-[1px] mb-1", theme.labelColor)}>Prognóstico</p>
+                        <p className={cn("text-xs italic", theme.subColor)}>"{data.prognostico}"</p>
                       </div>
                     )}
-                  </CardContent>
+
+                    {data.statusMelhoria && (
+                      <div className="pt-2 border-t border-black/5">
+                        <p className={cn("text-[9px] font-medium uppercase tracking-[1px] mb-1", theme.labelColor)}>Status de Melhoria</p>
+                        <p className={cn("text-xs font-medium", theme.valueColor)}>{data.statusMelhoria.descricao}</p>
+                      </div>
+                    )}
+                  </div>
                 </Card>
               );
             })}
           </section>
 
-          <Card className="border-none shadow-sm bg-white/90 rounded-3xl">
+          {/* Visão Geral (Card Creme Style) */}
+          <Card className="border border-[#D4C9B5] bg-[#E8DECE] rounded-3xl">
             <CardHeader>
-              <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider">
-                <ShieldCheck className="text-accent" size={18} />
+              <CardTitle className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
+                <ShieldCheck className="text-[#4A7A5C]" size={18} />
                 Visão Geral e Objetivo
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-xs text-slate-600 leading-relaxed">{analysis.visaoGeral?.descricao}</p>
-              <div className="p-4 bg-accent/5 rounded-2xl border border-accent/10">
-                <p className="text-[10px] font-bold text-accent uppercase mb-1">Objetivo do Tratamento</p>
-                <p className="text-xs text-slate-800 font-medium">{analysis.visaoGeral?.objetivo}</p>
+              <p className="font-body text-xs text-[#1C3A2B]/90 leading-relaxed">{analysis.visaoGeral?.descricao}</p>
+              <div className="p-4 bg-[#F5F0E8] rounded-2xl border border-[#D4C9B5]">
+                <p className="font-label-category text-[9px] text-[#4A7A5C] mb-1">Objetivo do Tratamento</p>
+                <p className="font-heading text-sm font-medium text-[#1C3A2B]">{analysis.visaoGeral?.objetivo}</p>
               </div>
             </CardContent>
           </Card>
@@ -336,16 +391,16 @@ const AnalysisResult = () => {
           <Button 
             onClick={handleGeneratePdf} 
             disabled={isGeneratingPdf}
-            className="w-full h-14 text-sm gap-2 rounded-2xl shadow-xl shadow-accent/20 bg-accent hover:bg-accent/90 font-bold"
+            className="btn-elha-primary w-full h-14"
           >
             {isGeneratingPdf ? (
               <>
-                <Loader2 className="animate-spin" size={18} />
+                <Loader2 className="animate-spin" size={14} />
                 Gerando PDF...
               </>
             ) : (
               <>
-                <Download size={18} /> Gerar Relatório PDF
+                <Download size={14} className="mr-1.5" /> Gerar Relatório PDF
               </>
             )}
           </Button>

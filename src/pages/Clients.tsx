@@ -37,27 +37,27 @@ const Clients = () => {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24 md:pt-20">
+    <div className="min-h-screen bg-[#F5F0E8] text-[#1C3A2B] pb-24 md:pt-20">
       <Navbar />
       <main className="max-w-4xl mx-auto p-6">
-        <header className="relative flex flex-col items-center justify-center mb-6 text-center">
-          <h1 className="text-xl font-bold text-slate-900">Clientes</h1>
-          <p className="text-xs text-slate-500 mt-1">Gerencie sua lista de clientes cadastrados</p>
+        <header className="relative flex flex-col items-center justify-center mb-6 text-center pt-4">
+          <h1 className="font-heading text-2xl font-normal text-[#1C3A2B]">Clientes</h1>
+          <p className="font-body text-xs text-[#4A7A5C] font-light mt-1">Gerencie sua lista de clientes cadastrados</p>
           <div className="absolute right-0 top-1/2 -translate-y-1/2">
-            <Button asChild size="sm" className="gap-1.5 h-9 rounded-xl px-3">
+            <Button asChild size="sm" className="btn-elha-primary gap-1.5 h-9 px-4">
               <Link to="/novo-cliente">
-                <UserPlus size={16} />
-                <span className="text-xs font-semibold">Novo</span>
+                <UserPlus size={14} />
+                <span>Novo</span>
               </Link>
             </Button>
           </div>
         </header>
 
         <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4A7A5C]" size={18} />
           <Input 
             placeholder="Buscar cliente..." 
-            className="pl-10 bg-white border-slate-200 h-11 rounded-xl text-sm"
+            className="pl-10 bg-[#E8DECE] border-[#D4C9B5] text-[#1C3A2B] placeholder-[#4A7A5C]/70 h-11 rounded-xl text-sm focus-visible:ring-[#1C3A2B]"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -65,44 +65,44 @@ const Clients = () => {
 
         {loading ? (
           <div className="flex justify-center py-12">
-            <Loader2 className="animate-spin text-accent" size={32} />
+            <Loader2 className="animate-spin text-[#4A7A5C]" size={32} />
           </div>
         ) : (
           <div className="space-y-3">
             {filteredClients.length > 0 ? filteredClients.map((client) => (
-              <Card key={client.id} className="border-none shadow-sm overflow-hidden">
+              <Card key={client.id} className="border border-[#D4C9B5] bg-[#E8DECE] rounded-2xl shadow-sm overflow-hidden">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
+                      <div className="w-10 h-10 rounded-full bg-[#1C3A2B]/10 text-[#1C3A2B] flex items-center justify-center font-heading font-medium text-base">
                         {client.name.charAt(0)}
                       </div>
                       <div>
-                        <h3 className="font-semibold text-slate-900 text-sm">{client.name}</h3>
-                        <p className="text-[10px] text-slate-500">Cadastrado em: {new Date(client.created_at).toLocaleDateString()}</p>
+                        <h3 className="font-heading text-base font-medium text-[#1C3A2B]">{client.name}</h3>
+                        <p className="font-body text-[10px] text-[#4A7A5C]">Cadastrado em: {new Date(client.created_at).toLocaleDateString()}</p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-[#1C3A2B] hover:bg-[#1C3A2B]/5">
                       <MoreVertical size={16} />
                     </Button>
                   </div>
                   <div className="mt-4 flex gap-4">
                     {client.phone && (
-                      <div className="flex items-center gap-1 text-xs text-slate-500">
-                        <Phone size={12} />
+                      <div className="flex items-center gap-1 font-body text-xs text-[#1C3A2B]/80">
+                        <Phone size={12} className="text-[#4A7A5C]" />
                         {client.phone}
                       </div>
                     )}
-                    <div className="flex items-center gap-1 text-xs text-slate-500">
-                      <Mail size={12} />
+                    <div className="flex items-center gap-1 font-body text-xs text-[#1C3A2B]/80">
+                      <Mail size={12} className="text-[#4A7A5C]" />
                       {client.email}
                     </div>
                   </div>
                 </CardContent>
               </Card>
             )) : (
-              <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200">
-                <p className="text-slate-400 text-sm">Nenhum cliente encontrado.</p>
+              <div className="text-center py-12 bg-[#E8DECE] rounded-2xl border border-dashed border-[#D4C9B5]">
+                <p className="font-body text-[#4A7A5C] text-sm">Nenhum cliente encontrado.</p>
               </div>
             )}
           </div>
