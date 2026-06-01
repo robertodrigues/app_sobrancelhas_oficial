@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import ImageAnnotator, { RegionBBox } from '@/components/camera/ImageAnnotator';
+import AnalysisModeIllustration from '@/components/camera/AnalysisModeIllustration';
 import Navbar from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -32,15 +33,6 @@ const ANALYSIS_MODES = [
 ] as const;
 
 type AnalysisMode = (typeof ANALYSIS_MODES)[number]['id'];
-
-const EyebrowSVG = ({ className = 'w-32 h-12 text-[#8FAF8A]' }: { className?: string }) => (
-  <svg viewBox="0 0 100 30" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M10,22 C25,12 45,8 65,12 C75,14 85,18 90,24 C80,20 70,16 60,15 C40,13 25,17 10,22 Z"
-      fill="currentColor"
-    />
-  </svg>
-);
 
 const MAX_UPLOAD_DIMENSION = 8192;
 
@@ -342,28 +334,8 @@ const Capture = () => {
                 <div className="relative overflow-hidden rounded-2xl border border-[#4A7A5C]/50 bg-[#10261C] min-h-[360px] sm:min-h-[420px] flex items-center justify-center">
                   {!currentImage ? (
                     !hasAtLeastOneImage ? (
-                      <div className="w-full h-full min-h-[360px] sm:min-h-[420px] flex flex-col items-center justify-center p-6 text-center">
-                        <div className="w-full max-w-xs rounded-3xl border border-dashed border-[#4A7A5C] bg-[#3D6B52]/30 px-5 py-8">
-                          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-[#8FAF8A]/40 bg-[#1C3A2B]/40 text-[#8FAF8A]">
-                            {analysisMode === 'comparison' ? (
-                              <Columns size={34} />
-                            ) : analysisMode === 'tricoscopia' ? (
-                              <BrainCircuit size={34} />
-                            ) : (
-                              <EyebrowSVG className="w-14 h-10 text-[#8FAF8A]" />
-                            )}
-                          </div>
-                          <h3 className="font-heading text-base sm:text-lg font-normal text-[#E8DECE]">
-                            Suba a foto para análise
-                          </h3>
-                          <p className="mt-2 font-body text-xs sm:text-sm text-[#8FAF8A]">
-                            {analysisMode === 'comparison'
-                              ? 'Use uma imagem com antes e depois.'
-                              : analysisMode === 'tricoscopia'
-                                ? 'Use a imagem da tricoscopia para análise.'
-                                : 'Use uma imagem da sobrancelha atual.'}
-                          </p>
-                        </div>
+                      <div className="w-full h-full min-h-[360px] sm:min-h-[420px] flex items-center justify-center p-6 text-center">
+                        <AnalysisModeIllustration mode={analysisMode} />
                       </div>
                     ) : (
                       <div className="w-full h-full min-h-[360px] sm:min-h-[420px] p-4 sm:p-6 flex flex-col justify-center gap-5">
