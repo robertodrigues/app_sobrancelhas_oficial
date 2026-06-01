@@ -29,9 +29,9 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   const imageRef = useRef<HTMLImageElement | null>(null);
 
   const colors = {
-    ponto_inicial: '#8FAF8A', // Verde menta
-    meio: '#D4C9B5',          // Bege areia
-    cauda: '#4A7A5C',         // Verde sage
+    ponto_inicial: '#16A34A',
+    meio: '#EAB308',
+    cauda: '#DC2626',
   };
 
   const render = () => {
@@ -72,7 +72,6 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
       setCurrentBBoxes({});
       setHistory([{ data: drawingCanvas.toDataURL(), bboxes: {} }]);
       
-      // Draw initial image
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -236,13 +235,13 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
 
       <div className="p-6 bg-[#1C3A2B] space-y-6 border-t border-[#4A7A5C]/30">
         <div className="flex items-center justify-center gap-6 bg-[#3D6B52]/50 border border-[#4A7A5C] p-3 rounded-2xl">
-          <button onClick={() => setBrushSize(4)} className={cn("p-2 rounded-full transition-all", brushSize === 4 ? "bg-[#4A7A5C] text-[#E8DECE]" : "text-[#8FAF8A]/70")}>
+          <button onClick={() => setBrushSize(4)} className={cn("p-2 rounded-full transition-all", brushSize === 4 ? "bg-[#16A34A] text-white" : "text-[#8FAF8A]/70")}>
             <Circle size={8} fill="currentColor" />
           </button>
-          <button onClick={() => setBrushSize(8)} className={cn("p-2 rounded-full transition-all", brushSize === 8 ? "bg-[#4A7A5C] text-[#E8DECE]" : "text-[#8FAF8A]/70")}>
+          <button onClick={() => setBrushSize(8)} className={cn("p-2 rounded-full transition-all", brushSize === 8 ? "bg-[#EAB308] text-white" : "text-[#8FAF8A]/70")}>
             <Circle size={14} fill="currentColor" />
           </button>
-          <button onClick={() => setBrushSize(14)} className={cn("p-2 rounded-full transition-all", brushSize === 14 ? "bg-[#4A7A5C] text-[#E8DECE]" : "text-[#8FAF8A]/70")}>
+          <button onClick={() => setBrushSize(14)} className={cn("p-2 rounded-full transition-all", brushSize === 14 ? "bg-[#DC2626] text-white" : "text-[#8FAF8A]/70")}>
             <Circle size={20} fill="currentColor" />
           </button>
         </div>
@@ -252,10 +251,10 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
             onClick={() => setActiveRegion('ponto_inicial')}
             className={cn(
               "flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all",
-              activeRegion === 'ponto_inicial' ? "border-[#8FAF8A] bg-[#8FAF8A]/20" : "border-[#4A7A5C] bg-[#3D6B52]/30"
+              activeRegion === 'ponto_inicial' ? "border-[#16A34A] bg-[#16A34A]/20" : "border-[#4A7A5C] bg-[#3D6B52]/30"
             )}
           >
-            <div className="w-6 h-6 rounded-full bg-[#8FAF8A]" />
+            <div className="w-6 h-6 rounded-full bg-[#16A34A]" />
             <span className="font-label-category text-[9px] text-[#E8DECE]">Início</span>
           </button>
           
@@ -263,10 +262,10 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
             onClick={() => setActiveRegion('meio')}
             className={cn(
               "flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all",
-              activeRegion === 'meio' ? "border-[#D4C9B5] bg-[#D4C9B5]/20" : "border-[#4A7A5C] bg-[#3D6B52]/30"
+              activeRegion === 'meio' ? "border-[#EAB308] bg-[#EAB308]/20" : "border-[#4A7A5C] bg-[#3D6B52]/30"
             )}
           >
-            <div className="w-6 h-6 rounded-full bg-[#D4C9B5]" />
+            <div className="w-6 h-6 rounded-full bg-[#EAB308]" />
             <span className="font-label-category text-[9px] text-[#E8DECE]">Meio</span>
           </button>
 
@@ -274,10 +273,10 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
             onClick={() => setActiveRegion('cauda')}
             className={cn(
               "flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all",
-              activeRegion === 'cauda' ? "border-[#4A7A5C] bg-[#4A7A5C]/20" : "border-[#4A7A5C] bg-[#3D6B52]/30"
+              activeRegion === 'cauda' ? "border-[#DC2626] bg-[#DC2626]/20" : "border-[#4A7A5C] bg-[#3D6B52]/30"
             )}
           >
-            <div className="w-6 h-6 rounded-full bg-[#4A7A5C]" />
+            <div className="w-6 h-6 rounded-full bg-[#DC2626]" />
             <span className="font-label-category text-[9px] text-[#E8DECE]">Cauda</span>
           </button>
         </div>

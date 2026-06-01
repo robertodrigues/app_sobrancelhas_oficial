@@ -33,7 +33,6 @@ const AnalysisResult = () => {
   const [pdfBgColor, setPdfBgColor] = useState('#F5F0E8');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
-  // Carregar preferências de Ajuste do localStorage
   useEffect(() => {
     const savedLogo = localStorage.getItem('pdf_custom_logo');
     const savedBg = localStorage.getItem('pdf_custom_bg_color');
@@ -54,46 +53,50 @@ const AnalysisResult = () => {
 
   const getRegionTheme = (key: string) => {
     switch (key) {
-      case 'inicio': return { 
-        type: 'sage',
-        bg: 'bg-[#3D6B52]', 
-        labelColor: 'text-[#8FAF8A]', 
-        valueColor: 'text-[#E8DECE]', 
-        subColor: 'text-[#6B9A7C]', 
-        progressBg: 'bg-white/10', 
-        progressFill: 'bg-[#8FAF8A]',
-        label: 'Ponto Inicial' 
-      };
-      case 'meio': return { 
-        type: 'claro',
-        bg: 'bg-[#F5F0E8] border border-[#D4C9B5]', 
-        labelColor: 'text-[#7A9E8A]', 
-        valueColor: 'text-[#1C3A2B]', 
-        subColor: 'text-[#7A9060]', 
-        progressBg: 'bg-[#D4C9B5]', 
-        progressFill: 'bg-[#4A7A5C]',
-        label: 'Meio da Sobrancelha' 
-      };
-      case 'cauda': return { 
-        type: 'escuro',
-        bg: 'bg-[#1C3A2B]', 
-        labelColor: 'text-[#8FAF8A]', 
-        valueColor: 'text-[#E8DECE]', 
-        subColor: 'text-[#6B9A7C]', 
-        progressBg: 'bg-white/10', 
-        progressFill: 'bg-[#8FAF8A]',
-        label: 'Cauda da Sobrancelha' 
-      };
-      default: return { 
-        type: 'creme',
-        bg: 'bg-[#E8DECE]', 
-        labelColor: 'text-[#1C3A2B]/60', 
-        valueColor: 'text-[#1C3A2B]', 
-        subColor: 'text-[#1C3A2B]/80', 
-        progressBg: 'bg-[#D4C9B5]', 
-        progressFill: 'bg-[#1C3A2B]',
-        label: key 
-      };
+      case 'inicio':
+        return { 
+          type: 'verde',
+          bg: 'bg-[#EAF3DE] border border-[#16A34A]/20',
+          labelColor: 'text-[#166534]',
+          valueColor: 'text-[#14532D]',
+          subColor: 'text-[#166534]/80',
+          progressBg: 'bg-[#D1FAE5]',
+          progressFill: 'bg-[#16A34A]',
+          label: 'Ponto Inicial'
+        };
+      case 'meio':
+        return { 
+          type: 'amarelo',
+          bg: 'bg-[#FEF3C7] border border-[#EAB308]/25',
+          labelColor: 'text-[#A16207]',
+          valueColor: 'text-[#78350F]',
+          subColor: 'text-[#A16207]/80',
+          progressBg: 'bg-[#FDE68A]',
+          progressFill: 'bg-[#EAB308]',
+          label: 'Meio da Sobrancelha'
+        };
+      case 'cauda':
+        return { 
+          type: 'vermelho',
+          bg: 'bg-[#FEE2E2] border border-[#DC2626]/25',
+          labelColor: 'text-[#991B1B]',
+          valueColor: 'text-[#7F1D1D]',
+          subColor: 'text-[#991B1B]/80',
+          progressBg: 'bg-[#FCA5A5]',
+          progressFill: 'bg-[#DC2626]',
+          label: 'Cauda da Sobrancelha'
+        };
+      default:
+        return { 
+          type: 'neutro',
+          bg: 'bg-[#E8DECE]', 
+          labelColor: 'text-[#1C3A2B]/60', 
+          valueColor: 'text-[#1C3A2B]', 
+          subColor: 'text-[#1C3A2B]/80', 
+          progressBg: 'bg-[#D4C9B5]', 
+          progressFill: 'bg-[#1C3A2B]',
+          label: key 
+        };
     }
   };
 
@@ -278,22 +281,18 @@ const AnalysisResult = () => {
               return (
                 <Card key={key} className={cn("border-none shadow-sm rounded-2xl overflow-hidden p-6", theme.bg)}>
                   <div className="space-y-4">
-                    {/* Label */}
                     <p className={cn("text-[10px] font-normal uppercase tracking-[3px]", theme.labelColor)}>
                       {theme.label}
                     </p>
                     
-                    {/* Valor */}
                     <h3 className={cn("font-heading text-3xl font-medium tracking-[1px]", theme.valueColor)}>
                       {data.densidade?.classificacao || 'Densidade'} ({percent}%)
                     </h3>
 
-                    {/* Subtítulo */}
                     <p className={cn("text-xs font-light leading-relaxed", theme.subColor)}>
                       {data.descricao}
                     </p>
 
-                    {/* Barra de progresso */}
                     <div className="space-y-1.5">
                       <div className={cn("w-full h-1 rounded-full overflow-hidden", theme.progressBg)}>
                         <div 
@@ -307,7 +306,6 @@ const AnalysisResult = () => {
                       </div>
                     </div>
 
-                    {/* Outros Detalhes */}
                     <div className="grid grid-cols-2 gap-2 pt-2 border-t border-black/5">
                       <div className="p-2 rounded-lg bg-black/5">
                         <p className={cn("text-[9px] font-medium uppercase tracking-[1px]", theme.labelColor)}>Espessura</p>
@@ -368,7 +366,6 @@ const AnalysisResult = () => {
             })}
           </section>
 
-          {/* Visão Geral (Card Creme Style) */}
           <Card className="border border-[#D4C9B5] bg-[#E8DECE] rounded-3xl">
             <CardHeader>
               <CardTitle className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
