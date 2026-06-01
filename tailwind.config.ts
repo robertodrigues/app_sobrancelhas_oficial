@@ -11,8 +11,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
-        cormorant: ["Cormorant Garamond", "serif"],
+        sans: ["Poppins", "sans-serif"],
+        cormorant: ["Poppins", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

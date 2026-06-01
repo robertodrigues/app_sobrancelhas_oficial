@@ -68,12 +68,12 @@
 
 @layer base {
   *, *::before, *::after {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Poppins', sans-serif;
   }
 
   body {
     @apply bg-[#F5F0E8] text-[#1C3A2B];
-    font-family: 'Inter', sans-serif;
+    font-family: 'Poppins', sans-serif;
     font-weight: 300;
     line-height: 1.7;
     -webkit-tap-highlight-color: transparent;
@@ -86,25 +86,25 @@
 
 /* Custom Typography Classes */
 .font-brand-logo {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Poppins', sans-serif;
   font-weight: 500;
   letter-spacing: 12px;
 }
 
 .font-heading {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Poppins', sans-serif;
   font-weight: 500;
   letter-spacing: 1.5px;
 }
 
 .font-body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-weight: 300;
   line-height: 1.7;
 }
 
 .font-label-category {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-weight: 500;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -115,7 +115,7 @@
   background-color: #1C3A2B;
   color: #E8DECE;
   border-radius: 99px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-weight: 500;
   font-size: 11px;
   letter-spacing: 3px;
@@ -133,7 +133,7 @@
   color: #1C3A2B;
   border: 1px solid #1C3A2B;
   border-radius: 99px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-weight: 500;
   font-size: 11px;
   letter-spacing: 3px;
@@ -149,7 +149,7 @@
 .tag-elha {
   background-color: #EAF3DE;
   color: #3B6D11;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-weight: 500;
   font-size: 11px;
   letter-spacing: 1px;
