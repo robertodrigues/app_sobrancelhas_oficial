@@ -24,6 +24,64 @@ import html2canvas from 'html2canvas';
 import { cn } from '@/lib/utils';
 import { uploadPhotoToR2 } from '@/lib/r2';
 
+const SUPPORTED_UPLOAD_TYPES = new Set([
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/gif',
+]);
+
+const dataUrlToFile = (dataUrl: string, filename: string) => {
+  const [header, base64Data] = dataUrl.split(',');
+  const mimeMatch = header.match(/data:(.*?);base64/);
+  const mimeType = mimeMatch?.[1] || 'image/png';
+  const binary = atob(base64Data || '');
+  const bytes = new Uint8Array(binary.length);
+
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return new File([bytes], filename, { type: mimeType });
+};
+
+const readFileAsDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Não foi possível ler o arquivo da logo.'));
+    reader.readAsDataURL(file);
+  });
+
+const loadImage = (src: string) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Não foi possível preparar a logo para upload.'));
+    img.src = src;
+  });
+
+const normalizeImageForUpload = async (file: File) => {
+  if (SUPPORTED_UPLOAD_TYPES.has(file.type)) {
+    return file;
+  }
+
+  const dataUrl = await readFileAsDataUrl(file);
+  const img = await loadImage(dataUrl);
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth || img.width;
+  canvas.height = img.naturalHeight || img.height;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error('Não foi possível converter a logo para envio.');
+  }
+
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const pngDataUrl = canvas.toDataURL('image/png');
+  return dataUrlToFile(pngDataUrl, `${file.name.replace(/\.[^.]+$/, '') || 'logo'}.png`);
+};
+
 const Edition = () => {
   // Imagens de Antes e Depois
   const [beforeImg, setBeforeImg] = useState<string | null>(null);
@@ -104,13 +162,15 @@ const Edition = () => {
 
     if (type === 'pdfLogo') {
       try {
-        const uploadRes = await uploadPhotoToR2(file);
+        const normalizedFile = await normalizeImageForUpload(file);
+        const uploadRes = await uploadPhotoToR2(normalizedFile);
         setPdfLogo(uploadRes.url);
         savePdfSettings(uploadRes.url, pdfBgColor);
         showSuccess('Logo do PDF enviada para o R2 com sucesso!');
       } catch (error) {
         console.error('Erro ao enviar logo do PDF para o R2:', error);
-        showError('Não foi possível enviar a logo do PDF para o R2.');
+        const errorMessage = error instanceof Error ? error.message : 'Não foi possível enviar a logo do PDF para o R2.';
+        showError(errorMessage);
       }
       return;
     }
