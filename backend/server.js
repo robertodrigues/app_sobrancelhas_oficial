@@ -13,7 +13,13 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || 'dummy-key-for-build-safety',
 });
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://app-sobrancelhas-frontend.onrender.com',
+    'http://localhost:5173'
+  ]
+}));
+
 app.use(express.json({ limit: '20mb' }));
 
 app.post('/api/anthropic', async (req, res) => {
