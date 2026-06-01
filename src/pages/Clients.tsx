@@ -2,39 +2,156 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, UserPlus, MoreVertical, Phone, Mail, Loader2 } from 'lucide-react';
+import { Search, UserPlus, MoreVertical, Phone, Mail, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
+import { showError, showSuccess } from '@/utils/toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+
+type ClientRecord = {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  created_at: string;
+};
 
 const Clients = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [clients, setClients] = useState<any[]>([]);
+  const [clients, setClients] = useState<ClientRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [editingClient, setEditingClient] = useState<ClientRecord | null>(null);
+  const [deletingClient, setDeletingClient] = useState<ClientRecord | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+  });
 
   useEffect(() => {
     fetchClients();
   }, []);
 
   const fetchClients = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .order('name');
-      
-      if (error) throw error;
-      setClients(data || []);
-    } catch (error) {
-      console.error('Erro ao buscar clientes:', error);
-    } finally {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .order('name');
+
+    if (error) {
+      showError('Erro ao buscar clientes.');
       setLoading(false);
+      return;
     }
+
+    setClients((data || []) as ClientRecord[]);
+    setLoading(false);
   };
 
-  const filteredClients = clients.filter(client => 
-    client.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredClients = clients.filter((client) =>
+    client.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
+
+  const handleOpenEdit = (client: ClientRecord) => {
+    setEditingClient(client);
+    setEditForm({
+      name: client.name || '',
+      email: client.email || '',
+      phone: client.phone || '',
+    });
+    setEditOpen(true);
+  };
+
+  const handleUpdateClient = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!editingClient) return;
+
+    if (!editForm.name.trim()) {
+      showError('O nome é obrigatório.');
+      return;
+    }
+
+    setEditLoading(true);
+
+    const { error } = await supabase
+      .from('clients')
+      .update({
+        name: editForm.name.trim(),
+        email: editForm.email.trim() || null,
+        phone: editForm.phone.trim() || null,
+      })
+      .eq('id', editingClient.id);
+
+    setEditLoading(false);
+
+    if (error) {
+      showError('Não foi possível atualizar o cliente.');
+      return;
+    }
+
+    showSuccess('Cliente atualizado com sucesso!');
+    setEditOpen(false);
+    setEditingClient(null);
+    await fetchClients();
+  };
+
+  const handleOpenDelete = (client: ClientRecord) => {
+    setDeletingClient(client);
+    setDeleteOpen(true);
+  };
+
+  const handleDeleteClient = async () => {
+    if (!deletingClient) return;
+
+    setDeleteLoading(true);
+
+    const { error } = await supabase
+      .from('clients')
+      .delete()
+      .eq('id', deletingClient.id);
+
+    setDeleteLoading(false);
+
+    if (error) {
+      showError('Não foi possível excluir o cliente.');
+      return;
+    }
+
+    showSuccess('Cliente excluído com sucesso!');
+    setDeleteOpen(false);
+    setDeletingClient(null);
+    await fetchClients();
+  };
 
   return (
     <div className="min-h-screen bg-[#F5F0E8] text-[#1C3A2B] pb-24 md:pt-20">
@@ -55,8 +172,8 @@ const Clients = () => {
 
         <div className="relative mb-6">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4A7A5C]" size={18} />
-          <Input 
-            placeholder="Buscar cliente..." 
+          <Input
+            placeholder="Buscar cliente..."
             className="pl-10 bg-[#E8DECE] border-[#D4C9B5] text-[#1C3A2B] placeholder-[#4A7A5C]/70 h-11 rounded-xl text-sm focus-visible:ring-[#1C3A2B]"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -72,31 +189,57 @@ const Clients = () => {
             {filteredClients.length > 0 ? filteredClients.map((client) => (
               <Card key={client.id} className="border border-[#D4C9B5] bg-[#E8DECE] rounded-2xl shadow-sm overflow-hidden">
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#1C3A2B]/10 text-[#1C3A2B] flex items-center justify-center font-heading font-medium text-base">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-full bg-[#1C3A2B]/10 text-[#1C3A2B] flex items-center justify-center font-heading font-medium text-base shrink-0">
                         {client.name.charAt(0)}
                       </div>
-                      <div>
-                        <h3 className="font-heading text-base font-medium text-[#1C3A2B]">{client.name}</h3>
-                        <p className="font-body text-[10px] text-[#4A7A5C]">Cadastrado em: {new Date(client.created_at).toLocaleDateString()}</p>
+                      <div className="min-w-0">
+                        <h3 className="font-heading text-base font-medium text-[#1C3A2B] truncate">{client.name}</h3>
+                        <p className="font-body text-[10px] text-[#4A7A5C]">
+                          Cadastrado em: {new Date(client.created_at).toLocaleDateString('pt-BR')}
+                        </p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-[#1C3A2B] hover:bg-[#1C3A2B]/5">
-                      <MoreVertical size={16} />
-                    </Button>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-[#1C3A2B] hover:bg-[#1C3A2B]/5">
+                          <MoreVertical size={16} />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-44 bg-[#F5F0E8] border-[#D4C9B5]">
+                        <DropdownMenuItem
+                          className="cursor-pointer flex items-center gap-2 text-[#1C3A2B]"
+                          onClick={() => handleOpenEdit(client)}
+                        >
+                          <Pencil size={14} />
+                          Editar cliente
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="cursor-pointer flex items-center gap-2 text-red-600 focus:text-red-600"
+                          onClick={() => handleOpenDelete(client)}
+                        >
+                          <Trash2 size={14} />
+                          Excluir cliente
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                  <div className="mt-4 flex gap-4">
+
+                  <div className="mt-4 flex flex-col sm:flex-row gap-3 sm:gap-4">
                     {client.phone && (
                       <div className="flex items-center gap-1 font-body text-xs text-[#1C3A2B]/80">
                         <Phone size={12} className="text-[#4A7A5C]" />
-                        {client.phone}
+                        <span>{client.phone}</span>
                       </div>
                     )}
-                    <div className="flex items-center gap-1 font-body text-xs text-[#1C3A2B]/80">
-                      <Mail size={12} className="text-[#4A7A5C]" />
-                      {client.email}
-                    </div>
+                    {client.email && (
+                      <div className="flex items-center gap-1 font-body text-xs text-[#1C3A2B]/80 break-all">
+                        <Mail size={12} className="text-[#4A7A5C]" />
+                        <span>{client.email}</span>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -108,6 +251,97 @@ const Clients = () => {
           </div>
         )}
       </main>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B]">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-xl">Editar cliente</DialogTitle>
+            <DialogDescription className="text-[#4A7A5C]">
+              Atualize os dados do cliente selecionado.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleUpdateClient} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name" className="font-label-category text-[10px] text-[#1C3A2B]">
+                Nome
+              </Label>
+              <Input
+                id="edit-name"
+                value={editForm.name}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
+                className="bg-[#E8DECE] border-[#D4C9B5] text-[#1C3A2B] h-11 rounded-xl text-sm focus-visible:ring-[#1C3A2B]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-email" className="font-label-category text-[10px] text-[#1C3A2B]">
+                E-mail
+              </Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
+                className="bg-[#E8DECE] border-[#D4C9B5] text-[#1C3A2B] h-11 rounded-xl text-sm focus-visible:ring-[#1C3A2B]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-phone" className="font-label-category text-[10px] text-[#1C3A2B]">
+                Telefone
+              </Label>
+              <Input
+                id="edit-phone"
+                value={editForm.phone}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
+                className="bg-[#E8DECE] border-[#D4C9B5] text-[#1C3A2B] h-11 rounded-xl text-sm focus-visible:ring-[#1C3A2B]"
+              />
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditOpen(false)}
+                className="btn-elha-outline h-11"
+                disabled={editLoading}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" className="btn-elha-primary h-11" disabled={editLoading}>
+                {editLoading ? <Loader2 className="animate-spin" size={14} /> : 'Salvar alterações'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-heading text-xl">Excluir cliente?</AlertDialogTitle>
+            <AlertDialogDescription className="text-[#4A7A5C]">
+              Essa ação não pode ser desfeita. O cliente será removido definitivamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="btn-elha-outline h-11" disabled={deleteLoading}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                void handleDeleteClient();
+              }}
+              className="bg-red-600 text-white hover:bg-red-700 h-11"
+              disabled={deleteLoading}
+            >
+              {deleteLoading ? <Loader2 className="animate-spin" size={14} /> : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
