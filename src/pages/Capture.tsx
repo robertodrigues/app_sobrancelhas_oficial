@@ -175,16 +175,52 @@ const Capture = () => {
     try {
       // Convert base64 to File
       const file = dataURLtoFile(annotatedBase64, `annotated-${Date.now()}.jpg`);
-      // Upload to R2
-      const uploadRes = await uploadPhotoToR2(file);
       
-      setCapturedImages(prev => [...prev, { url: uploadRes.url, bboxes }]);
+      let imageUrl = annotatedBase64; // Default fallback to local base64
+      let uploadSuccess = false;
+
+      // 1. Try uploading to R2
+      try {
+        const uploadRes = await uploadPhotoToR2(file);
+        if (uploadRes && uploadRes.url) {
+          imageUrl = uploadRes.url;
+          uploadSuccess = true;
+        }
+      } catch (r2Error) {
+        console.warn('R2 upload failed, trying Supabase storage...', r2Error);
+        
+        // 2. Try uploading to Supabase storage 'photos' bucket
+        try {
+          const fileName = `photos/${Date.now()}-${Math.random().toString(36).substring(2)}.jpg`;
+          const { data, error } = await supabase.storage.from('photos').upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+          
+          if (!error && data) {
+            const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(fileName);
+            imageUrl = publicUrl;
+            uploadSuccess = true;
+          } else {
+            console.warn('Supabase storage upload failed, using base64 fallback:', error);
+          }
+        } catch (supabaseError) {
+          console.warn('Supabase storage upload failed, using base64 fallback:', supabaseError);
+        }
+      }
+
+      setCapturedImages(prev => [...prev, { url: imageUrl, bboxes }]);
       setCurrentImage(null);
       setCurrentImageFile(null);
       setIsAnnotating(false);
-      showSuccess('Imagem marcada com sucesso!');
+      
+      if (uploadSuccess) {
+        showSuccess('Imagem marcada e enviada com sucesso!');
+      } else {
+        showSuccess('Imagem marcada com sucesso! (Salva localmente)');
+      }
     } catch (error: any) {
-      showError('Erro ao enviar imagem marcada: ' + error.message);
+      showError('Erro ao processar imagem: ' + error.message);
     } finally {
       setIsPreparingImage(false);
     }
