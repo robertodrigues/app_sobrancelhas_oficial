@@ -34,10 +34,27 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
     cauda: '#4A7A5C',         // Verde sage
   };
 
+  const render = () => {
+    const canvas = mainCanvasRef.current;
+    const drawingCanvas = drawingCanvasRef.current;
+    const img = imageRef.current;
+    if (!canvas || !drawingCanvas || !img) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 0.9;
+    ctx.drawImage(drawingCanvas, 0, 0);
+    ctx.globalAlpha = 1.0;
+  };
+
   useEffect(() => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = image;
+    if (image.startsWith('http')) {
+      img.crossOrigin = 'anonymous';
+    }
 
     img.onload = () => {
       imageRef.current = img;
@@ -54,29 +71,21 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
 
       setCurrentBBoxes({});
       setHistory([{ data: drawingCanvas.toDataURL(), bboxes: {} }]);
-      render();
+      
+      // Draw initial image
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      }
     };
 
-    img.onerror = () => {
-      console.error('Erro ao carregar imagem para anotação');
+    img.onerror = (err) => {
+      console.error('Erro ao carregar imagem para anotação:', err);
     };
+
+    img.src = image;
   }, [image]);
-
-  const render = () => {
-    const canvas = mainCanvasRef.current;
-    const drawingCanvas = drawingCanvasRef.current;
-    const img = imageRef.current;
-    if (!canvas || !drawingCanvas || !img) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    ctx.globalAlpha = 0.9;
-    ctx.drawImage(drawingCanvas, 0, 0);
-    ctx.globalAlpha = 1.0;
-  };
 
   const updateBBox = (region: string, x: number, y: number) => {
     setCurrentBBoxes(prev => {
@@ -167,7 +176,6 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
     const lastState = newHistory[newHistory.length - 1];
     
     const img = new Image();
-    img.src = lastState.data;
     img.onload = () => {
       const dCtx = drawingCanvasRef.current?.getContext('2d');
       if (dCtx) {
@@ -178,6 +186,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
         render();
       }
     };
+    img.src = lastState.data;
   };
 
   const handleSave = () => {

@@ -68,6 +68,19 @@ const resizeImageIfNeeded = (file: File): Promise<string> => {
   });
 };
 
+// Helper to convert base64 data URL to File object
+const dataURLtoFile = (dataurl: string, filename: string): File => {
+  const arr = dataurl.split(',');
+  const mime = arr[0].match(/:(.*?);/)![1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], filename, { type: mime });
+};
+
 const Capture = () => {
   const [capturedImages, setCapturedImages] = useState<{url: string, bboxes: Record<string, RegionBBox>}[]>([]);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
@@ -157,38 +170,32 @@ const Capture = () => {
     }
   };
 
-  const addImageToFlow = async (url: string, bboxes: Record<string, RegionBBox>) => {
-    setCapturedImages(prev => [...prev, { url, bboxes }]);
-    setCurrentImage(null);
-    setCurrentImageFile(null);
-    setIsAnnotating(false);
-  };
-
-  const handleAnnotateImage = async () => {
-    if (!currentImageFile && !currentImage) {
-      showError('Selecione uma imagem antes de marcar.');
-      return;
-    }
-
+  const addImageToFlow = async (annotatedBase64: string, bboxes: Record<string, RegionBBox>) => {
     setIsPreparingImage(true);
     try {
-      const uploadedUrl = currentImageFile
-        ? (await uploadPhotoToR2(currentImageFile)).url
-        : currentImage;
-
-      if (!uploadedUrl) {
-        showError('Não foi possível carregar a imagem.');
-        return;
-      }
-
-      setCurrentImage(uploadedUrl);
+      // Convert base64 to File
+      const file = dataURLtoFile(annotatedBase64, `annotated-${Date.now()}.jpg`);
+      // Upload to R2
+      const uploadRes = await uploadPhotoToR2(file);
+      
+      setCapturedImages(prev => [...prev, { url: uploadRes.url, bboxes }]);
+      setCurrentImage(null);
       setCurrentImageFile(null);
-      setIsAnnotating(true);
+      setIsAnnotating(false);
+      showSuccess('Imagem marcada com sucesso!');
     } catch (error: any) {
-      showError(error.message || 'Não foi possível enviar a foto.');
+      showError('Erro ao enviar imagem marcada: ' + error.message);
     } finally {
       setIsPreparingImage(false);
     }
+  };
+
+  const handleAnnotateImage = () => {
+    if (!currentImage) {
+      showError('Selecione uma imagem antes de marcar.');
+      return;
+    }
+    setIsAnnotating(true);
   };
 
   const resetFlow = () => {
