@@ -1,6 +1,10 @@
 import { RegionBBox } from '@/components/camera/ImageAnnotator';
 import { PROMPT_ESPECIALISTA } from '../constants/prompt';
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  'https://app-sobrancelhas-oficial-5svn.onrender.com';
+
 type AnthropicMessageContent =
   | { type: 'text'; text: string }
   | { type: 'image'; source: { type: 'base64'; media_type: 'image/jpeg'; data: string } };
@@ -59,7 +63,7 @@ export const analyzeWithClaude = async (images: { url: string; bboxes: Record<st
 
     content.push({ type: 'text', text: PROMPT_ESPECIALISTA });
 
-    const response = await fetch('/api/anthropic', {
+    const response = await fetch(`${API_BASE_URL.replace(/\/$/, '')}/api/anthropic`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
