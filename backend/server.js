@@ -16,7 +16,7 @@ const anthropic = new Anthropic({
 app.use(cors());
 app.options('*', cors());
 
-app.use(express.json({ limit: '20mb' }));
+app.use(express.json({ limit: '50mb' }));
 
 app.post('/api/anthropic', async (req, res) => {
   try {
