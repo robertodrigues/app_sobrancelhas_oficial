@@ -22,6 +22,7 @@ import { performDualAnalysis } from '@/services/analysis';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { uploadPhotoToR2 } from '@/lib/r2';
+import type { AnalysisImage } from '@/services/types';
 
 const EyebrowSVG = ({ className = "w-32 h-12 text-[#8FAF8A]" }: { className?: string }) => (
   <svg viewBox="0 0 100 30" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -68,7 +69,6 @@ const resizeImageIfNeeded = (file: File): Promise<string> => {
   });
 };
 
-// Helper to convert base64 data URL to File object
 const dataURLtoFile = (dataurl: string, filename: string): File => {
   const arr = dataurl.split(',');
   const mime = arr[0].match(/:(.*?);/)![1];
@@ -82,7 +82,7 @@ const dataURLtoFile = (dataurl: string, filename: string): File => {
 };
 
 const Capture = () => {
-  const [capturedImages, setCapturedImages] = useState<{url: string, bboxes: Record<string, RegionBBox>}[]>([]);
+  const [capturedImages, setCapturedImages] = useState<AnalysisImage[]>([]);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
   const [currentImageFile, setCurrentImageFile] = useState<File | null>(null);
   const [isAnnotating, setIsAnnotating] = useState(false);
@@ -173,13 +173,11 @@ const Capture = () => {
   const addImageToFlow = async (annotatedBase64: string, bboxes: Record<string, RegionBBox>) => {
     setIsPreparingImage(true);
     try {
-      // Convert base64 to File
       const file = dataURLtoFile(annotatedBase64, `annotated-${Date.now()}.jpg`);
       
-      let imageUrl = annotatedBase64; // Default fallback to local base64
+      let imageUrl = annotatedBase64;
       let uploadSuccess = false;
 
-      // 1. Try uploading to R2
       try {
         const uploadRes = await uploadPhotoToR2(file);
         if (uploadRes && uploadRes.url) {
@@ -189,7 +187,6 @@ const Capture = () => {
       } catch (r2Error) {
         console.warn('R2 upload failed, trying Supabase storage...', r2Error);
         
-        // 2. Try uploading to Supabase storage 'photos' bucket
         try {
           const fileName = `photos/${Date.now()}-${Math.random().toString(36).substring(2)}.jpg`;
           const { data, error } = await supabase.storage.from('photos').upload(fileName, file, {
@@ -209,7 +206,7 @@ const Capture = () => {
         }
       }
 
-      setCapturedImages(prev => [...prev, { url: imageUrl, bboxes }]);
+      setCapturedImages(prev => [...prev, { url: imageUrl, dataUrl: annotatedBase64, bboxes }]);
       setCurrentImage(null);
       setCurrentImageFile(null);
       setIsAnnotating(false);

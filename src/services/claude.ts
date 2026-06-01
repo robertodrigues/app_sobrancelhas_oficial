@@ -1,5 +1,6 @@
 import { RegionBBox } from '@/components/camera/ImageAnnotator';
 import { PROMPT_ESPECIALISTA } from '../constants/prompt';
+import type { AnalysisImage } from './types';
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
@@ -8,6 +9,26 @@ const API_BASE_URL =
 type AnthropicMessageContent =
   | { type: 'text'; text: string }
   | { type: 'image'; source: { type: 'base64'; media_type: 'image/jpeg'; data: string } };
+
+const toDataUrl = async (source: string): Promise<string> => {
+  if (source.startsWith('data:')) {
+    return source;
+  }
+
+  const response = await fetch(source, { mode: 'cors' });
+  if (!response.ok) {
+    throw new Error('Não foi possível carregar a imagem para análise.');
+  }
+
+  const blob = await response.blob();
+
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Não foi possível converter a imagem para base64.'));
+    reader.readAsDataURL(blob);
+  });
+};
 
 const cropImage = (base64Str: string, bbox: RegionBBox): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -31,24 +52,26 @@ const cropImage = (base64Str: string, bbox: RegionBBox): Promise<string> => {
   });
 };
 
-export const analyzeWithClaude = async (images: { url: string; bboxes: Record<string, RegionBBox> }[]) => {
+export const analyzeWithClaude = async (images: AnalysisImage[]) => {
   try {
     const content: AnthropicMessageContent[] = [];
 
     for (let i = 0; i < images.length; i++) {
       const label = images.length > 1 ? (i === 0 ? 'ANTES' : 'DEPOIS') : 'VISÃO GERAL';
+      const imageDataUrl = await toDataUrl(images[i].dataUrl ?? images[i].url);
+
       content.push({ type: 'text', text: `Imagem ${i + 1}: ${label}` });
       content.push({
         type: 'image',
         source: {
           type: 'base64',
           media_type: 'image/jpeg',
-          data: images[i].url.split(',')[1],
+          data: imageDataUrl.split(',')[1],
         },
       });
 
       for (const [name, box] of Object.entries(images[i].bboxes)) {
-        const croppedData = await cropImage(images[i].url, box);
+        const croppedData = await cropImage(imageDataUrl, box);
         content.push({ type: 'text', text: `Detalhe ${label} - Região ${name.toUpperCase()}` });
         content.push({
           type: 'image',
