@@ -89,7 +89,7 @@ const Capture = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>("");
-  const [analysisMode, setAnalysisMode] = useState<'single' | 'comparison'>('single');
+  const [analysisMode, setAnalysisMode] = useState<'single' | 'comparison' | 'tricoscopia'>('single');
   const [isPreparingImage, setIsPreparingImage] = useState(false);
   
   const webcamRef = useRef<any>(null);
@@ -249,6 +249,8 @@ const Capture = () => {
   }
 
   const hasAtLeastOneImage = capturedImages.length >= 1;
+  const captureTitle = analysisMode === 'tricoscopia' ? 'Tricoscopia' : analysisMode === 'comparison' ? 'Comparação Técnica' : 'Captura Técnica';
+  const captureSubtitle = analysisMode === 'tricoscopia' ? 'Diagnóstico Capilar • Tricoscopia' : 'Diagnóstico Capilar';
 
   return (
     <div className="min-h-screen bg-[#1C3A2B] flex flex-col text-[#E8DECE]">
@@ -258,9 +260,9 @@ const Capture = () => {
         </button>
         <div className="text-center">
           <h1 className="font-heading text-lg font-normal text-[#E8DECE]">
-            {analysisMode === 'comparison' ? 'Comparação Técnica' : 'Captura Técnica'}
+            {captureTitle}
           </h1>
-          <p className="font-label-category text-[9px] text-[#8FAF8A] mt-0.5">Diagnóstico Capilar</p>
+          <p className="font-label-category text-[9px] text-[#8FAF8A] mt-0.5">{captureSubtitle}</p>
         </div>
         <button onClick={resetFlow} className="p-2 hover:bg-white/10 rounded-full text-red-400">
           <Trash2 size={18} />
@@ -282,18 +284,24 @@ const Capture = () => {
           </SelectContent>
         </Select>
 
-        <div className="grid grid-cols-2 gap-2 p-1 bg-[#3D6B52]/50 backdrop-blur-md rounded-xl border border-[#4A7A5C]">
+        <div className="grid grid-cols-3 gap-2 p-1 bg-[#3D6B52]/50 backdrop-blur-md rounded-xl border border-[#4A7A5C]">
           <button
             onClick={() => { setAnalysisMode('single'); setCapturedImages([]); }}
-            className={cn("flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all", analysisMode === 'single' ? "bg-[#4A7A5C] text-[#E8DECE] shadow-lg" : "text-[#8FAF8A]/70")}
+            className={cn("flex items-center justify-center gap-2 py-2.5 rounded-lg text-[11px] font-bold transition-all", analysisMode === 'single' ? "bg-[#4A7A5C] text-[#E8DECE] shadow-lg" : "text-[#8FAF8A]/70")}
           >
             <FileText size={14} /> Sem Comparações
           </button>
           <button
             onClick={() => { setAnalysisMode('comparison'); setCapturedImages([]); }}
-            className={cn("flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all", analysisMode === 'comparison' ? "bg-[#4A7A5C] text-[#E8DECE] shadow-lg" : "text-[#8FAF8A]/70")}
+            className={cn("flex items-center justify-center gap-2 py-2.5 rounded-lg text-[11px] font-bold transition-all", analysisMode === 'comparison' ? "bg-[#4A7A5C] text-[#E8DECE] shadow-lg" : "text-[#8FAF8A]/70")}
           >
             <Columns size={14} /> Com Comparações
+          </button>
+          <button
+            onClick={() => { setAnalysisMode('tricoscopia'); setCapturedImages([]); }}
+            className={cn("flex items-center justify-center gap-2 py-2.5 rounded-lg text-[11px] font-bold transition-all", analysisMode === 'tricoscopia' ? "bg-[#4A7A5C] text-[#E8DECE] shadow-lg" : "text-[#8FAF8A]/70")}
+          >
+            <BrainCircuit size={14} /> Tricoscopia
           </button>
         </div>
       </div>
@@ -304,18 +312,25 @@ const Capture = () => {
             {!hasAtLeastOneImage ? (
               <div className="w-full h-full bg-[#1C3A2B] flex flex-col items-center justify-center p-8 text-center">
                 <div className="w-48 h-48 rounded-3xl border-2 border-dashed border-[#4A7A5C] bg-[#3D6B52]/30 flex flex-col items-center justify-center p-4 mb-6 transition-all duration-300">
-                  {analysisMode === 'single' ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <EyebrowSVG className="w-36 h-14 text-[#8FAF8A]" />
-                      <span className="font-label-category text-[10px] text-[#8FAF8A]">1 Sobrancelha</span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-3">
+                  {analysisMode === 'comparison' ? (
+                    <div className="flex flex-col gap-3 items-center">
                       <div className="flex flex-col gap-1 items-center">
                         <EyebrowSVG className="w-28 h-10 text-[#8FAF8A]/40" />
                         <EyebrowSVG className="w-28 h-10 text-[#8FAF8A]" />
                       </div>
                       <span className="font-label-category text-[10px] text-[#8FAF8A]">Antes & Depois</span>
+                    </div>
+                  ) : analysisMode === 'tricoscopia' ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-20 h-20 rounded-full border-2 border-[#8FAF8A]/50 flex items-center justify-center">
+                        <BrainCircuit className="w-10 h-10 text-[#8FAF8A]" />
+                      </div>
+                      <span className="font-label-category text-[10px] text-[#8FAF8A]">Tricoscopia</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <EyebrowSVG className="w-36 h-14 text-[#8FAF8A]" />
+                      <span className="font-label-category text-[10px] text-[#8FAF8A]">1 Sobrancelha</span>
                     </div>
                   )}
                 </div>
@@ -324,7 +339,9 @@ const Capture = () => {
                 <p className="font-body text-[#8FAF8A] text-xs max-w-xs">
                   {analysisMode === 'comparison' 
                     ? 'Suba uma montagem contendo o Antes e Depois' 
-                    : 'Suba a foto da sobrancelha atual'}
+                    : analysisMode === 'tricoscopia'
+                      ? 'Suba a foto para a análise de tricoscopia'
+                      : 'Suba a foto da sobrancelha atual'}
                 </p>
               </div>
             ) : (
@@ -334,7 +351,7 @@ const Capture = () => {
                     <div key={i} className="relative w-32 h-44 rounded-2xl overflow-hidden border-2 border-[#4A7A5C] shadow-xl">
                       <img src={img.url} className="w-full h-full object-cover" />
                       <div className="absolute bottom-0 left-0 right-0 bg-[#4A7A5C] text-[#E8DECE] font-label-category text-[9px] py-1">
-                        {analysisMode === 'comparison' ? 'Montagem/Foto' : 'Captura'}
+                        {analysisMode === 'comparison' ? 'Montagem/Foto' : analysisMode === 'tricoscopia' ? 'Tricoscopia' : 'Captura'}
                       </div>
                     </div>
                   ))}
