@@ -7,8 +7,10 @@ const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
+
+// Inicialização segura do cliente Anthropic para evitar crash no startup/build caso a chave não esteja definida ainda
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiKey: process.env.ANTHROPIC_API_KEY || 'dummy-key-for-build-safety',
 });
 
 app.use(cors());
@@ -17,6 +19,10 @@ app.use(express.json({ limit: '20mb' }));
 app.post('/api/anthropic', async (req, res) => {
   try {
     const { model, messages, max_tokens, temperature } = req.body;
+
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return res.status(500).json({ error: 'A variável de ambiente ANTHROPIC_API_KEY não está configurada no servidor.' });
+    }
 
     const response = await anthropic.messages.create({
       model,
