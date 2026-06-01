@@ -22,6 +22,7 @@ import {
 import { showSuccess, showError } from '@/utils/toast';
 import html2canvas from 'html2canvas';
 import { cn } from '@/lib/utils';
+import { uploadPhotoToR2 } from '@/lib/r2';
 
 const Edition = () => {
   // Imagens de Antes e Depois
@@ -97,22 +98,31 @@ const Edition = () => {
     }
   }, [layoutSize, splitDirection, beforeImg, afterImg]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'before' | 'after' | 'logo' | 'pdfLogo') => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'before' | 'after' | 'logo' | 'pdfLogo') => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        if (type === 'before') setBeforeImg(result);
-        if (type === 'after') setAfterImg(result);
-        if (type === 'logo') setLogoImg(result);
-        if (type === 'pdfLogo') {
-          setPdfLogo(result);
-          savePdfSettings(result, pdfBgColor);
-        }
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    if (type === 'pdfLogo') {
+      try {
+        const uploadRes = await uploadPhotoToR2(file);
+        setPdfLogo(uploadRes.url);
+        savePdfSettings(uploadRes.url, pdfBgColor);
+        showSuccess('Logo do PDF enviada para o R2 com sucesso!');
+      } catch (error) {
+        console.error('Erro ao enviar logo do PDF para o R2:', error);
+        showError('Não foi possível enviar a logo do PDF para o R2.');
+      }
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (type === 'before') setBeforeImg(result);
+      if (type === 'after') setAfterImg(result);
+      if (type === 'logo') setLogoImg(result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
