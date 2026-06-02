@@ -53,7 +53,7 @@ const Index = () => {
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
-            className="fixed inset-0 bg-[#1C3A2B] z-50 flex flex-col items-center justify-center"
+            className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center"
           >
             <motion.div 
               initial={{ opacity: 0, y: 15 }}
@@ -61,10 +61,10 @@ const Index = () => {
               transition={{ delay: 0.2, duration: 0.8 }}
               className="text-center space-y-4"
             >
-              <h1 className="font-brand-logo text-5xl font-medium text-[#E8DECE] uppercase translate-x-[6px]">
+              <h1 className="font-brand-logo text-5xl font-medium text-[#1C3A2B] uppercase translate-x-[6px]">
                 ELHA
               </h1>
-              <p className="font-body text-[11px] font-light text-[#8FAF8A] tracking-[4px] uppercase">
+              <p className="font-body text-[11px] font-light text-[#4A7A5C] tracking-[4px] uppercase">
                 Tricologia de Sobrancelhas
               </p>
             </motion.div>
@@ -72,14 +72,14 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      <div className="min-h-screen bg-[#1C3A2B] text-[#E8DECE] pb-28 md:pt-20">
+      <div className="min-h-screen bg-white text-[#1C3A2B] pb-28 md:pt-20">
         <Navbar />
         <main className="max-w-4xl mx-auto p-6">
           <header className="mb-8 flex flex-col items-center text-center relative pt-4">
             <div className="w-12 h-12 rounded-2xl bg-[#8FAF8A]/10 flex items-center justify-center text-[#8FAF8A] mb-3">
               <Sparkles size={24} />
             </div>
-            <h1 className="font-heading text-3xl font-normal text-[#E8DECE] tracking-[1px]">
+            <h1 className="font-heading text-3xl font-normal text-[#1C3A2B] tracking-[1px]">
               Olá, Especialista
             </h1>
             <p className="font-body text-xs text-[#8FAF8A] font-light tracking-[1px] uppercase mt-1">
@@ -156,7 +156,7 @@ const Index = () => {
               <h2 className="font-label-category text-xs font-medium text-[#8FAF8A]">
                 Atividades Recentes
               </h2>
-              <Button variant="link" className="text-[#8FAF8A] hover:text-[#E8DECE] font-medium text-xs tracking-[1px] uppercase">
+              <Button variant="link" className="text-[#8FAF8A] hover:text-[#1C3A2B] font-medium text-xs tracking-[1px] uppercase">
                 Ver tudo
               </Button>
             </div>
