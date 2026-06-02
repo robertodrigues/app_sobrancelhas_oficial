@@ -53,7 +53,7 @@ const Index = () => {
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
-            className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center"
+            className="fixed inset-0 bg-[#F6F0E8] z-50 flex flex-col items-center justify-center"
           >
             <motion.div 
               initial={{ opacity: 0, y: 15 }}
@@ -72,7 +72,7 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      <div className="min-h-screen bg-white text-[#1C3A2B] pb-28 md:pt-20">
+      <div className="min-h-screen bg-[#F6F0E8] text-[#1C3A2B] pb-28 md:pt-20">
         <Navbar />
         <main className="max-w-4xl mx-auto p-6">
           <header className="mb-8 flex flex-col items-center text-center relative pt-4">
