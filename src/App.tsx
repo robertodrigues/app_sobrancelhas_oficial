@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ClerkProvider, RedirectToSignIn, SignedIn, SignedOut } from "@clerk/clerk-react";
+import { HybridAuthProvider, SignedIn, SignedOut, RedirectToSignIn } from "./lib/auth";
 import Index from "./pages/Index";
 import Capture from "./pages/Capture";
 import Clients from "./pages/Clients";
@@ -17,11 +17,8 @@ import Register from "./pages/Register";
 
 const queryClient = new QueryClient();
 
-// Chave pública padrão do Clerk (pode ser substituída por variável de ambiente)
-const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "pk_test_ZGVmaW5pdGUtbWFzdG9kb24tNDkuY2xlcmsuYWNjb3VudHMuZGV2JA";
-
 const App = () => (
-  <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+  <HybridAuthProvider>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
@@ -84,7 +81,7 @@ const App = () => (
         </div>
       </TooltipProvider>
     </QueryClientProvider>
-  </ClerkProvider>
+  </HybridAuthProvider>
 );
 
 export default App;

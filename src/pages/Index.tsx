@@ -6,7 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { useUser, useClerk } from "@clerk/clerk-react";
+import { useUser, useClerk } from "@/lib/auth";
 import { showSuccess, showError } from "@/utils/toast";
 
 const Index = () => {

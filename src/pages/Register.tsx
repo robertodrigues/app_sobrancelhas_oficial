@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { UserPlus, Loader2 } from "lucide-react";
-import { useSignUp } from "@clerk/clerk-react";
+import { useSignUp } from "@/lib/auth";
 import { showError, showSuccess } from "@/utils/toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,8 +55,6 @@ const Register = () => {
         showSuccess("Cadastro realizado com sucesso!");
         navigate("/");
       } else {
-        // Se precisar de verificação de e-mail por código, o Clerk retorna "missing_requirements"
-        // Para simplificar e manter o fluxo direto, se o Clerk estiver configurado para fluxo direto:
         showSuccess("Cadastro realizado! Faça login para continuar.");
         navigate("/login");
       }

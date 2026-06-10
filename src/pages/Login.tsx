@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LogIn, Loader2 } from "lucide-react";
-import { useSignIn } from "@clerk/clerk-react";
+import { useSignIn } from "@/lib/auth";
 import { showError, showSuccess } from "@/utils/toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
