@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { UserPlus, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { useSignUp } from "@clerk/clerk-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const Register = () => {
+  const { isLoaded, signUp, setActive } = useSignUp();
   const navigate = useNavigate();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,8 +23,10 @@ const Register = () => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
-      showError("Preencha todos os campos.");
+    if (!isLoaded) return;
+
+    if (!firstName.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
+      showError("Preencha todos os campos obrigatórios.");
       return;
     }
 
@@ -30,26 +35,36 @@ const Register = () => {
       return;
     }
 
-    if (password.length < 6) {
-      showError("A senha precisa ter pelo menos 6 caracteres.");
+    if (password.length < 8) {
+      showError("A senha precisa ter pelo menos 8 caracteres.");
       return;
     }
 
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-    });
+    try {
+      const result = await signUp.create({
+        emailAddress: email.trim(),
+        password,
+        firstName: firstName.trim(),
+        lastName: lastName.trim() || undefined,
+      });
 
-    if (error) {
-      showError(error.message);
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        showSuccess("Cadastro realizado com sucesso!");
+        navigate("/");
+      } else {
+        // Se precisar de verificação de e-mail por código, o Clerk retorna "missing_requirements"
+        // Para simplificar e manter o fluxo direto, se o Clerk estiver configurado para fluxo direto:
+        showSuccess("Cadastro realizado! Faça login para continuar.");
+        navigate("/login");
+      }
+    } catch (err: any) {
+      showError(err.errors?.[0]?.message || "Erro ao realizar cadastro.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    showSuccess("Cadastro realizado com sucesso!");
-    navigate("/login");
   };
 
   return (
@@ -70,10 +85,37 @@ const Register = () => {
           </CardHeader>
 
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName" className="font-label-category text-[10px] text-[#1C3A2B]">
+                    Nome *
+                  </Label>
+                  <Input
+                    id="firstName"
+                    placeholder="Maria"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] placeholder:text-[#4A7A5C]/60 h-11 rounded-xl text-sm focus-visible:ring-[#1C3A2B]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName" className="font-label-category text-[10px] text-[#1C3A2B]">
+                    Sobrenome
+                  </Label>
+                  <Input
+                    id="lastName"
+                    placeholder="Silva"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] placeholder:text-[#4A7A5C]/60 h-11 rounded-xl text-sm focus-visible:ring-[#1C3A2B]"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="email" className="font-label-category text-[10px] text-[#1C3A2B]">
-                  E-mail
+                  E-mail *
                 </Label>
                 <Input
                   id="email"
@@ -87,12 +129,12 @@ const Register = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="password" className="font-label-category text-[10px] text-[#1C3A2B]">
-                  Senha
+                  Senha *
                 </Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Crie uma senha"
+                  placeholder="Mínimo 8 caracteres"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] placeholder:text-[#4A7A5C]/60 h-11 rounded-xl text-sm focus-visible:ring-[#1C3A2B]"
@@ -101,7 +143,7 @@ const Register = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword" className="font-label-category text-[10px] text-[#1C3A2B]">
-                  Confirmar senha
+                  Confirmar senha *
                 </Label>
                 <Input
                   id="confirmPassword"
@@ -113,7 +155,7 @@ const Register = () => {
                 />
               </div>
 
-              <Button type="submit" className="btn-elha-primary w-full h-12 gap-2" disabled={loading}>
+              <Button type="submit" className="btn-elha-primary w-full h-12 gap-2 mt-2" disabled={loading}>
                 {loading ? <Loader2 className="animate-spin" size={16} /> : <UserPlus size={16} />}
                 Criar conta
               </Button>

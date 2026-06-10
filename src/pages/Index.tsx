@@ -1,20 +1,37 @@
 import Navbar from "@/components/layout/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, FileText, Camera, Sparkles, Loader2, ChevronRight } from "lucide-react";
+import { Plus, Users, FileText, Camera, Sparkles, Loader2, ChevronRight, LogOut, Upload } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
+import { useUser, useClerk } from "@clerk/clerk-react";
+import { showSuccess, showError } from "@/utils/toast";
 
 const Index = () => {
+  const { user } = useUser();
+  const { signOut } = useClerk();
   const [stats, setStats] = useState({ clients: 0, analyses: 0 });
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSplash, setShowSplash] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [customAvatar, setCustomAvatar] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
+  // Obter primeiro nome do usuário
+  const firstName = user?.firstName || user?.fullName?.split(" ")[0] || "Especialista";
+
   useEffect(() => {
+    // Carregar foto/logo customizada do localStorage
+    const savedAvatar = localStorage.getItem("elha_user_avatar");
+    if (savedAvatar) {
+      setCustomAvatar(savedAvatar);
+    }
+
     // Splash screen timer
     const timer = setTimeout(() => {
       setShowSplash(false);
@@ -41,8 +58,48 @@ const Index = () => {
     };
 
     fetchData();
-    return () => clearTimeout(timer);
+
+    // Fechar menu ao clicar fora
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
+
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      setCustomAvatar(base64);
+      localStorage.setItem("elha_user_avatar", base64);
+      showSuccess("Foto de perfil atualizada com sucesso!");
+      setMenuOpen(false);
+    };
+    reader.onerror = () => {
+      showError("Erro ao carregar a imagem.");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      showSuccess("Sessão encerrada com sucesso!");
+      navigate("/login");
+    } catch (error) {
+      showError("Erro ao sair da conta.");
+    }
+  };
 
   return (
     <>
@@ -76,18 +133,71 @@ const Index = () => {
         <Navbar />
         <main className="max-w-4xl mx-auto p-6">
           <header className="mb-8 flex flex-col items-center text-center relative pt-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#8FAF8A]/10 flex items-center justify-center text-[#8FAF8A] mb-3">
-              <Sparkles size={24} />
+            
+            {/* Avatar Interativo com Menu Dropdown */}
+            <div className="relative mb-3" ref={menuRef}>
+              <button 
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="w-14 h-14 rounded-full bg-[#8FAF8A]/10 border-2 border-[#4A7A5C]/20 flex items-center justify-center text-[#8FAF8A] overflow-hidden hover:scale-105 active:scale-95 transition-all shadow-sm"
+              >
+                {customAvatar ? (
+                  <img src={customAvatar} alt="Avatar" className="w-full h-full object-cover" />
+                ) : user?.imageUrl ? (
+                  <img src={user.imageUrl} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <Sparkles size={24} />
+                )}
+              </button>
+
+              {/* Dropdown Menu */}
+              <AnimatePresence>
+                {menuOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-16 left-1/2 -translate-x-1/2 w-48 bg-[#E8DECE] border border-[#D4C9B5] rounded-2xl shadow-xl p-2 z-50 space-y-1"
+                  >
+                    <button 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-[#1C3A2B] hover:bg-[#F5F0E8] rounded-xl transition-colors text-left"
+                    >
+                      <Upload size={14} className="text-[#4A7A5C]" />
+                      <span>Alterar Foto/Logo</span>
+                    </button>
+                    
+                    <div className="h-px bg-[#D4C9B5] my-1" />
+
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left"
+                    >
+                      <LogOut size={14} />
+                      <span>Sair</span>
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleAvatarUpload} 
+                accept="image/*" 
+                className="hidden" 
+              />
             </div>
+
             <h1 className="font-heading text-3xl font-normal text-[#1C3A2B] tracking-[1px]">
-              Olá, Especialista
+              Olá, {firstName}
             </h1>
             <p className="font-body text-xs text-[#8FAF8A] font-light tracking-[1px] uppercase mt-1">
               Pronta para transformar olhares?
             </p>
           </header>
 
-          {/* Stats Cards (Card Sage Style) */}
+          {/* Stats Cards */}
           <div className="grid grid-cols-2 gap-4 mb-8">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <Card className="border-none shadow-sm bg-[#3D6B52] rounded-2xl">
@@ -128,7 +238,6 @@ const Index = () => {
               Ações Rápidas
             </h2>
             <div className="grid grid-cols-2 gap-4">
-              {/* Novo Cliente (Card Creme Style) */}
               <Button asChild variant="ghost" className="h-32 flex flex-col gap-3 bg-[#E8DECE] text-[#1C3A2B] border-none shadow-sm rounded-2xl hover:bg-[#E8DECE]/90 transition-all group">
                 <Link to="/novo-cliente">
                   <div className="w-12 h-12 rounded-full bg-[#1C3A2B]/10 flex items-center justify-center group-hover:bg-[#1C3A2B] group-hover:text-[#E8DECE] transition-colors">
@@ -138,7 +247,6 @@ const Index = () => {
                 </Link>
               </Button>
 
-              {/* Nova Captura (Card Sage Style) */}
               <Button asChild variant="ghost" className="h-32 flex flex-col gap-3 bg-[#3D6B52] text-[#E8DECE] border border-[#4A7A5C] shadow-sm rounded-2xl hover:bg-[#3D6B52]/90 transition-all group">
                 <Link to="/captura">
                   <div className="w-12 h-12 rounded-full bg-[#1C3A2B]/30 flex items-center justify-center group-hover:bg-[#8FAF8A] group-hover:text-[#1C3A2B] transition-colors">

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LogIn, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { useSignIn } from "@clerk/clerk-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const Login = () => {
+  const { isLoaded, signIn, setActive } = useSignIn();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,6 +20,8 @@ const Login = () => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (!isLoaded) return;
+
     if (!email.trim() || !password.trim()) {
       showError("Preencha e-mail e senha.");
       return;
@@ -26,19 +29,25 @@ const Login = () => {
 
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
+    try {
+      const result = await signIn.create({
+        identifier: email.trim(),
+        password,
+      });
 
-    if (error) {
-      showError(error.message);
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        showSuccess("Login realizado com sucesso!");
+        navigate("/");
+      } else {
+        console.log(result);
+        showError("Não foi possível concluir o login. Verifique seus dados.");
+      }
+    } catch (err: any) {
+      showError(err.errors?.[0]?.message || "Erro ao realizar login.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    showSuccess("Login realizado com sucesso!");
-    navigate("/");
   };
 
   return (

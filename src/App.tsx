@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ClerkProvider, RedirectToSignIn, SignedIn, SignedOut } from "@clerk/clerk-react";
 import Index from "./pages/Index";
 import Capture from "./pages/Capture";
 import Clients from "./pages/Clients";
@@ -16,31 +17,74 @@ import Register from "./pages/Register";
 
 const queryClient = new QueryClient();
 
+// Chave pública padrão do Clerk (pode ser substituída por variável de ambiente)
+const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "pk_test_ZGVmaW5pdGUtbWFzdG9kb24tNDkuY2xlcmsuYWNjb3VudHMuZGV2JA";
+
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <div className="min-h-[100dvh] bg-[#D8D1C6] md:flex md:items-center md:justify-center md:p-4">
-        <div className="relative min-h-[100dvh] w-full overflow-x-hidden overflow-y-auto bg-[#F6F0E8] text-[#1C3A2B] md:h-[calc(100dvh-2rem)] md:max-w-[430px] md:rounded-[32px] md:shadow-[0_25px_80px_rgba(0,0,0,0.18)] md:ring-1 md:ring-black/5">
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/captura" element={<Capture />} />
-              <Route path="/clientes" element={<Clients />} />
-              <Route path="/novo-cliente" element={<NewClient />} />
-              <Route path="/resultado" element={<AnalysisResult />} />
-              <Route path="/creditos" element={<Credits />} />
-              <Route path="/edicao" element={<Edition />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+  <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <div className="min-h-[100dvh] bg-[#D8D1C6] md:flex md:items-center md:justify-center md:p-4">
+          <div className="relative min-h-[100dvh] w-full overflow-x-hidden overflow-y-auto bg-[#F6F0E8] text-[#1C3A2B] md:h-[calc(100dvh-2rem)] md:max-w-[430px] md:rounded-[32px] md:shadow-[0_25px_80px_rgba(0,0,0,0.18)] md:ring-1 md:ring-black/5">
+            <BrowserRouter>
+              <Routes>
+                {/* Rotas Públicas */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+
+                {/* Rotas Protegidas por Autenticação */}
+                <Route path="/" element={
+                  <>
+                    <SignedIn><Index /></SignedIn>
+                    <SignedOut><RedirectToSignIn /></SignedOut>
+                  </>
+                } />
+                <Route path="/captura" element={
+                  <>
+                    <SignedIn><Capture /></SignedIn>
+                    <SignedOut><RedirectToSignIn /></SignedOut>
+                  </>
+                } />
+                <Route path="/clientes" element={
+                  <>
+                    <SignedIn><Clients /></SignedIn>
+                    <SignedOut><RedirectToSignIn /></SignedOut>
+                  </>
+                } />
+                <Route path="/novo-cliente" element={
+                  <>
+                    <SignedIn><NewClient /></SignedIn>
+                    <SignedOut><RedirectToSignIn /></SignedOut>
+                  </>
+                } />
+                <Route path="/resultado" element={
+                  <>
+                    <SignedIn><AnalysisResult /></SignedIn>
+                    <SignedOut><RedirectToSignIn /></SignedOut>
+                  </>
+                } />
+                <Route path="/creditos" element={
+                  <>
+                    <SignedIn><Credits /></SignedIn>
+                    <SignedOut><RedirectToSignIn /></SignedOut>
+                  </>
+                } />
+                <Route path="/edicao" element={
+                  <>
+                    <SignedIn><Edition /></SignedIn>
+                    <SignedOut><RedirectToSignIn /></SignedOut>
+                  </>
+                } />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </div>
         </div>
-      </div>
-    </TooltipProvider>
-  </QueryClientProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ClerkProvider>
 );
 
 export default App;
