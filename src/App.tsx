@@ -22,7 +22,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <div className="min-h-[100dvh] bg-[#D8D1C6] md:flex md:items-center md:justify-center md:p-4">
-        <div className="relative min-h-[100dvh] w-full overflow-x-hidden bg-[#F6F0E8] text-[#1C3A2B] md:h-[calc(100dvh-2rem)] md:max-w-[430px] md:overflow-hidden md:rounded-[32px] md:shadow-[0_25px_80px_rgba(0,0,0,0.18)] md:ring-1 md:ring-black/5">
+        <div className="relative min-h-[100dvh] w-full overflow-x-hidden overflow-y-auto bg-[#F6F0E8] text-[#1C3A2B] md:h-[calc(100dvh-2rem)] md:max-w-[430px] md:rounded-[32px] md:shadow-[0_25px_80px_rgba(0,0,0,0.18)] md:ring-1 md:ring-black/5">
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
