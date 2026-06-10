@@ -10,11 +10,8 @@ import {
   useSignUp as useRealSignUp
 } from '@clerk/clerk-react';
 
-// Sua chave pública real do Clerk configurada como permanente
-const DEFAULT_KEY = "pk_test_d29uZHJvdXMtbG9jdXN0LTg1LmNsZXJrLmFjY291bnRzLmRldiQ";
-const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || DEFAULT_KEY;
-
-// Se a chave estiver ativa, usamos o Clerk real
+// Só ativa o Clerk real se a variável de ambiente estiver explicitamente configurada pelo usuário
+const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "";
 const isClerkConfigured = !!CLERK_KEY;
 
 interface MockUser {
@@ -46,7 +43,7 @@ export const HybridAuthProvider = ({ children }: { children: React.ReactNode }) 
     );
   }
 
-  // Mock Auth State (Fallback de segurança)
+  // Mock Auth State (Fallback de segurança local)
   const [user, setUser] = useState<MockUser | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
