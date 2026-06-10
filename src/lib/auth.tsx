@@ -123,8 +123,11 @@ export const useSignIn = () => {
     isLoaded: true,
     isMock: true,
     signIn: {
-      create: async ({ identifier }: { identifier: string }) => {
+      create: async ({ identifier, strategy }: { identifier: string, strategy?: string }) => {
         await context?.signIn(identifier);
+        return { status: 'complete', createdSessionId: 'mock-session' };
+      },
+      attemptFirstFactor: async ({ strategy, code, password }: any) => {
         return { status: 'complete', createdSessionId: 'mock-session' };
       }
     },
