@@ -5,7 +5,9 @@ import {
   SignedOut as RealSignedOut, 
   useUser as useRealUser, 
   useClerk as useRealClerk,
-  RedirectToSignIn as RealRedirectToSignIn
+  RedirectToSignIn as RealRedirectToSignIn,
+  useSignIn as useRealSignIn,
+  useSignUp as useRealSignUp
 } from '@clerk/clerk-react';
 
 // Sua chave pública real do Clerk configurada como permanente
@@ -116,7 +118,7 @@ export const useClerk = () => {
 
 export const useSignIn = () => {
   if (isClerkConfigured) {
-    const { isLoaded, signIn, setActive } = useRealUser() as any; // Fallback seguro
+    const { isLoaded, signIn, setActive } = useRealSignIn();
     return { isLoaded, signIn, setActive, isMock: false };
   }
   const context = useContext(AuthContext);
@@ -135,7 +137,7 @@ export const useSignIn = () => {
 
 export const useSignUp = () => {
   if (isClerkConfigured) {
-    const { isLoaded, signUp, setActive } = useRealUser() as any; // Fallback seguro
+    const { isLoaded, signUp, setActive } = useRealSignUp();
     return { isLoaded, signUp, setActive, isMock: false };
   }
   const context = useContext(AuthContext);
