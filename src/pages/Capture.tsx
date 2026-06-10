@@ -253,235 +253,230 @@ const Capture = () => {
         : 'Diagnóstico Capilar';
 
   return (
-    <div className="min-h-screen bg-[#1C3A2B] text-[#E8DECE] pb-28 md:pt-20">
+    <div className="min-h-screen bg-[#1C3A2B] text-[#E8DECE] pb-28">
       <Navbar />
 
-      <main className="mx-auto w-full max-w-5xl px-4 sm:px-6 py-4 sm:py-6">
-        <header className="mb-5 sm:mb-6">
-          <div className="flex items-center justify-between gap-3">
-            <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-white/10 transition-colors">
-              <ArrowLeft size={20} />
-            </button>
+      <main className="mx-auto w-full max-w-md px-4 py-4 space-y-4">
+        <header className="flex items-center justify-between gap-3 pt-2">
+          <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-white/10 transition-colors">
+            <ArrowLeft size={20} />
+          </button>
 
-            <div className="text-center flex-1">
-              <h1 className="font-heading text-lg sm:text-xl font-normal">{captureTitle}</h1>
-              <p className="font-label-category text-[9px] sm:text-[10px] text-[#8FAF8A] mt-1">{captureSubtitle}</p>
-            </div>
-
-            <button onClick={resetFlow} className="p-2 rounded-full hover:bg-white/10 transition-colors text-red-300">
-              <Trash2 size={18} />
-            </button>
+          <div className="text-center flex-1">
+            <h1 className="font-heading text-lg font-normal">{captureTitle}</h1>
+            <p className="font-label-category text-[9px] text-[#8FAF8A] mt-0.5">{captureSubtitle}</p>
           </div>
+
+          <button onClick={resetFlow} className="p-2 rounded-full hover:bg-white/10 transition-colors text-red-300">
+            <Trash2 size={18} />
+          </button>
         </header>
 
-        <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-          <section className="space-y-4">
-            <Card className="border border-[#4A7A5C]/40 bg-[#3D6B52]/35 text-[#E8DECE] rounded-3xl overflow-hidden">
-              <CardContent className="p-4 sm:p-5 space-y-4">
-                <div className="flex items-center gap-2 text-[#8FAF8A]">
-                  <User size={18} />
-                  <span className="font-label-category text-[10px]">Selecionar Cliente</span>
-                </div>
+        {/* Card de Seleção de Cliente e Modo */}
+        <Card className="border border-[#4A7A5C]/40 bg-[#3D6B52]/35 text-[#E8DECE] rounded-2xl shadow-sm">
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center gap-2 text-[#8FAF8A]">
+              <User size={16} />
+              <span className="font-label-category text-[9px]">Selecionar Cliente</span>
+            </div>
 
-                <div className="rounded-2xl border border-[#4A7A5C] bg-[#1C3A2B]/30 px-4 py-3">
-                  <select
-                    value={selectedClientId}
-                    onChange={(e) => setSelectedClientId(e.target.value)}
-                    className="w-full bg-transparent text-[#E8DECE] outline-none text-sm"
+            <div className="rounded-xl border border-[#4A7A5C] bg-[#1C3A2B]/30 px-3 py-2.5">
+              <select
+                value={selectedClientId}
+                onChange={(e) => setSelectedClientId(e.target.value)}
+                className="w-full bg-transparent text-[#E8DECE] outline-none text-xs"
+              >
+                <option value="" className="text-black">
+                  Selecionar Cliente
+                </option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id} className="text-black">
+                    {client.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1.5">
+              {ANALYSIS_MODES.map((mode) => {
+                const Icon = mode.icon;
+                const active = analysisMode === mode.id;
+
+                return (
+                  <button
+                    key={mode.id}
+                    onClick={() => {
+                      setAnalysisMode(mode.id);
+                      setCapturedImages([]);
+                      setCurrentImage(null);
+                    }}
+                    className={cn(
+                      'flex flex-col items-center justify-center gap-1 rounded-xl border p-2 text-[9px] font-bold transition-all text-center',
+                      active
+                        ? 'bg-[#4A7A5C] border-[#8FAF8A] text-[#E8DECE] shadow-md'
+                        : 'bg-[#1C3A2B]/25 border-[#4A7A5C] text-[#8FAF8A] hover:bg-[#1C3A2B]/40',
+                    )}
                   >
-                    <option value="" className="text-black">
-                      Selecionar Cliente
-                    </option>
-                    {clients.map((client) => (
-                      <option key={client.id} value={client.id} className="text-black">
-                        {client.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    <Icon size={14} />
+                    <span className="leading-tight">{mode.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {ANALYSIS_MODES.map((mode) => {
-                    const Icon = mode.icon;
-                    const active = analysisMode === mode.id;
-
-                    return (
-                      <button
-                        key={mode.id}
-                        onClick={() => {
-                          setAnalysisMode(mode.id);
-                          setCapturedImages([]);
-                          setCurrentImage(null);
-                        }}
-                        className={cn(
-                          'flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-[11px] font-bold transition-all',
-                          active
-                            ? 'bg-[#4A7A5C] border-[#8FAF8A] text-[#E8DECE] shadow-lg'
-                            : 'bg-[#1C3A2B]/25 border-[#4A7A5C] text-[#8FAF8A] hover:bg-[#1C3A2B]/40',
-                        )}
-                      >
-                        <Icon size={14} />
-                        <span>{mode.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-[#4A7A5C]/30 bg-[#1C3A2B]/70 text-[#E8DECE] rounded-3xl overflow-hidden">
-              <CardContent className="p-3 sm:p-4">
-                <div className="relative overflow-hidden rounded-2xl border border-[#4A7A5C]/50 bg-[#10261C] min-h-[360px] sm:min-h-[420px] flex items-center justify-center">
-                  {!currentImage ? (
-                    !hasAtLeastOneImage ? (
-                      <div className="w-full h-full min-h-[360px] sm:min-h-[420px] flex items-center justify-center p-6 text-center">
-                        <AnalysisModeIllustration mode={analysisMode} />
-                      </div>
-                    ) : (
-                      <div className="w-full h-full min-h-[360px] sm:min-h-[420px] p-4 sm:p-6 flex flex-col justify-center gap-5">
-                        <div className="flex flex-wrap gap-3 justify-center">
-                          {capturedImages.map((img, i) => (
-                            <div
-                              key={i}
-                              className="w-[110px] sm:w-32 rounded-2xl overflow-hidden border border-[#4A7A5C] bg-[#1C3A2B] shadow-xl"
-                            >
-                              <div className="aspect-[3/4]">
-                                <img src={img.url} className="h-full w-full object-cover" alt={`Imagem ${i + 1}`} />
-                              </div>
-                              <div className="bg-[#4A7A5C] px-2 py-1 text-center text-[9px] font-label-category text-[#E8DECE]">
-                                {analysisMode === 'comparison'
-                                  ? 'Montagem'
-                                  : analysisMode === 'tricoscopia'
-                                    ? 'Tricoscopia'
-                                    : 'Captura'}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div className="text-center">
-                          <h3 className="font-heading text-base font-normal text-[#E8DECE]">Tudo pronto</h3>
-                          <p className="mt-1 font-body text-xs text-[#8FAF8A]">Agora você pode gerar o diagnóstico.</p>
-                        </div>
-                      </div>
-                    )
-                  ) : (
-                    <div className="relative h-full w-full min-h-[360px] sm:min-h-[420px]">
-                      <img src={currentImage} className="h-full w-full object-contain" alt="Imagem carregada" />
-                      <div className="absolute inset-0 flex items-end justify-center p-4 sm:p-6 pointer-events-none">
-                        <div className="pointer-events-auto rounded-2xl border border-[#8FAF8A]/25 bg-[#4A7A5C]/90 px-4 py-3 text-center text-[#E8DECE] shadow-2xl backdrop-blur-md">
-                          <p className="text-xs font-bold">Foto carregada</p>
-                          <p className="mt-1 text-[9px] uppercase tracking-wider opacity-80">
-                            Clique em “Marcar” para prosseguir
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {isPreparingImage && (
-                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/70 backdrop-blur-md">
-                      <Loader2 className="mb-3 h-10 w-10 animate-spin text-[#8FAF8A]" />
-                      <p className="text-sm font-bold">Preparando imagem...</p>
-                    </div>
-                  )}
-
-                  {isAnalyzing && (
-                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md">
-                      <BrainCircuit className="mb-4 h-16 w-16 animate-pulse text-[#8FAF8A]" />
-                      <p className="text-base font-bold">Processando Diagnóstico...</p>
-                      <p className="mt-2 text-xs text-slate-300">Analisando evolução técnica</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-
-          <aside className="space-y-4">
-            <Card className="border border-[#D4C9B5] bg-[#E8DECE] text-[#1C3A2B] rounded-3xl">
-              <CardContent className="p-4 sm:p-5 space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="btn-elha-outline h-12 gap-2"
-                  >
-                    <Upload size={14} />
-                    Upload
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    onClick={() => cameraInputRef.current?.click()}
-                    className="btn-elha-outline h-12 gap-2"
-                  >
-                    <Camera size={14} />
-                    Câmera
-                  </Button>
-                </div>
-
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileUpload}
-                  accept="image/*"
-                  className="hidden"
-                />
-                <input
-                  type="file"
-                  ref={cameraInputRef}
-                  onChange={handleFileUpload}
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
-                />
-
-                {currentImage ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      variant="outline"
-                      className="btn-elha-outline h-12 gap-2"
-                      onClick={() => setCurrentImage(null)}
-                    >
-                      <RefreshCw size={14} />
-                      Repetir
-                    </Button>
-
-                    <Button
-                      className="btn-elha-primary h-12 gap-2"
-                      onClick={handleAnnotateImage}
-                      disabled={isPreparingImage}
-                    >
-                      <Pencil size={14} />
-                      Marcar
-                    </Button>
+        {/* Card de Preview da Imagem */}
+        <Card className="border border-[#4A7A5C]/30 bg-[#1C3A2B]/70 text-[#E8DECE] rounded-2xl shadow-sm overflow-hidden">
+          <CardContent className="p-3">
+            <div className="relative overflow-hidden rounded-xl border border-[#4A7A5C]/50 bg-[#10261C] min-h-[280px] flex items-center justify-center">
+              {!currentImage ? (
+                !hasAtLeastOneImage ? (
+                  <div className="w-full flex items-center justify-center p-4 text-center">
+                    <AnalysisModeIllustration mode={analysisMode} />
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-[#D4C9B5] bg-[#F5F0E8] p-4 text-center">
-                    <p className="font-heading text-sm text-[#1C3A2B]">
-                      {hasAtLeastOneImage ? 'Imagem pronta para análise' : 'Nenhuma imagem carregada'}
-                    </p>
-                    <p className="mt-1 text-xs text-[#4A7A5C]">
-                      {hasAtLeastOneImage ? 'Clique abaixo para gerar o diagnóstico.' : 'Escolha uma imagem para começar.'}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  <div className="w-full p-4 flex flex-col justify-center gap-4">
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {capturedImages.map((img, i) => (
+                        <div
+                          key={i}
+                          className="w-24 rounded-xl overflow-hidden border border-[#4A7A5C] bg-[#1C3A2B] shadow-md"
+                        >
+                          <div className="aspect-[3/4]">
+                            <img src={img.url} className="h-full w-full object-cover" alt={`Imagem ${i + 1}`} />
+                          </div>
+                          <div className="bg-[#4A7A5C] py-1 text-center text-[8px] font-label-category text-[#E8DECE]">
+                            {analysisMode === 'comparison'
+                              ? 'Montagem'
+                              : analysisMode === 'tricoscopia'
+                                ? 'Tricoscopia'
+                                : 'Captura'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
 
-            {hasAtLeastOneImage && !currentImage && (
+                    <div className="text-center">
+                      <h3 className="font-heading text-sm font-normal text-[#E8DECE]">Tudo pronto</h3>
+                      <p className="mt-0.5 font-body text-[10px] text-[#8FAF8A]">Agora você pode gerar o diagnóstico.</p>
+                    </div>
+                  </div>
+                )
+              ) : (
+                <div className="relative w-full aspect-[3/4] max-h-[320px]">
+                  <img src={currentImage} className="h-full w-full object-contain" alt="Imagem carregada" />
+                  <div className="absolute inset-x-0 bottom-3 flex justify-center px-4 pointer-events-none">
+                    <div className="pointer-events-auto rounded-xl border border-[#8FAF8A]/25 bg-[#4A7A5C]/90 px-3 py-2 text-center text-[#E8DECE] shadow-lg backdrop-blur-md">
+                      <p className="text-[10px] font-bold">Foto carregada</p>
+                      <p className="mt-0.5 text-[8px] uppercase tracking-wider opacity-80">
+                        Clique em “Marcar” para prosseguir
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {isPreparingImage && (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/70 backdrop-blur-md">
+                  <Loader2 className="mb-2 h-8 w-8 animate-spin text-[#8FAF8A]" />
+                  <p className="text-xs font-bold">Preparando imagem...</p>
+                </div>
+              )}
+
+              {isAnalyzing && (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md">
+                  <BrainCircuit className="mb-3 h-12 w-12 animate-pulse text-[#8FAF8A]" />
+                  <p className="text-sm font-bold">Processando Diagnóstico...</p>
+                  <p className="mt-1 text-[10px] text-slate-300">Analisando evolução técnica</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card de Ações de Upload e Câmera */}
+        <Card className="border border-[#D4C9B5] bg-[#E8DECE] text-[#1C3A2B] rounded-2xl shadow-sm">
+          <CardContent className="p-4 space-y-3">
+            <div className="grid grid-cols-2 gap-2">
               <Button
-                className="btn-elha-primary w-full h-14 gap-2"
-                onClick={handleConfirm}
-                disabled={isAnalyzing}
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="btn-elha-outline h-11 gap-1.5 text-xs"
               >
-                {isAnalyzing ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
-                Gerar Diagnóstico
+                <Upload size={14} />
+                Upload
               </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => cameraInputRef.current?.click()}
+                className="btn-elha-outline h-11 gap-1.5 text-xs"
+              >
+                <Camera size={14} />
+                Câmera
+              </Button>
+            </div>
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept="image/*"
+              className="hidden"
+            />
+            <input
+              type="file"
+              ref={cameraInputRef}
+              onChange={handleFileUpload}
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+            />
+
+            {currentImage ? (
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  className="btn-elha-outline h-11 gap-1.5 text-xs"
+                  onClick={() => setCurrentImage(null)}
+                >
+                  <RefreshCw size={14} />
+                  Repetir
+                </Button>
+
+                <Button
+                  className="btn-elha-primary h-11 gap-1.5 text-xs"
+                  onClick={handleAnnotateImage}
+                  disabled={isPreparingImage}
+                >
+                  <Pencil size={14} />
+                  Marcar
+                </Button>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-[#D4C9B5] bg-[#F5F0E8] p-3 text-center">
+                <p className="font-heading text-xs text-[#1C3A2B]">
+                  {hasAtLeastOneImage ? 'Imagem pronta para análise' : 'Nenhuma imagem carregada'}
+                </p>
+                <p className="mt-0.5 text-[10px] text-[#4A7A5C]">
+                  {hasAtLeastOneImage ? 'Clique abaixo para gerar o diagnóstico.' : 'Escolha uma imagem para começar.'}
+                </p>
+              </div>
             )}
-          </aside>
-        </div>
+          </CardContent>
+        </Card>
+
+        {hasAtLeastOneImage && !currentImage && (
+          <Button
+            className="btn-elha-primary w-full h-12 gap-2 text-xs"
+            onClick={handleConfirm}
+            disabled={isAnalyzing}
+          >
+            {isAnalyzing ? <Loader2 className="animate-spin" size={14} /> : <Check size={14} />}
+            Gerar Diagnóstico
+          </Button>
+        )}
       </main>
     </div>
   );
