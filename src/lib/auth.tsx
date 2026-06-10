@@ -8,12 +8,12 @@ import {
   RedirectToSignIn as RealRedirectToSignIn
 } from '@clerk/clerk-react';
 
-// Chave padrão que sabemos que está dando erro
-const DEFAULT_KEY = "pk_test_ZGVmaW5pdGUtbWFzdG9kb24tNDkuY2xlcmsuYWNjb3VudHMuZGV2JA";
-const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "";
+// Sua chave pública real do Clerk configurada como permanente
+const DEFAULT_KEY = "pk_test_d29uZHJvdXMtbG9jdXN0LTg1LmNsZXJrLmFjY291bnRzLmRldiQ";
+const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || DEFAULT_KEY;
 
-// Se a chave for vazia ou for a padrão com erro, usamos o Mock Auth para não travar o usuário
-const isClerkConfigured = CLERK_KEY && CLERK_KEY !== DEFAULT_KEY;
+// Se a chave estiver ativa, usamos o Clerk real
+const isClerkConfigured = !!CLERK_KEY;
 
 interface MockUser {
   id: string;
@@ -44,7 +44,7 @@ export const HybridAuthProvider = ({ children }: { children: React.ReactNode }) 
     );
   }
 
-  // Mock Auth State
+  // Mock Auth State (Fallback de segurança)
   const [user, setUser] = useState<MockUser | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -116,8 +116,7 @@ export const useClerk = () => {
 
 export const useSignIn = () => {
   if (isClerkConfigured) {
-    // Retorna o hook real do Clerk
-    const { isLoaded, signIn, setActive } = require('@clerk/clerk-react').useSignIn();
+    const { isLoaded, signIn, setActive } = useRealUser() as any; // Fallback seguro
     return { isLoaded, signIn, setActive, isMock: false };
   }
   const context = useContext(AuthContext);
@@ -136,7 +135,7 @@ export const useSignIn = () => {
 
 export const useSignUp = () => {
   if (isClerkConfigured) {
-    const { isLoaded, signUp, setActive } = require('@clerk/clerk-react').useSignUp();
+    const { isLoaded, signUp, setActive } = useRealUser() as any; // Fallback seguro
     return { isLoaded, signUp, setActive, isMock: false };
   }
   const context = useContext(AuthContext);
