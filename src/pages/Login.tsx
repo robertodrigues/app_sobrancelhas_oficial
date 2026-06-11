@@ -82,7 +82,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-[#F5F0E8] text-[#1C3A2B] px-4 py-10 flex items-center justify-center">
-      <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center">
+      <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center -translate-y-[12%]">
         
         {/* Logo ELHA */}
         <div className="mb-6 flex justify-center">
