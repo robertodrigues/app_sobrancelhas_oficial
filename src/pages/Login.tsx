@@ -59,11 +59,6 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-[#F5F0E8] text-[#1C3A2B] px-4 py-10 flex items-center justify-center">
       <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center">
-        <div className="text-center mb-6 w-full">
-          <p className="font-label-category text-[10px] text-[#4A7A5C] mb-2">Acesso ao sistema</p>
-          <h1 className="font-heading text-3xl text-[#1C3A2B]">Entrar</h1>
-          <p className="font-body text-sm text-[#4A7A5C] mt-2">Faça login para continuar.</p>
-        </div>
 
         {isClerkConfigured ? (
           <div className="w-full flex justify-center">
