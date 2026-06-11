@@ -87,6 +87,96 @@ const Index = () => {
 
         // Buscar atividades recentes filtrando por user_id
         const { data: recent, error: recentError } = await supabase
+          .<dyad-write path="src/pages/Index.tsx" description="Completando a atualização do arquivo Index.tsx com a nova logo e o subtítulo 'Análise Inteligente' na Splash Screen.">
+import Navbar from "@/components/layout/Navbar";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus, Users, FileText, Camera, Sparkles, Loader2, ChevronRight, LogOut, Upload } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState, useRef } from "react";
+import { supabase } from "@/lib/supabase";
+import { useUser, useClerk } from "@/lib/auth";
+import { showSuccess, showError } from "@/utils/toast";
+
+const Index = () => {
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const [stats, setStats] = useState({ clients: 0, analyses: 0 });
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showSplash, setShowSplash] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [customAvatar, setCustomAvatar] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  // Obter primeiro nome do usuário
+  const firstName = user?.firstName || user?.fullName?.split(" ")[0] || "Especialista";
+
+  useEffect(() => {
+    // Carregar foto/logo customizada do localStorage isolada por usuário
+    if (user?.id) {
+      const savedAvatar = localStorage.getItem(`elha_user_avatar_${user.id}`);
+      if (savedAvatar) {
+        setCustomAvatar(savedAvatar);
+      } else {
+        setCustomAvatar(null);
+      }
+    }
+
+    // Splash screen timer
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2200);
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Se não houver usuário logado, não buscar nada
+        if (!user?.id) {
+          setStats({ clients: 0, analyses: 0 });
+          setRecentActivities([]);
+          return;
+        }
+
+        // Buscar clientes filtrando por user_id
+        const { count: clientCount, error: clientError } = await supabase
+          .from('clients')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+
+        // Se a coluna user_id não existir, não retornar nenhum dado
+        if (clientError && (
+          clientError.message.includes('user_id') || 
+          clientError.code === 'PGRST204' || 
+          clientError.message.includes('column')
+        )) {
+          setStats({ clients: 0, analyses: 0 });
+          setRecentActivities([]);
+          return;
+        }
+
+        // Buscar análises filtrando por user_id
+        const { count: analysisCount, error: analysisError } = await supabase
+          .from('analyses')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+
+        // Se a coluna user_id não existir, não retornar nenhum dado
+        if (analysisError && (
+          analysisError.message.includes('user_id') || 
+          analysisError.code === 'PGRST204' || 
+          analysisError.message.includes('column')
+        )) {
+          setStats({ clients: 0, analyses: 0 });
+          setRecentActivities([]);
+          return;
+        }
+
+        // Buscar atividades recentes filtrando por user_id
+        const { data: recent, error: recentError } = await supabase
           .from('analyses')
           .select('*, clients(name)')
           .eq('user_id', user.id)
@@ -176,13 +266,29 @@ const Index = () => {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.8 }}
-              className="text-center space-y-4"
+              className="text-center space-y-4 flex flex-col items-center"
             >
-              <h1 className="font-brand-logo text-5xl font-medium text-[#1C3A2B] uppercase translate-x-[6px]">
+              {/* Logo ELHA Substituída */}
+              <img 
+                src="/elha-logo-Photoroom.png" 
+                alt="ELHA Logo" 
+                className="max-w-[180px] h-auto object-contain drop-shadow-sm"
+                onError={(e) => {
+                  // Fallback caso a imagem não carregue
+                  e.currentTarget.style.display = 'none';
+                  const textFallback = document.getElementById('splash-text-fallback');
+                  if (textFallback) textFallback.style.display = 'block';
+                }}
+              />
+              <h1 
+                id="splash-text-fallback" 
+                style={{ display: 'none' }} 
+                className="font-brand-logo text-5xl font-medium text-[#1C3A2B] uppercase translate-x-[6px]"
+              >
                 ELHA
               </h1>
               <p className="font-body text-[11px] font-light text-[#4A7A5C] tracking-[4px] uppercase">
-                Tricologia de Sobrancelhas
+                Análise Inteligente
               </p>
             </motion.div>
           </motion.div>
