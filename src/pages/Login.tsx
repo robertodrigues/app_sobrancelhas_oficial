@@ -70,17 +70,15 @@ const Login = () => {
             appearance={{
               elements: {
                 formButtonPrimary: "btn-elha-primary w-full h-12 gap-2",
-                card: "border border-[#D4C9B5] bg-[#E8DECE] rounded-3xl shadow-sm",
+                card: "border border-[#D4C9B5] bg-[#E8DECE] rounded-3xl shadow-sm w-full",
                 headerTitle: "font-heading text-xl text-[#1C3A2B]",
                 headerSubtitle: "text-[#4A7A5C]",
                 socialButtonsBlockButton: "btn-elha-outline flex-1 h-12 gap-2",
               },
             }}
-            routing="path"
-            path="/login"
+            routing="hash"
             signUpUrl="/register"
-            afterSignInUrl="/"
-            afterSignUpUrl="/"
+            forceRedirectUrl="/"
           />
         ) : (
           <form onSubmit={handleMockLogin} className="space-y-5 bg-[#E8DECE] p-6 rounded-3xl shadow-sm border border-[#D4C9B5]">

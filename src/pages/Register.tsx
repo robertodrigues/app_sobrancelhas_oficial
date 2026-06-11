@@ -55,17 +55,15 @@ const Register = () => {
             appearance={{
               elements: {
                 formButtonPrimary: "btn-elha-primary w-full h-12 gap-2",
-                card: "border border-[#D4C9B5] bg-[#E8DECE] rounded-3xl shadow-sm",
+                card: "border border-[#D4C9B5] bg-[#E8DECE] rounded-3xl shadow-sm w-full",
                 headerTitle: "font-heading text-xl text-[#1C3A2B]",
                 headerSubtitle: "text-[#4A7A5C]",
                 socialButtonsBlockButton: "btn-elha-outline flex-1 h-12 gap-2",
               },
             }}
-            routing="path"
-            path="/register"
+            routing="hash"
             signInUrl="/login"
-            afterSignInUrl="/"
-            afterSignUpUrl="/"
+            forceRedirectUrl="/"
           />
         ) : (
           <form onSubmit={handleMockRegister} className="space-y-4 bg-[#E8DECE] p-6 rounded-3xl shadow-sm border border-[#D4C9B5]">
