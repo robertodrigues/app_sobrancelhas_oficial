@@ -12,7 +12,7 @@ import {
 
 // Só ativa o Clerk real se a variável de ambiente estiver explicitamente configurada pelo usuário
 const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "";
-const isClerkConfigured = !!CLERK_KEY;
+export const isClerkConfigured = !!CLERK_KEY;
 
 interface MockUser {
   id: string;
