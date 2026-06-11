@@ -26,10 +26,14 @@ const Index = () => {
   const firstName = user?.firstName || user?.fullName?.split(" ")[0] || "Especialista";
 
   useEffect(() => {
-    // Carregar foto/logo customizada do localStorage
-    const savedAvatar = localStorage.getItem("elha_user_avatar");
-    if (savedAvatar) {
-      setCustomAvatar(savedAvatar);
+    // Carregar foto/logo customizada do localStorage isolada por usuário
+    if (user?.id) {
+      const savedAvatar = localStorage.getItem(`elha_user_avatar_${user.id}`);
+      if (savedAvatar) {
+        setCustomAvatar(savedAvatar);
+      } else {
+        setCustomAvatar(null);
+      }
     }
 
     // Splash screen timer
@@ -93,7 +97,9 @@ const Index = () => {
     reader.onload = (event) => {
       const base64 = event.target?.result as string;
       setCustomAvatar(base64);
-      localStorage.setItem("elha_user_avatar", base64);
+      if (user?.id) {
+        localStorage.setItem(`elha_user_avatar_${user.id}`, base64);
+      }
       showSuccess("Foto de perfil atualizada com sucesso!");
       setMenuOpen(false);
     };

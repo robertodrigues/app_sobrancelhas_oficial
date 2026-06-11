@@ -61,7 +61,7 @@ export const HybridAuthProvider = ({ children }: { children: React.ReactNode }) 
       firstName: 'Especialista',
       lastName: 'Elha',
       fullName: 'Especialista Elha',
-      imageUrl: localStorage.getItem('elha_user_avatar') || null,
+      imageUrl: localStorage.getItem('elha_user_avatar_mock-user-id') || null,
       emailAddresses: [{ emailAddress: email }]
     };
     setUser(mockUser);
@@ -74,7 +74,7 @@ export const HybridAuthProvider = ({ children }: { children: React.ReactNode }) 
       firstName: firstName,
       lastName: lastName,
       fullName: `${firstName} ${lastName}`,
-      imageUrl: localStorage.getItem('elha_user_avatar') || null,
+      imageUrl: localStorage.getItem('elha_user_avatar_mock-user-id') || null,
       emailAddresses: [{ emailAddress: email }]
     };
     setUser(mockUser);
