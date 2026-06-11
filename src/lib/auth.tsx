@@ -5,7 +5,6 @@ import {
   SignedOut as RealSignedOut, 
   useUser as useRealUser, 
   useClerk as useRealClerk,
-  RedirectToSignIn as RealRedirectToSignIn,
   useSignIn as useRealSignIn,
   useSignUp as useRealSignUp
 } from '@clerk/clerk-react';
@@ -171,9 +170,6 @@ export const SignedOut = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const RedirectToSignIn = () => {
-  if (isClerkConfigured) {
-    return <RealRedirectToSignIn />;
-  }
   useEffect(() => {
     window.location.href = '/login';
   }, []);
