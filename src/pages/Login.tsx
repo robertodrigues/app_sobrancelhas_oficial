@@ -58,31 +58,33 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-[#F5F0E8] text-[#1C3A2B] px-4 py-10 flex items-center justify-center">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-6">
+      <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center">
+        <div className="text-center mb-6 w-full">
           <p className="font-label-category text-[10px] text-[#4A7A5C] mb-2">Acesso ao sistema</p>
           <h1 className="font-heading text-3xl text-[#1C3A2B]">Entrar</h1>
           <p className="font-body text-sm text-[#4A7A5C] mt-2">Faça login para continuar.</p>
         </div>
 
         {isClerkConfigured ? (
-          <SignIn
-            appearance={{
-              elements: {
-                formButtonPrimary: "btn-elha-primary w-full h-12 gap-2",
-                cardBox: "shadow-none w-full",
-                card: "border border-[#D4C9B5] bg-[#E8DECE] rounded-3xl shadow-sm w-full overflow-hidden",
-                headerTitle: "font-heading text-xl text-[#1C3A2B]",
-                headerSubtitle: "text-[#4A7A5C]",
-                socialButtonsBlockButton: "btn-elha-outline flex-1 h-12 gap-2",
-              },
-            }}
-            routing="hash"
-            signUpUrl="/register"
-            forceRedirectUrl="/"
-          />
+          <div className="w-full flex justify-center">
+            <SignIn
+              appearance={{
+                elements: {
+                  formButtonPrimary: "btn-elha-primary w-full h-12 gap-2",
+                  cardBox: "shadow-none w-full mx-auto flex justify-center",
+                  card: "border border-[#D4C9B5] bg-[#E8DECE] rounded-3xl shadow-sm w-full overflow-hidden mx-auto",
+                  headerTitle: "font-heading text-xl text-[#1C3A2B]",
+                  headerSubtitle: "text-[#4A7A5C]",
+                  socialButtonsBlockButton: "btn-elha-outline flex-1 h-12 gap-2",
+                },
+              }}
+              routing="hash"
+              signUpUrl="/register"
+              forceRedirectUrl="/"
+            />
+          </div>
         ) : (
-          <form onSubmit={handleMockLogin} className="space-y-5 bg-[#E8DECE] p-6 rounded-3xl shadow-sm border border-[#D4C9B5]">
+          <form onSubmit={handleMockLogin} className="w-full space-y-5 bg-[#E8DECE] p-6 rounded-3xl shadow-sm border border-[#D4C9B5]">
             <div className="space-y-2">
               <Label htmlFor="email" className="font-label-category text-[10px] text-[#1C3A2B]">E-mail</Label>
               <Input 
@@ -117,13 +119,13 @@ const Login = () => {
           </form>
         )}
 
-        <div className="mt-4 text-center">
+        <div className="mt-4 text-center w-full">
           <Button type="button" onClick={handleForgotPassword} disabled={loading} className="btn-elha-outline">
             {loading ? "Enviando..." : "Esqueci minha senha"}
           </Button>
         </div>
 
-        <div className="text-center pt-2">
+        <div className="text-center pt-2 w-full">
           <p className="text-xs text-[#4A7A5C]">
             Não tem uma conta? <Link to="/register" className="text-[#1C3A2B] font-medium underline">Criar conta</Link>
           </p>
