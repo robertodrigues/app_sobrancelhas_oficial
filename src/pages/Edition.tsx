@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   Upload, 
   Download, 
@@ -17,7 +18,10 @@ import {
   RotateCcw,
   Sparkles,
   Trash2,
-  Sliders
+  Sliders,
+  Maximize2,
+  Palette,
+  FileText
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import html2canvas from 'html2canvas';
@@ -166,11 +170,10 @@ const Edition = () => {
         const uploadRes = await uploadPhotoToR2(normalizedFile);
         setPdfLogo(uploadRes.url);
         savePdfSettings(uploadRes.url, pdfBgColor);
-        showSuccess('Logo do PDF enviada para o R2 com sucesso!');
+        showSuccess('Logo do PDF enviada com sucesso!');
       } catch (error) {
-        console.error('Erro ao enviar logo do PDF para o R2:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Não foi possível enviar a logo do PDF para o R2.';
-        showError(errorMessage);
+        console.error('Erro ao enviar logo do PDF:', error);
+        showError('Não foi possível enviar a logo do PDF.');
       }
       return;
     }
@@ -251,7 +254,7 @@ const Edition = () => {
 
   const exportCollage = async () => {
     if (!beforeImg || !afterImg) {
-      showError('Por favor, adicione as fotos de Antes e Depois primeiro.');
+      showError('Adicione as fotos de Antes e Depois primeiro.');
       return;
     }
 
@@ -277,451 +280,455 @@ const Edition = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F0E8] text-[#1C3A2B] pb-28 md:pt-20">
+    <div className="min-h-screen bg-[#F5F0E8] text-[#1C3A2B] pb-28">
       <Navbar />
-      <main className="max-w-4xl mx-auto p-6">
-        <header className="mb-8 text-center pt-4">
-          <div className="w-12 h-12 rounded-2xl bg-[#4A7A5C]/10 flex items-center justify-center text-[#4A7A5C] mb-3 mx-auto">
-            <Sparkles size={24} />
+      <main className="max-w-md mx-auto px-4 py-4 space-y-4">
+        
+        {/* Header Compacto */}
+        <header className="text-center pt-2">
+          <div className="w-10 h-10 rounded-xl bg-[#4A7A5C]/10 flex items-center justify-center text-[#4A7A5C] mb-1.5 mx-auto">
+            <Sparkles size={20} />
           </div>
-          <h1 className="font-heading text-2xl font-normal text-[#1C3A2B] tracking-tight">Edição de Antes & Depois</h1>
-          <p className="font-body text-xs text-[#4A7A5C] font-light mt-1">Crie montagens profissionais para suas redes sociais</p>
+          <h1 className="font-heading text-lg font-normal text-[#1C3A2B] tracking-tight">Edição de Antes & Depois</h1>
+          <p className="font-body text-[10px] text-[#4A7A5C] font-light">Crie montagens profissionais para suas redes</p>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* Preview da Montagem (Esquerda) */}
-          <div className="lg:col-span-7 flex flex-col items-center space-y-6">
-            <div 
-              ref={collageRef}
-              className={cn(
-                "relative overflow-hidden bg-[#1C3A2B] shadow-2xl rounded-2xl border-4 border-[#E8DECE] transition-all duration-300 flex",
-                layoutSize === 'feed' ? "w-full aspect-square max-w-[400px]" : "w-full aspect-[9/16] max-w-[340px]",
-                splitDirection === 'vertical' ? "flex-col" : "flex-row"
-              )}
-            >
-              {/* Foto Antes */}
-              <div className="relative flex-1 overflow-hidden h-full w-full">
-                {beforeImg ? (
-                  <img src={beforeImg} className="w-full h-full object-cover" alt="Antes" />
-                ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-[#8FAF8A] bg-[#1C3A2B]/80 p-4 text-center">
-                    <ImageIcon size={32} className="mb-2 text-[#8FAF8A]/60" />
-                    <span className="font-label-category text-[10px] text-[#E8DECE]">Foto Antes</span>
-                  </div>
-                )}
-                <div className="absolute top-3 left-3 bg-[#1C3A2B]/80 backdrop-blur-md text-[#E8DECE] font-label-category text-[9px] px-2.5 py-1 rounded-full">
-                  Antes
-                </div>
-              </div>
-
-              {/* Linha de Separação */}
-              {separationType === 'straight' ? (
-                <div className={cn(
-                  "bg-[#E8DECE] z-10 shadow-lg",
-                  splitDirection === 'horizontal' ? "w-1 h-full" : "h-1 w-full"
-                )} />
+        {/* Preview da Montagem (Centralizado e Otimizado) */}
+        <div className="flex flex-col items-center justify-center w-full">
+          <div 
+            ref={collageRef}
+            className={cn(
+              "relative overflow-hidden bg-[#1C3A2B] shadow-xl rounded-2xl border-2 border-[#E8DECE] transition-all duration-300 flex w-full",
+              layoutSize === 'feed' ? "aspect-square max-w-[340px]" : "aspect-[9/16] max-w-[290px]",
+              splitDirection === 'vertical' ? "flex-col" : "flex-row"
+            )}
+          >
+            {/* Foto Antes */}
+            <div className="relative flex-1 overflow-hidden h-full w-full">
+              {beforeImg ? (
+                <img src={beforeImg} className="w-full h-full object-cover" alt="Antes" />
               ) : (
-                <div className={cn(
-                  "absolute z-10 pointer-events-none bg-gradient-to-r from-transparent via-black/40 to-transparent",
-                  splitDirection === 'horizontal' 
-                    ? "top-0 bottom-0 left-1/2 -translate-x-1/2 w-12 bg-gradient-to-r" 
-                    : "left-0 right-0 top-1/2 -translate-y-1/2 h-12 bg-gradient-to-b"
-                )} />
-              )}
-
-              {/* Foto Depois */}
-              <div className="relative flex-1 overflow-hidden h-full w-full">
-                {afterImg ? (
-                  <img src={afterImg} className="w-full h-full object-cover" alt="Depois" />
-                ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-[#8FAF8A] bg-[#1C3A2B]/80 p-4 text-center">
-                    <ImageIcon size={32} className="mb-2 text-[#8FAF8A]/60" />
-                    <span className="font-label-category text-[10px] text-[#E8DECE]">Foto Depois</span>
-                  </div>
-                )}
-                <div className="absolute top-3 right-3 bg-[#4A7A5C] text-[#E8DECE] font-label-category text-[9px] px-2.5 py-1 rounded-full">
-                  Depois
-                </div>
-              </div>
-
-              {/* Canvas de Desenho Livre */}
-              <canvas
-                ref={canvasRef}
-                onMouseDown={startDrawing}
-                onMouseMove={draw}
-                onMouseUp={stopDrawing}
-                onMouseLeave={stopDrawing}
-                onTouchStart={startDrawing}
-                onTouchMove={draw}
-                onTouchEnd={stopDrawing}
-                className={cn(
-                  "absolute inset-0 z-20 touch-none",
-                  isDrawingMode ? "cursor-crosshair pointer-events-auto" : "pointer-events-none"
-                )}
-              />
-
-              {/* Marca d'água / Texto */}
-              {text && (
-                <div 
-                  style={{ 
-                    left: `${textX}%`, 
-                    top: `${textY}%`, 
-                    color: textColor, 
-                    fontSize: `${textSize}px` 
-                  }}
-                  className="absolute z-30 -translate-x-1/2 -translate-y-1/2 font-bold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] pointer-events-none whitespace-nowrap tracking-wide"
-                >
-                  {text}
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-[#8FAF8A] bg-[#1C3A2B]/90 p-4 text-center">
+                  <ImageIcon size={24} className="mb-1 text-[#8FAF8A]/60" />
+                  <span className="font-label-category text-[8px] text-[#E8DECE]">Foto Antes</span>
                 </div>
               )}
+              <div className="absolute top-2.5 left-2.5 bg-[#1C3A2B]/80 backdrop-blur-md text-[#E8DECE] font-label-category text-[8px] px-2 py-0.5 rounded-full">
+                Antes
+              </div>
+            </div>
 
-              {/* Logo do Usuário */}
-              {logoImg && (
-                <img 
-                  src={logoImg} 
-                  style={{ 
-                    left: `${logoX}%`, 
-                    top: `${logoY}%`, 
-                    width: `${logoSize}px`,
-                    height: 'auto'
-                  }}
-                  className="absolute z-30 -translate-x-1/2 -translate-y-1/2 pointer-events-none drop-shadow-lg"
-                  alt="Logo"
-                />
+            {/* Linha de Separação */}
+            {separationType === 'straight' ? (
+              <div className={cn(
+                "bg-[#E8DECE] z-10 shadow-md",
+                splitDirection === 'horizontal' ? "w-0.5 h-full" : "h-0.5 w-full"
+              )} />
+            ) : (
+              <div className={cn(
+                "absolute z-10 pointer-events-none bg-gradient-to-r from-transparent via-black/40 to-transparent",
+                splitDirection === 'horizontal' 
+                  ? "top-0 bottom-0 left-1/2 -translate-x-1/2 w-8 bg-gradient-to-r" 
+                  : "left-0 right-0 top-1/2 -translate-y-1/2 h-8 bg-gradient-to-b"
+              )} />
+            )}
+
+            {/* Foto Depois */}
+            <div className="relative flex-1 overflow-hidden h-full w-full">
+              {afterImg ? (
+                <img src={afterImg} className="w-full h-full object-cover" alt="Depois" />
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-[#8FAF8A] bg-[#1C3A2B]/90 p-4 text-center">
+                  <ImageIcon size={24} className="mb-1 text-[#8FAF8A]/60" />
+                  <span className="font-label-category text-[8px] text-[#E8DECE]">Foto Depois</span>
+                </div>
               )}
-            </div>
-
-            <div className="flex gap-3 mt-4 w-full max-w-[340px]">
-              <Button 
-                onClick={() => beforeInputRef.current?.click()} 
-                variant="outline" 
-                className="btn-elha-outline flex-1 h-11"
-              >
-                <Upload size={14} className="mr-1.5" /> Add Antes
-              </Button>
-              <Button 
-                onClick={() => afterInputRef.current?.click()} 
-                variant="outline" 
-                className="btn-elha-outline flex-1 h-11"
-              >
-                <Upload size={14} className="mr-1.5" /> Add Depois
-              </Button>
-            </div>
-
-            <input type="file" ref={beforeInputRef} onChange={(e) => handleImageUpload(e, 'before')} accept="image/*" className="hidden" />
-            <input type="file" ref={afterInputRef} onChange={(e) => handleImageUpload(e, 'after')} accept="image/*" className="hidden" />
-          </div>
-
-          {/* Painel de Controle (Direita) */}
-          <div className="lg:col-span-5 space-y-6">
-            
-            {/* Formato e Orientação */}
-            <div className="bg-[#E8DECE] p-5 rounded-2xl shadow-sm border border-[#D4C9B5] space-y-4">
-              <h3 className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
-                <Layers size={16} className="text-[#4A7A5C]" /> Layout & Formato
-              </h3>
-              
-              <div className="space-y-3">
-                <Label className="font-label-category text-[10px] text-[#1C3A2B]">Tamanho da Edição</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button 
-                    variant={layoutSize === 'feed' ? 'default' : 'outline'} 
-                    onClick={() => setLayoutSize('feed')}
-                    className={cn("h-11 rounded-xl text-xs font-bold", layoutSize === 'feed' ? "btn-elha-primary" : "btn-elha-outline")}
-                  >
-                    Feed (1:1)
-                  </Button>
-                  <Button 
-                    variant={layoutSize === 'story' ? 'default' : 'outline'} 
-                    onClick={() => setLayoutSize('story')}
-                    className={cn("h-11 rounded-xl text-xs font-bold", layoutSize === 'story' ? "btn-elha-primary" : "btn-elha-outline")}
-                  >
-                    Story (9:16)
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <Label className="font-label-category text-[10px] text-[#1C3A2B]">Orientação da Divisão</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button 
-                    variant={splitDirection === 'horizontal' ? 'default' : 'outline'} 
-                    onClick={() => setSplitDirection('horizontal')}
-                    className={cn("h-11 rounded-xl text-xs font-bold", splitDirection === 'horizontal' ? "btn-elha-primary" : "btn-elha-outline")}
-                  >
-                    Lado a Lado
-                  </Button>
-                  <Button 
-                    variant={splitDirection === 'vertical' ? 'default' : 'outline'} 
-                    onClick={() => setSplitDirection('vertical')}
-                    className={cn("h-11 rounded-xl text-xs font-bold", splitDirection === 'vertical' ? "btn-elha-primary" : "btn-elha-outline")}
-                  >
-                    Cima e Baixo
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <Label className="font-label-category text-[10px] text-[#1C3A2B]">Linha de Separação</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button 
-                    variant={separationType === 'straight' ? 'default' : 'outline'} 
-                    onClick={() => setSeparationType('straight')}
-                    className={cn("h-11 rounded-xl text-xs font-bold", separationType === 'straight' ? "btn-elha-primary" : "btn-elha-outline")}
-                  >
-                    Linha Reta
-                  </Button>
-                  <Button 
-                    variant={separationType === 'faded' ? 'default' : 'outline'} 
-                    onClick={() => setSeparationType('faded')}
-                    className={cn("h-11 rounded-xl text-xs font-bold", separationType === 'faded' ? "btn-elha-primary" : "btn-elha-outline")}
-                  >
-                    Esfumaçada
-                  </Button>
-                </div>
+              <div className="absolute top-2.5 right-2.5 bg-[#4A7A5C] text-[#E8DECE] font-label-category text-[8px] px-2 py-0.5 rounded-full">
+                Depois
               </div>
             </div>
+
+            {/* Canvas de Desenho Livre */}
+            <canvas
+              ref={canvasRef}
+              onMouseDown={startDrawing}
+              onMouseMove={draw}
+              onMouseUp={stopDrawing}
+              onMouseLeave={stopDrawing}
+              onTouchStart={startDrawing}
+              onTouchMove={draw}
+              onTouchEnd={stopDrawing}
+              className={cn(
+                "absolute inset-0 z-20 touch-none",
+                isDrawingMode ? "cursor-crosshair pointer-events-auto" : "pointer-events-none"
+              )}
+            />
 
             {/* Marca d'água / Texto */}
-            <div className="bg-[#E8DECE] p-5 rounded-2xl shadow-sm border border-[#D4C9B5] space-y-4">
-              <h3 className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
-                <Type size={16} className="text-[#4A7A5C]" /> Texto / Marca d'água
-              </h3>
-
-              <div className="space-y-2">
-                <Label htmlFor="watermark" className="font-label-category text-[10px] text-[#1C3A2B]">Seu @ ou Nome</Label>
-                <Input 
-                  id="watermark" 
-                  placeholder="Ex: @suasobrancelha" 
-                  value={text} 
-                  onChange={(e) => setText(e.target.value)}
-                  className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] placeholder-[#4A7A5C]/70 h-11 rounded-xl text-sm focus-visible:ring-[#1C3A2B]"
-                />
+            {text && (
+              <div 
+                style={{ 
+                  left: `${textX}%`, 
+                  top: `${textY}%`, 
+                  color: textColor, 
+                  fontSize: `${textSize}px` 
+                }}
+                className="absolute z-30 -translate-x-1/2 -translate-y-1/2 font-bold drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.8)] pointer-events-none whitespace-nowrap tracking-wide"
+              >
+                {text}
               </div>
+            )}
 
-              {text && (
-                <div className="space-y-4 pt-2">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label className="font-label-category text-[9px] text-[#4A7A5C]">Cor do Texto</Label>
-                      <div className="flex gap-2">
-                        <input 
-                          type="color" 
-                          value={textColor} 
-                          onChange={(e) => setTextColor(e.target.value)}
-                          className="w-10 h-10 rounded-lg border border-[#D4C9B5] cursor-pointer"
-                        />
-                        <Input 
-                          value={textColor} 
-                          onChange={(e) => setTextColor(e.target.value)}
-                          className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] h-10 rounded-lg text-xs font-mono"
+            {/* Logo do Usuário */}
+            {logoImg && (
+              <img 
+                src={logoImg} 
+                style={{ 
+                  left: `${logoX}%`, 
+                  top: `${logoY}%`, 
+                  width: `${logoSize}px`,
+                  height: 'auto'
+                }}
+                className="absolute z-30 -translate-x-1/2 -translate-y-1/2 pointer-events-none drop-shadow-md"
+                alt="Logo"
+              />
+            )}
+          </div>
+
+          {/* Botões Rápidos de Upload */}
+          <div className="flex gap-2 mt-3 w-full max-w-[340px]">
+            <Button 
+              onClick={() => beforeInputRef.current?.click()} 
+              variant="outline" 
+              className="btn-elha-outline flex-1 h-10 text-[10px]"
+            >
+              <Upload size={12} className="mr-1" /> Add Antes
+            </Button>
+            <Button 
+              onClick={() => afterInputRef.current?.click()} 
+              variant="outline" 
+              className="btn-elha-outline flex-1 h-10 text-[10px]"
+            >
+              <Upload size={12} className="mr-1" /> Add Depois
+            </Button>
+          </div>
+
+          <input type="file" ref={beforeInputRef} onChange={(e) => handleImageUpload(e, 'before')} accept="image/*" className="hidden" />
+          <input type="file" ref={afterInputRef} onChange={(e) => handleImageUpload(e, 'after')} accept="image/*" className="hidden" />
+        </div>
+
+        {/* Painel de Controle em Abas (Estilo Canva Mobile) */}
+        <Card className="border border-[#D4C9B5] bg-[#E8DECE] rounded-2xl shadow-sm overflow-hidden">
+          <Tabs defaultValue="layout" className="w-full">
+            <TabsList className="grid grid-cols-4 bg-[#1C3A2B]/10 p-1 rounded-t-2xl rounded-b-none h-12">
+              <TabsTrigger value="layout" className="text-[10px] font-bold uppercase tracking-wider data-[state=active]:bg-[#1C3A2B] data-[state=active]:text-[#E8DECE] rounded-xl">
+                <Layers size={14} className="mr-1" /> Layout
+              </TabsTrigger>
+              <TabsTrigger value="texto" className="text-[10px] font-bold uppercase tracking-wider data-[state=active]:bg-[#1C3A2B] data-[state=active]:text-[#E8DECE] rounded-xl">
+                <Type size={14} className="mr-1" /> Texto
+              </TabsTrigger>
+              <TabsTrigger value="logo" className="text-[10px] font-bold uppercase tracking-wider data-[state=active]:bg-[#1C3A2B] data-[state=active]:text-[#E8DECE] rounded-xl">
+                <Maximize2 size={14} className="mr-1" /> Logo
+              </TabsTrigger>
+              <TabsTrigger value="desenho" className="text-[10px] font-bold uppercase tracking-wider data-[state=active]:bg-[#1C3A2B] data-[state=active]:text-[#E8DECE] rounded-xl">
+                <Paintbrush size={14} className="mr-1" /> Caneta
+              </TabsTrigger>
+            </TabsList>
+
+            <CardContent className="p-4 space-y-4">
+              
+              {/* ABA: LAYOUT */}
+              <TabsContent value="layout" className="space-y-4 mt-0">
+                <div className="space-y-2">
+                  <Label className="font-label-category text-[9px] text-[#1C3A2B]">Tamanho da Edição</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                      variant={layoutSize === 'feed' ? 'default' : 'outline'} 
+                      onClick={() => setLayoutSize('feed')}
+                      className={cn("h-9 rounded-xl text-[10px] font-bold", layoutSize === 'feed' ? "btn-elha-primary" : "btn-elha-outline")}
+                    >
+                      Feed (1:1)
+                    </Button>
+                    <Button 
+                      variant={layoutSize === 'story' ? 'default' : 'outline'} 
+                      onClick={() => setLayoutSize('story')}
+                      className={cn("h-9 rounded-xl text-[10px] font-bold", layoutSize === 'story' ? "btn-elha-primary" : "btn-elha-outline")}
+                    >
+                      Story (9:16)
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="font-label-category text-[9px] text-[#1C3A2B]">Orientação da Divisão</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                      variant={splitDirection === 'horizontal' ? 'default' : 'outline'} 
+                      onClick={() => setSplitDirection('horizontal')}
+                      className={cn("h-9 rounded-xl text-[10px] font-bold", splitDirection === 'horizontal' ? "btn-elha-primary" : "btn-elha-outline")}
+                    >
+                      Lado a Lado
+                    </Button>
+                    <Button 
+                      variant={splitDirection === 'vertical' ? 'default' : 'outline'} 
+                      onClick={() => setSplitDirection('vertical')}
+                      className={cn("h-9 rounded-xl text-[10px] font-bold", splitDirection === 'vertical' ? "btn-elha-primary" : "btn-elha-outline")}
+                    >
+                      Cima e Baixo
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="font-label-category text-[9px] text-[#1C3A2B]">Linha de Separação</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                      variant={separationType === 'straight' ? 'default' : 'outline'} 
+                      onClick={() => setSeparationType('straight')}
+                      className={cn("h-9 rounded-xl text-[10px] font-bold", separationType === 'straight' ? "btn-elha-primary" : "btn-elha-outline")}
+                    >
+                      Linha Reta
+                    </Button>
+                    <Button 
+                      variant={separationType === 'faded' ? 'default' : 'outline'} 
+                      onClick={() => setSeparationType('faded')}
+                      className={cn("h-9 rounded-xl text-[10px] font-bold", separationType === 'faded' ? "btn-elha-primary" : "btn-elha-outline")}
+                    >
+                      Esfumaçada
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* ABA: TEXTO */}
+              <TabsContent value="texto" className="space-y-4 mt-0">
+                <div className="space-y-1.5">
+                  <Label htmlFor="watermark" className="font-label-category text-[9px] text-[#1C3A2B]">Seu @ ou Nome</Label>
+                  <Input 
+                    id="watermark" 
+                    placeholder="Ex: @suasobrancelha" 
+                    value={text} 
+                    onChange={(e) => setText(e.target.value)}
+                    className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] placeholder-[#4A7A5C]/70 h-10 rounded-xl text-xs focus-visible:ring-[#1C3A2B]"
+                  />
+                </div>
+
+                {text && (
+                  <div className="space-y-3 pt-1">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="font-label-category text-[8px] text-[#4A7A5C]">Cor do Texto</Label>
+                        <div className="flex gap-1.5 items-center">
+                          <input 
+                            type="color" 
+                            value={textColor} 
+                            onChange={(e) => setTextColor(e.target.value)}
+                            className="w-8 h-8 rounded-lg border border-[#D4C9B5] cursor-pointer shrink-0"
+                          />
+                          <Input 
+                            value={textColor} 
+                            onChange={(e) => setTextColor(e.target.value)}
+                            className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] h-8 rounded-lg text-[10px] font-mono px-1.5"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="font-label-category text-[8px] text-[#4A7A5C]">Tamanho ({textSize}px)</Label>
+                        <Slider 
+                          value={[textSize]} 
+                          onValueChange={(val) => setTextSize(val[0])} 
+                          min={10} 
+                          max={32} 
+                          step={1}
+                          className="py-2"
                         />
                       </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label className="font-label-category text-[9px] text-[#4A7A5C]">Tamanho</Label>
-                      <Slider 
-                        value={[textSize]} 
-                        onValueChange={(val) => setTextSize(val[0])} 
-                        min={10} 
-                        max={32} 
-                        step={1}
-                        className="py-4"
-                      />
+
+                    <div className="space-y-1">
+                      <Label className="font-label-category text-[8px] text-[#4A7A5C]">Posição Horizontal (X: {textX}%)</Label>
+                      <Slider value={[textX]} onValueChange={(val) => setTextX(val[0])} min={5} max={95} />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="font-label-category text-[8px] text-[#4A7A5C]">Posição Vertical (Y: {textY}%)</Label>
+                      <Slider value={[textY]} onValueChange={(val) => setTextY(val[0])} min={5} max={95} />
                     </div>
                   </div>
+                )}
+              </TabsContent>
 
-                  <div className="space-y-2">
-                    <Label className="font-label-category text-[9px] text-[#4A7A5C]">Posição Horizontal (X)</Label>
-                    <Slider value={[textX]} onValueChange={(val) => setTextX(val[0])} min={5} max={95} />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="font-label-category text-[9px] text-[#4A7A5C]">Posição Vertical (Y)</Label>
-                    <Slider value={[textY]} onValueChange={(val) => setTextY(val[0])} min={5} max={95} />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Upload de Logo da Montagem */}
-            <div className="bg-[#E8DECE] p-5 rounded-2xl shadow-sm border border-[#D4C9B5] space-y-4">
-              <h3 className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
-                <ImageIcon size={16} className="text-[#4A7A5C]" /> Sua Logomarca na Montagem
-              </h3>
-
-              <div className="flex items-center gap-3">
-                <Button 
-                  onClick={() => logoInputRef.current?.click()} 
-                  variant="outline" 
-                  className="btn-elha-outline flex-1 h-11"
-                >
-                  <Upload size={14} className="mr-1.5" /> Subir Logo PNG
-                </Button>
-                {logoImg && (
+              {/* ABA: LOGO */}
+              <TabsContent value="logo" className="space-y-4 mt-0">
+                <div className="flex items-center gap-2">
                   <Button 
-                    onClick={() => setLogoImg(null)} 
-                    variant="ghost" 
-                    className="h-11 w-11 rounded-xl text-red-500 hover:bg-red-50 p-0"
+                    onClick={() => logoInputRef.current?.click()} 
+                    variant="outline" 
+                    className="btn-elha-outline flex-1 h-10 text-[10px]"
                   >
-                    <Trash2 size={18} />
+                    <Upload size={12} className="mr-1" /> Subir Logo PNG
+                  </Button>
+                  {logoImg && (
+                    <Button 
+                      onClick={() => setLogoImg(null)} 
+                      variant="ghost" 
+                      className="h-10 w-10 rounded-xl text-red-500 hover:bg-red-50 p-0 shrink-0"
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  )}
+                </div>
+                <input type="file" ref={logoInputRef} onChange={(e) => handleImageUpload(e, 'logo')} accept="image/*" className="hidden" />
+
+                {logoImg && (
+                  <div className="space-y-3 pt-1">
+                    <div className="space-y-1">
+                      <Label className="font-label-category text-[8px] text-[#4A7A5C]">Tamanho da Logo ({logoSize}px)</Label>
+                      <Slider 
+                        value={[logoSize]} 
+                        onValueChange={(val) => setLogoSize(val[0])} 
+                        min={30} 
+                        max={200} 
+                        step={5}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="font-label-category text-[8px] text-[#4A7A5C]">Posição Horizontal (X: {logoX}%)</Label>
+                      <Slider value={[logoX]} onValueChange={(val) => setLogoX(val[0])} min={5} max={95} />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="font-label-category text-[8px] text-[#4A7A5C]">Posição Vertical (Y: {logoY}%)</Label>
+                      <Slider value={[logoY]} onValueChange={(val) => setLogoY(val[0])} min={5} max={95} />
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* ABA: DESENHO */}
+              <TabsContent value="desenho" className="space-y-4 mt-0">
+                <div className="flex items-center justify-between bg-[#F5F0E8] p-2.5 rounded-xl border border-[#D4C9B5]">
+                  <span className="font-label-category text-[9px] text-[#1C3A2B]">Modo Caneta</span>
+                  <Button 
+                    variant={isDrawingMode ? 'default' : 'outline'} 
+                    onClick={() => setIsDrawingMode(!isDrawingMode)}
+                    className={cn("h-8 rounded-lg text-[9px] font-bold uppercase px-3", isDrawingMode ? "btn-elha-primary" : "btn-elha-outline")}
+                  >
+                    {isDrawingMode ? 'Ativa' : 'Ativar'}
+                  </Button>
+                </div>
+
+                {isDrawingMode && (
+                  <div className="space-y-3 pt-1">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="font-label-category text-[8px] text-[#4A7A5C]">Cor da Caneta</Label>
+                        <div className="flex gap-1.5 items-center">
+                          <input 
+                            type="color" 
+                            value={penColor} 
+                            onChange={(e) => setPenColor(e.target.value)}
+                            className="w-8 h-8 rounded-lg border border-[#D4C9B5] cursor-pointer shrink-0"
+                          />
+                          <Input 
+                            value={penColor} 
+                            onChange={(e) => setPenColor(e.target.value)}
+                            className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] h-8 rounded-lg text-[10px] font-mono px-1.5"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="font-label-category text-[8px] text-[#4A7A5C]">Espessura ({penWidth}px)</Label>
+                        <Slider 
+                          value={[penWidth]} 
+                          onValueChange={(val) => setPenWidth(val[0])} 
+                          min={2} 
+                          max={12} 
+                          step={1}
+                          className="py-2"
+                        />
+                      </div>
+                    </div>
+
+                    <Button 
+                      onClick={clearDrawing} 
+                      variant="outline" 
+                      className="w-full h-9 rounded-xl text-[10px] font-bold text-red-500 border-red-100 hover:bg-red-50"
+                    >
+                      <RotateCcw size={12} className="mr-1" /> Limpar Desenhos
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+
+            </CardContent>
+          </Tabs>
+        </Card>
+
+        {/* Ajustes do Relatório PDF (Compacto e Elegante) */}
+        <Card className="border border-[#D4C9B5] bg-[#E8DECE] rounded-2xl shadow-sm overflow-hidden">
+          <CardContent className="p-4 space-y-3">
+            <h3 className="font-label-category text-[9px] text-[#1C3A2B] flex items-center gap-1.5">
+              <FileText size={14} className="text-[#4A7A5C]" /> Ajuste do Relatório PDF
+            </h3>
+            
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Button 
+                  onClick={() => pdfLogoInputRef.current?.click()} 
+                  variant="outline" 
+                  className="btn-elha-outline flex-1 h-10 text-[10px]"
+                >
+                  <Upload size={12} className="mr-1" /> Subir Logo PDF
+                </Button>
+                {pdfLogo && (
+                  <Button 
+                    onClick={() => { setPdfLogo(null); savePdfSettings(null, pdfBgColor); }} 
+                    variant="ghost" 
+                    className="h-10 w-10 rounded-xl text-red-500 hover:bg-red-50 p-0 shrink-0"
+                  >
+                    <Trash2 size={16} />
                   </Button>
                 )}
               </div>
-              <input type="file" ref={logoInputRef} onChange={(e) => handleImageUpload(e, 'logo')} accept="image/*" className="hidden" />
-
-              {logoImg && (
-                <div className="space-y-4 pt-2">
-                  <div className="space-y-1.5">
-                    <Label className="font-label-category text-[9px] text-[#4A7A5C]">Tamanho da Logo</Label>
-                    <Slider 
-                      value={[logoSize]} 
-                      onValueChange={(val) => setLogoSize(val[0])} 
-                      min={30} 
-                      max={200} 
-                      step={5}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="font-label-category text-[9px] text-[#4A7A5C]">Posição Horizontal (X)</Label>
-                    <Slider value={[logoX]} onValueChange={(val) => setLogoX(val[0])} min={5} max={95} />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="font-label-category text-[9px] text-[#4A7A5C]">Posição Vertical (Y)</Label>
-                    <Slider value={[logoY]} onValueChange={(val) => setLogoY(val[0])} min={5} max={95} />
-                  </div>
+              <input type="file" ref={pdfLogoInputRef} onChange={(e) => handleImageUpload(e, 'pdfLogo')} accept="image/*" className="hidden" />
+              
+              {pdfLogo && (
+                <div className="p-1.5 bg-[#F5F0E8] rounded-xl border border-[#D4C9B5] flex justify-center">
+                  <img src={pdfLogo} className="h-8 object-contain" alt="Logo PDF Preview" />
                 </div>
               )}
             </div>
 
-            {/* Caneta Desenho Livre */}
-            <div className="bg-[#E8DECE] p-5 rounded-2xl shadow-sm border border-[#D4C9B5] space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
-                  <Paintbrush size={16} className="text-[#4A7A5C]" /> Caneta de Marcação
-                </h3>
-                <Button 
-                  variant={isDrawingMode ? 'default' : 'outline'} 
-                  onClick={() => setIsDrawingMode(!isDrawingMode)}
-                  className={cn("h-8 rounded-lg text-[10px] font-bold uppercase px-3", isDrawingMode ? "btn-elha-primary" : "btn-elha-outline")}
-                >
-                  {isDrawingMode ? 'Ativa' : 'Ativar'}
-                </Button>
+            <div className="space-y-1">
+              <Label className="font-label-category text-[8px] text-[#1C3A2B]">Cor de Fundo do PDF</Label>
+              <div className="flex gap-1.5 items-center">
+                <input 
+                  type="color" 
+                  value={pdfBgColor} 
+                  onChange={(e) => { setPdfBgColor(e.target.value); savePdfSettings(pdfLogo, e.target.value); }}
+                  className="w-8 h-8 rounded-lg border border-[#D4C9B5] cursor-pointer shrink-0"
+                />
+                <Input 
+                  value={pdfBgColor} 
+                  onChange={(e) => { setPdfBgColor(e.target.value); savePdfSettings(pdfLogo, e.target.value); }}
+                  placeholder="#F5F0E8"
+                  className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] h-8 rounded-lg text-[10px] font-mono px-1.5 focus-visible:ring-[#1C3A2B]"
+                />
               </div>
-
-              {isDrawingMode && (
-                <div className="space-y-4 pt-2">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label className="font-label-category text-[9px] text-[#4A7A5C]">Cor da Caneta</Label>
-                      <div className="flex gap-2">
-                        <input 
-                          type="color" 
-                          value={penColor} 
-                          onChange={(e) => setPenColor(e.target.value)}
-                          className="w-10 h-10 rounded-lg border border-[#D4C9B5] cursor-pointer"
-                        />
-                        <Input 
-                          value={penColor} 
-                          onChange={(e) => setPenColor(e.target.value)}
-                          className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] h-10 rounded-lg text-xs font-mono"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="font-label-category text-[9px] text-[#4A7A5C]">Espessura</Label>
-                      <Slider 
-                        value={[penWidth]} 
-                        onValueChange={(val) => setPenWidth(val[0])} 
-                        min={2} 
-                        max={12} 
-                        step={1}
-                        className="py-4"
-                      />
-                    </div>
-                  </div>
-
-                  <Button 
-                    onClick={clearDrawing} 
-                    variant="outline" 
-                    className="w-full h-10 rounded-xl text-xs font-bold text-red-500 border-red-100 hover:bg-red-50"
-                  >
-                    <RotateCcw size={14} className="mr-1.5" /> Limpar Desenhos
-                  </Button>
-                </div>
-              )}
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Botão de Exportar */}
-            <Button 
-              onClick={exportCollage}
-              className="btn-elha-primary w-full h-14"
-            >
-              <Download size={14} className="mr-1.5" /> Exportar Montagem Final
-            </Button>
+        {/* Botão de Exportar */}
+        <Button 
+          onClick={exportCollage}
+          className="btn-elha-primary w-full h-12 text-xs"
+        >
+          <Download size={14} className="mr-1.5" /> Exportar Montagem Final
+        </Button>
 
-            {/* CARD DE AJUSTE (LOGO E FUNDO DO PDF) */}
-            <Card className="border border-[#D4C9B5] bg-[#E8DECE] rounded-2xl overflow-hidden">
-              <CardHeader className="pb-3">
-                <CardTitle className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
-                  <Sliders size={16} className="text-[#4A7A5C]" /> Ajuste do Relatório PDF
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="font-label-category text-[10px] text-[#1C3A2B]">Sua Logo para o PDF</Label>
-                  <div className="flex items-center gap-3">
-                    <Button 
-                      onClick={() => pdfLogoInputRef.current?.click()} 
-                      variant="outline" 
-                      className="btn-elha-outline flex-1 h-11"
-                    >
-                      <Upload size={14} className="mr-1.5" /> Subir Logo PDF
-                    </Button>
-                    {pdfLogo && (
-                      <Button 
-                        onClick={() => { setPdfLogo(null); savePdfSettings(null, pdfBgColor); }} 
-                        variant="ghost" 
-                        className="h-11 w-11 rounded-xl text-red-500 hover:bg-red-50 p-0"
-                      >
-                        <Trash2 size={18} />
-                      </Button>
-                    )}
-                  </div>
-                  <input type="file" ref={pdfLogoInputRef} onChange={(e) => handleImageUpload(e, 'pdfLogo')} accept="image/*" className="hidden" />
-                  {pdfLogo && (
-                    <div className="p-2 bg-[#F5F0E8] rounded-xl border border-[#D4C9B5] flex justify-center">
-                      <img src={pdfLogo} className="h-12 object-contain" alt="Logo PDF Preview" />
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="font-label-category text-[10px] text-[#1C3A2B]">Cor de Fundo do PDF</Label>
-                  <div className="flex gap-2">
-                    <input 
-                      type="color" 
-                      value={pdfBgColor} 
-                      onChange={(e) => { setPdfBgColor(e.target.value); savePdfSettings(pdfLogo, e.target.value); }}
-                      className="w-11 h-11 rounded-xl border border-[#D4C9B5] cursor-pointer"
-                    />
-                    <Input 
-                      value={pdfBgColor} 
-                      onChange={(e) => { setPdfBgColor(e.target.value); savePdfSettings(pdfLogo, e.target.value); }}
-                      placeholder="#F5F0E8"
-                      className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] h-11 rounded-xl text-sm font-mono focus-visible:ring-[#1C3A2B]"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-          </div>
-
-        </div>
       </main>
     </div>
   );
