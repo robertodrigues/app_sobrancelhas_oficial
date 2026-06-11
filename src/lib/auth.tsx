@@ -10,8 +10,8 @@ import {
   useSignUp as useRealSignUp
 } from '@clerk/clerk-react';
 
-// Só ativa o Clerk real se a variável de ambiente estiver explicitamente configurada pelo usuário
-const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "";
+// Usa a chave do ambiente ou a chave que você forneceu como fallback para o preview
+const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "pk_test_d29uZHJvdXMtbG9jdXN0LTg1LmNsZXJrLmFjY291bnRzLmRldiQ";
 export const isClerkConfigured = !!CLERK_KEY;
 
 interface MockUser {
