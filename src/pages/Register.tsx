@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { showSuccess, showError } from "@/utils/toast";
 import { isClerkConfigured, useSignUp } from "@/lib/auth";
 import { Loader2, UserPlus } from "lucide-react";
+import Logo from "@/components/ui/Logo";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -44,6 +45,12 @@ const Register = () => {
   return (
     <div className="min-h-screen bg-[#F5F0E8] text-[#1C3A2B] px-4 py-10 flex items-center justify-center">
       <div className="w-full max-w-md">
+        
+        {/* Logo ELHA */}
+        <div className="mb-6 flex justify-center">
+          <Logo className="w-32 h-32 drop-shadow-md" />
+        </div>
+
         <div className="text-center mb-6">
           <p className="font-label-category text-[10px] text-[#4A7A5C] mb-2">Novo acesso</p>
           <h1 className="font-heading text-3xl text-[#1C3A2B]">Criar conta</h1>

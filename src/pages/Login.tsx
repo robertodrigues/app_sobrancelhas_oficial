@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { showSuccess, showError } from "@/utils/toast";
 import { isClerkConfigured, useSignIn } from "@/lib/auth";
 import { Loader2, LogIn } from "lucide-react";
+import Logo from "@/components/ui/Logo";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -59,6 +60,11 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-[#F5F0E8] text-[#1C3A2B] px-4 py-10 flex items-center justify-center">
       <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center">
+        
+        {/* Logo ELHA */}
+        <div className="mb-8 flex justify-center">
+          <Logo className="w-36 h-36 drop-shadow-md" />
+        </div>
 
         {isClerkConfigured ? (
           <div className="w-full flex justify-center">
