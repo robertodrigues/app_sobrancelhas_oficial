@@ -98,6 +98,16 @@ const Login = () => {
                 disabled={loading}
                 className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] placeholder-[#4A7A5C]/70 h-11 rounded-xl text-sm focus-visible:ring-[#1C3A2B]"
               />
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={loading}
+                  className="text-[11px] text-[#4A7A5C] hover:text-[#1C3A2B] hover:underline transition-colors font-medium"
+                >
+                  {loading ? "Enviando..." : "Esqueci minha senha"}
+                </button>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -120,13 +130,7 @@ const Login = () => {
           </form>
         )}
 
-        <div className="mt-4 text-center w-full">
-          <Button type="button" onClick={handleForgotPassword} disabled={loading} className="btn-elha-outline">
-            {loading ? "Enviando..." : "Esqueci minha senha"}
-          </Button>
-        </div>
-
-        <div className="text-center pt-2 w-full">
+        <div className="text-center pt-6 w-full">
           <p className="text-xs text-[#4A7A5C]">
             Não tem uma conta? <Link to="/register" className="text-[#1C3A2B] font-medium underline">Criar conta</Link>
           </p>
