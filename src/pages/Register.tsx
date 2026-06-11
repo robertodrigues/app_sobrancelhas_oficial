@@ -55,7 +55,8 @@ const Register = () => {
             appearance={{
               elements: {
                 formButtonPrimary: "btn-elha-primary w-full h-12 gap-2",
-                card: "border border-[#D4C9B5] bg-[#E8DECE] rounded-3xl shadow-sm w-full",
+                cardBox: "shadow-none w-full",
+                card: "border border-[#D4C9B5] bg-[#E8DECE] rounded-3xl shadow-sm w-full overflow-hidden",
                 headerTitle: "font-heading text-xl text-[#1C3A2B]",
                 headerSubtitle: "text-[#4A7A5C]",
                 socialButtonsBlockButton: "btn-elha-outline flex-1 h-12 gap-2",
