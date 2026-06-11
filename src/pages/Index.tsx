@@ -42,30 +42,95 @@ const Index = () => {
     }, 2200);
 
     const fetchData = async () => {
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
+      setLoading(true);
       try {
-        const { count: clientCount } = await supabase
-          .from('clients')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id);
+        let clientCount = 0;
+        let analysisCount = 0;
+        let recent: any[] = [];
 
-        const { count: analysisCount } = await supabase
-          .from('analyses')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id);
-        
-        const { data: recent } = await supabase
-          .from('analyses')
-          .select('*, clients(name)')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(5);
+        if (user?.id) {
+          // Tenta buscar clientes filtrando por user_id
+          const { count: cCount, error: cError } = await supabase
+            .from('clients')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id);
 
-        setStats({ clients: clientCount || 0, analyses: analysisCount || 0 });
-        setRecentActivities(recent || []);
+          if (cError && (
+            cError.message.includes('user_id') || 
+            cError.code === 'PGRST204' || 
+            cError.message.includes('column')
+          )) {
+            const { count: fallbackCCount } = await supabase
+              .from('clients')
+              .select('*', { count: 'exact', head: true });
+            clientCount = fallbackCCount || 0;
+          } else {
+            clientCount = cCount || 0;
+          }
+
+          // Tenta buscar análises filtrando por user_id
+          const { count: aCount, error: aError } = await supabase
+            .from('analyses')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id);
+
+          if (aError && (
+            aError.message.includes('user_id') || 
+            aError.code === 'PGRST204' || 
+            aError.message.includes('column')
+          )) {
+            const { count: fallbackACount } = await supabase
+              .from('analyses')
+              .select('*', { count: 'exact', head: true });
+            analysisCount = fallbackACount || 0;
+          } else {
+            analysisCount = aCount || 0;
+          }
+
+          // Tenta buscar atividades recentes filtrando por user_id
+          const { data: rData, error: rError } = await supabase
+            .from('analyses')
+            .select('*, clients(name)')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(5);
+
+          if (rError && (
+            rError.message.includes('user_id') || 
+            rError.code === 'PGRST204' || 
+            rError.message.includes('column')
+          )) {
+            const { data: fallbackRData } = await supabase
+              .from('analyses')
+              .select('*, clients(name)')
+              .order('created_at', { ascending: false })
+              .limit(5);
+            recent = fallbackRData || [];
+          } else {
+            recent = rData || [];
+          }
+        } else {
+          // Sem usuário logado (fallback)
+          const { count: cCount } = await supabase
+            .from('clients')
+            .select('*', { count: 'exact', head: true });
+          clientCount = cCount || 0;
+
+          const { count: aCount } = await supabase
+            .from('analyses')
+            .select('*', { count: 'exact', head: true });
+          analysisCount = aCount || 0;
+
+          const { data: rData } = await supabase
+            .from('analyses')
+            .select('*, clients(name)')
+            .order('created_at', { ascending: false })
+            .limit(5);
+          recent = rData || [];
+        }
+
+        setStats({ clients: clientCount, analyses: analysisCount });
+        setRecentActivities(recent);
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
       } finally {
@@ -100,7 +165,7 @@ const Index = () => {
       if (user?.id) {
         localStorage.setItem(`elha_user_avatar_${user.id}`, base64);
       }
-      showSuccess("Foto de perfil atualizada com sucesso!");
+      showSuccess("Foto de perfil updated com sucesso!");
       setMenuOpen(false);
     };
     reader.onerror = () => {

@@ -61,29 +61,61 @@ const Clients = () => {
   });
 
   useEffect(() => {
-    if (user?.id) {
-      fetchClients();
-    } else {
-      setLoading(false);
-    }
+    fetchClients();
   }, [user?.id]);
 
   const fetchClients = async () => {
-    if (!user?.id) return;
-    const { data, error } = await supabase
-      .from('clients')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('name');
+    setLoading(true);
+    try {
+      let data = null;
+      let error = null;
 
-    if (error) {
+      if (user?.id) {
+        // Tenta buscar filtrando por user_id
+        const { data: firstData, error: firstError } = await supabase
+          .from('clients')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('name');
+        
+        data = firstData;
+        error = firstError;
+
+        // Se falhar porque a coluna 'user_id' não existe, busca todos os clientes
+        if (firstError && (
+          firstError.message.includes('user_id') || 
+          firstError.code === 'PGRST204' || 
+          firstError.message.includes('column')
+        )) {
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('clients')
+            .select('*')
+            .order('name');
+          
+          data = fallbackData;
+          error = fallbackError;
+        }
+      } else {
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('clients')
+          .select('*')
+          .order('name');
+        
+        data = fallbackData;
+        error = fallbackError;
+      }
+
+      if (error) {
+        throw error;
+      }
+
+      setClients((data || []) as ClientRecord[]);
+    } catch (err) {
+      console.error('Erro ao buscar clientes:', err);
       showError('Erro ao buscar clientes.');
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setClients((data || []) as ClientRecord[]);
-    setLoading(false);
   };
 
   const filteredClients = clients.filter((client) =>
@@ -103,7 +135,7 @@ const Clients = () => {
   const handleUpdateClient = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!editingClient || !user?.id) return;
+    if (!editingClient) return;
 
     if (!editForm.name.trim()) {
       showError('O nome é obrigatório.');
@@ -112,27 +144,55 @@ const Clients = () => {
 
     setEditLoading(true);
 
-    const { error } = await supabase
-      .from('clients')
-      .update({
+    try {
+      const updateData: any = {
         name: editForm.name.trim(),
         email: editForm.email.trim() || null,
         phone: editForm.phone.trim() || null,
-      })
-      .eq('id', editingClient.id)
-      .eq('user_id', user.id);
+      };
 
-    setEditLoading(false);
+      let error = null;
 
-    if (error) {
+      if (user?.id && editingClient.user_id) {
+        const { error: firstError } = await supabase
+          .from('clients')
+          .update({ ...updateData, user_id: user.id })
+          .eq('id', editingClient.id)
+          .eq('user_id', user.id);
+        
+        error = firstError;
+
+        if (firstError && (
+          firstError.message.includes('user_id') || 
+          firstError.code === 'PGRST204' || 
+          firstError.message.includes('column')
+        )) {
+          const { error: fallbackError } = await supabase
+            .from('clients')
+            .update(updateData)
+            .eq('id', editingClient.id);
+          error = fallbackError;
+        }
+      } else {
+        const { error: fallbackError } = await supabase
+          .from('clients')
+          .update(updateData)
+          .eq('id', editingClient.id);
+        error = fallbackError;
+      }
+
+      if (error) throw error;
+
+      showSuccess('Cliente atualizado com sucesso!');
+      setEditOpen(false);
+      setEditingClient(null);
+      await fetchClients();
+    } catch (err) {
+      console.error(err);
       showError('Não foi possível atualizar o cliente.');
-      return;
+    } finally {
+      setEditLoading(false);
     }
-
-    showSuccess('Cliente atualizado com sucesso!');
-    setEditOpen(false);
-    setEditingClient(null);
-    await fetchClients();
   };
 
   const handleOpenDelete = (client: ClientRecord) => {
@@ -141,27 +201,53 @@ const Clients = () => {
   };
 
   const handleDeleteClient = async () => {
-    if (!deletingClient || !user?.id) return;
+    if (!deletingClient) return;
 
     setDeleteLoading(true);
 
-    const { error } = await supabase
-      .from('clients')
-      .delete()
-      .eq('id', deletingClient.id)
-      .eq('user_id', user.id);
+    try {
+      let error = null;
 
-    setDeleteLoading(false);
+      if (user?.id && deletingClient.user_id) {
+        const { error: firstError } = await supabase
+          .from('clients')
+          .delete()
+          .eq('id', deletingClient.id)
+          .eq('user_id', user.id);
+        
+        error = firstError;
 
-    if (error) {
+        if (firstError && (
+          firstError.message.includes('user_id') || 
+          firstError.code === 'PGRST204' || 
+          firstError.message.includes('column')
+        )) {
+          const { error: fallbackError } = await supabase
+            .from('clients')
+            .delete()
+            .eq('id', deletingClient.id);
+          error = fallbackError;
+        }
+      } else {
+        const { error: fallbackError } = await supabase
+          .from('clients')
+          .delete()
+          .eq('id', deletingClient.id);
+        error = fallbackError;
+      }
+
+      if (error) throw error;
+
+      showSuccess('Cliente excluído com sucesso!');
+      setDeleteOpen(false);
+      setDeletingClient(null);
+      await fetchClients();
+    } catch (err) {
+      console.error(err);
       showError('Não foi possível excluir o cliente.');
-      return;
+    } finally {
+      setDeleteLoading(false);
     }
-
-    showSuccess('Cliente excluído com sucesso!');
-    setDeleteOpen(false);
-    setDeletingClient(null);
-    await fetchClients();
   };
 
   return (

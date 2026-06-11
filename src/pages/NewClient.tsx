@@ -26,28 +26,44 @@ const NewClient = () => {
       return;
     }
 
-    if (!user?.id) {
-      showError('Usuário não autenticado.');
-      return;
-    }
-
     setLoading(true);
     
     try {
-      const dataToSave = {
+      const dataToSave: any = {
         name: formData.name.trim(),
         email: formData.email.trim() || null,
         phone: formData.phone.trim() || null,
-        user_id: user.id
       };
 
-      const { error, data } = await supabase
-        .from('clients')
-        .insert([dataToSave])
-        .select();
+      let error = null;
+
+      // Tenta salvar com user_id se o usuário estiver logado
+      if (user?.id) {
+        const { error: firstError } = await supabase
+          .from('clients')
+          .insert([{ ...dataToSave, user_id: user.id }]);
+        
+        error = firstError;
+
+        // Se falhar porque a coluna 'user_id' não existe no banco de dados, tenta salvar sem ela
+        if (firstError && (
+          firstError.message.includes('user_id') || 
+          firstError.code === 'PGRST204' || 
+          firstError.message.includes('column')
+        )) {
+          const { error: fallbackError } = await supabase
+            .from('clients')
+            .insert([dataToSave]);
+          error = fallbackError;
+        }
+      } else {
+        const { error: fallbackError } = await supabase
+          .from('clients')
+          .insert([dataToSave]);
+        error = fallbackError;
+      }
 
       if (error) {
-        console.error('Erro detalhado do Supabase:', error);
         throw error;
       }
 

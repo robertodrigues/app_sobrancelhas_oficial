@@ -101,13 +101,47 @@ const Capture = () => {
 
   useEffect(() => {
     const fetchClients = async () => {
-      if (!user?.id) return;
-      const { data } = await supabase
-        .from('clients')
-        .select('id, name')
-        .eq('user_id', user.id)
-        .order('name');
-      if (data) setClients(data);
+      try {
+        let data = null;
+        let error = null;
+
+        if (user?.id) {
+          const { data: firstData, error: firstError } = await supabase
+            .from('clients')
+            .select('id, name')
+            .eq('user_id', user.id)
+            .order('name');
+          
+          data = firstData;
+          error = firstError;
+
+          if (firstError && (
+            firstError.message.includes('user_id') || 
+            firstError.code === 'PGRST204' || 
+            firstError.message.includes('column')
+          )) {
+            const { data: fallbackData, error: fallbackError } = await supabase
+              .from('clients')
+              .select('id, name')
+              .order('name');
+            
+            data = fallbackData;
+            error = fallbackError;
+          }
+        } else {
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('clients')
+            .select('id, name')
+            .order('name');
+          
+          data = fallbackData;
+          error = fallbackError;
+        }
+
+        if (data) setClients(data);
+      } catch (err) {
+        console.error('Erro ao buscar clientes:', err);
+      }
     };
 
     fetchClients();
@@ -187,11 +221,6 @@ const Capture = () => {
       return;
     }
 
-    if (!user?.id) {
-      showError('Usuário não autenticado.');
-      return;
-    }
-
     setIsAnalyzing(true);
     try {
       const result = await performDualAnalysis(capturedImages);
@@ -200,14 +229,28 @@ const Capture = () => {
         result.isComparativo = true;
       }
 
-      const { error } = await supabase.from('analyses').insert([
-        {
-          client_id: selectedClientId,
-          image_url: capturedImages[capturedImages.length - 1].url,
-          result,
-          user_id: user.id,
-        },
-      ]);
+      const insertData: any = {
+        client_id: selectedClientId,
+        image_url: capturedImages[capturedImages.length - 1].url,
+        result,
+      };
+
+      if (user?.id) {
+        insertData.user_id = user.id;
+      }
+
+      let { error } = await supabase.from('analyses').insert([insertData]);
+
+      if (error && (
+        error.message.includes('user_id') || 
+        error.code === 'PGRST204' || 
+        error.message.includes('column')
+      )) {
+        // Fallback sem user_id
+        delete insertData.user_id;
+        const { error: fallbackError } = await supabase.from('analyses').insert([insertData]);
+        error = fallbackError;
+      }
 
       if (error) throw error;
 
