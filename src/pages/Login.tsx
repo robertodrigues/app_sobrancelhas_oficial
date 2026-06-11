@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { showSuccess, showError } from "@/utils/toast";
 import { isClerkConfigured, useSignIn } from "@/lib/auth";
-import { Loader2, LogIn } from "lucide-react";
+import { Loader2, LogIn, ShieldCheck } from "lucide-react";
 import Logo from "@/components/ui/Logo";
 
 const Login = () => {
@@ -136,6 +136,12 @@ const Login = () => {
           <Button type="submit" className="btn-elha-primary w-full gap-2 h-12" disabled={loading}>
             {loading ? <Loader2 className="animate-spin" /> : <><LogIn size={14} /> Entrar</>}
           </Button>
+
+          {/* Selo de Segurança do Clerk */}
+          <div className="flex items-center justify-center gap-1.5 text-[10px] text-[#4A7A5C]/70 pt-2 border-t border-[#D4C9B5]/40">
+            <ShieldCheck size={14} className="text-[#4A7A5C]" />
+            <span className="font-label-category text-[8px] tracking-[2px] uppercase">Secured by Clerk</span>
+          </div>
         </form>
 
         <div className="text-center pt-6 w-full">
