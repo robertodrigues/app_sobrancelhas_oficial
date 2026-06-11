@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.61.3",
+    "@clerk/localizations": "^4.7.1",
     "@google/generative-ai": "0.24.1",
     "@hookform/resolvers": "3.10.0",
     "@radix-ui/react-accordion": "1.2.4",
