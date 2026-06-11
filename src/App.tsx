@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ClerkProvider, SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
+import { HybridAuthProvider, SignedIn, SignedOut, RedirectToSignIn } from "@/lib/auth";
 import Index from "./pages/Index";
 import Capture from "./pages/Capture";
 import Clients from "./pages/Clients";
@@ -16,22 +16,10 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 
 const queryClient = new QueryClient();
-const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 const App = () => {
-  if (!publishableKey) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-[#F5F0E8] text-[#1C3A2B]">
-        <p className="text-center">
-          <strong>Chave do Clerk não configurada.</strong><br />
-          Defina a variável de ambiente <code>VITE_CLERK_PUBLISHABLE_KEY</code> no arquivo <code>.env</code> ou nas variáveis de ambiente do seu provedor (Render, Vercel, etc.).
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <ClerkProvider publishableKey={publishableKey}>
+    <HybridAuthProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
@@ -94,7 +82,7 @@ const App = () => {
           </div>
         </TooltipProvider>
       </QueryClientProvider>
-    </ClerkProvider>
+    </HybridAuthProvider>
   );
 };
 
