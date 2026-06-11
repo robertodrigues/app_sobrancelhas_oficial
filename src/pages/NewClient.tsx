@@ -7,9 +7,11 @@ import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
 import { supabase } from '@/lib/supabase';
+import { useUser } from '@/lib/auth';
 
 const NewClient = () => {
   const navigate = useNavigate();
+  const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -24,13 +26,19 @@ const NewClient = () => {
       return;
     }
 
+    if (!user?.id) {
+      showError('Usuário não autenticado.');
+      return;
+    }
+
     setLoading(true);
     
     try {
       const dataToSave = {
         name: formData.name.trim(),
         email: formData.email.trim() || null,
-        phone: formData.phone.trim() || null
+        phone: formData.phone.trim() || null,
+        user_id: user.id
       };
 
       const { error, data } = await supabase

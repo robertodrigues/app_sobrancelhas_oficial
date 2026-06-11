@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { showError, showSuccess } from '@/utils/toast';
+import { useUser } from '@/lib/auth';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,9 +40,11 @@ type ClientRecord = {
   email: string | null;
   phone: string | null;
   created_at: string;
+  user_id?: string;
 };
 
 const Clients = () => {
+  const { user } = useUser();
   const [searchTerm, setSearchTerm] = useState('');
   const [clients, setClients] = useState<ClientRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,13 +61,19 @@ const Clients = () => {
   });
 
   useEffect(() => {
-    fetchClients();
-  }, []);
+    if (user?.id) {
+      fetchClients();
+    } else {
+      setLoading(false);
+    }
+  }, [user?.id]);
 
   const fetchClients = async () => {
+    if (!user?.id) return;
     const { data, error } = await supabase
       .from('clients')
       .select('*')
+      .eq('user_id', user.id)
       .order('name');
 
     if (error) {
@@ -94,7 +103,7 @@ const Clients = () => {
   const handleUpdateClient = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!editingClient) return;
+    if (!editingClient || !user?.id) return;
 
     if (!editForm.name.trim()) {
       showError('O nome é obrigatório.');
@@ -110,7 +119,8 @@ const Clients = () => {
         email: editForm.email.trim() || null,
         phone: editForm.phone.trim() || null,
       })
-      .eq('id', editingClient.id);
+      .eq('id', editingClient.id)
+      .eq('user_id', user.id);
 
     setEditLoading(false);
 
@@ -131,14 +141,15 @@ const Clients = () => {
   };
 
   const handleDeleteClient = async () => {
-    if (!deletingClient) return;
+    if (!deletingClient || !user?.id) return;
 
     setDeleteLoading(true);
 
     const { error } = await supabase
       .from('clients')
       .delete()
-      .eq('id', deletingClient.id);
+      .eq('id', deletingClient.id)
+      .eq('user_id', user.id);
 
     setDeleteLoading(false);
 

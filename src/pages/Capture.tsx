@@ -24,6 +24,7 @@ import { performDualAnalysis } from '@/services/analysis';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { uploadPhotoToR2 } from '@/lib/r2';
+import { useUser } from '@/lib/auth';
 import type { AnalysisImage } from '@/services/types';
 
 const ANALYSIS_MODES = [
@@ -84,6 +85,7 @@ const dataURLtoFile = (dataurl: string, filename: string): File => {
 };
 
 const Capture = () => {
+  const { user } = useUser();
   const [capturedImages, setCapturedImages] = useState<AnalysisImage[]>([]);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
   const [isAnnotating, setIsAnnotating] = useState(false);
@@ -99,12 +101,17 @@ const Capture = () => {
 
   useEffect(() => {
     const fetchClients = async () => {
-      const { data } = await supabase.from('clients').select('id, name').order('name');
+      if (!user?.id) return;
+      const { data } = await supabase
+        .from('clients')
+        .select('id, name')
+        .eq('user_id', user.id)
+        .order('name');
       if (data) setClients(data);
     };
 
     fetchClients();
-  }, []);
+  }, [user?.id]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -180,6 +187,11 @@ const Capture = () => {
       return;
     }
 
+    if (!user?.id) {
+      showError('Usuário não autenticado.');
+      return;
+    }
+
     setIsAnalyzing(true);
     try {
       const result = await performDualAnalysis(capturedImages);
@@ -193,6 +205,7 @@ const Capture = () => {
           client_id: selectedClientId,
           image_url: capturedImages[capturedImages.length - 1].url,
           result,
+          user_id: user.id,
         },
       ]);
 

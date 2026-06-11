@@ -38,13 +38,25 @@ const Index = () => {
     }, 2200);
 
     const fetchData = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
       try {
-        const { count: clientCount } = await supabase.from('clients').select('*', { count: 'exact', head: true });
-        const { count: analysisCount } = await supabase.from('analyses').select('*', { count: 'exact', head: true });
+        const { count: clientCount } = await supabase
+          .from('clients')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+
+        const { count: analysisCount } = await supabase
+          .from('analyses')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
         
         const { data: recent } = await supabase
           .from('analyses')
           .select('*, clients(name)')
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(5);
 
@@ -71,7 +83,7 @@ const Index = () => {
       clearTimeout(timer);
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [user?.id]);
 
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
