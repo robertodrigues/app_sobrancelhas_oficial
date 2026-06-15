@@ -76,32 +76,32 @@ const Credits = () => {
             <div>
               <Label htmlFor="amount" className="font-label-category text-[10px] text-[#1C3A2B]">Comprar Créditos</Label>
               <div className="flex gap-2 items-center mt-2">
-                <Input 
-                  id="amount" 
-                  type="number" 
-                  placeholder="Quantidade" 
-                  value={creditAmount} 
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder="Quantidade"
+                  value={creditAmount}
                   onChange={(e) => setCreditAmount(e.target.value)}
                   min="10"
                   step="10"
                   className="flex-1 bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] placeholder-[#4A7A5C]/70 h-11 rounded-xl text-sm focus-visible:ring-[#1C3A2B]"
                 />
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="btn-elha-outline px-4 h-11"
                   onClick={() => setCreditAmount('10')}
                 >
                   10
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="btn-elha-outline px-4 h-11"
                   onClick={() => setCreditAmount('50')}
                 >
                   50
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="btn-elha-outline px-4 h-11"
                   onClick={() => setCreditAmount('100')}
                 >
@@ -110,7 +110,7 @@ const Credits = () => {
               </div>
             </div>
 
-            <Button 
+            <Button
               onClick={handleBuyCredits}
               disabled={loading || !creditAmount.trim()}
               className="btn-elha-primary w-full gap-2 h-12"
@@ -127,24 +127,15 @@ const Credits = () => {
 
             <div className="pt-4 border-t border-[#D4C9B5]">
               <h3 className="font-label-category text-[10px] text-[#1C3A2B] mb-3">Histórico de Compras</h3>
-              <div className="space-y-3">
-                {[10, 50, 100].map(amount => (
-                  <div key={amount} className="flex items-center justify-between p-3 bg-[#F5F0E8] rounded-xl border border-[#D4C9B5]">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[#E8DECE] flex items-center justify-center">
-                        <CreditCard size={14} className="text-[#4A7A5C]" />
-                      </div>
-                      <div>
-                        <p className="font-heading text-sm font-medium text-[#1C3A2B]">Compra de {amount} créditos</p>
-                        <p className="font-body text-[10px] text-[#4A7A5C]">Há 2 dias • Cartão Visa</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-heading text-sm font-medium text-[#1C3A2B]">- {amount} cr</p>
-                      <p className="font-body text-[10px] text-[#4A7A5C]">R$ {(amount * 0.5).toFixed(2)}</p>
-                    </div>
-                  </div>
-                ))}
+
+              <div className="text-center py-8 bg-[#F5F0E8] rounded-xl border border-dashed border-[#D4C9B5]">
+                <div className="w-10 h-10 rounded-full bg-[#E8DECE] flex items-center justify-center mx-auto mb-3">
+                  <CreditCard size={16} className="text-[#4A7A5C]" />
+                </div>
+                <p className="font-heading text-sm font-medium text-[#1C3A2B]">Nenhuma compra registrada</p>
+                <p className="font-body text-[10px] text-[#4A7A5C] mt-1">
+                  Suas compras de créditos vão aparecer aqui.
+                </p>
               </div>
             </div>
           </div>
