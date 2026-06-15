@@ -4,18 +4,36 @@ const multer = require('multer');
 const { Anthropic } = require('@anthropic-ai/sdk');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { v4: uuidv4 } = require('uuid');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Inicialização segura do cliente Anthropic para evitar crash no startup/build caso a chave não esteja definida ainda
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || 'dummy-key-for-build-safety',
 });
 
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const mercadoPagoAccessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+
+const getSupabaseAdmin = () => {
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    return null;
+  }
+
+  return createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+};
+
+const formatError = (message, status = 500) => ({ error: message, status });
+
 app.use(cors());
 app.options('*', cors());
-
 app.use(express.json({ limit: '50mb' }));
 
 app.post('/api/anthropic', async (req, res) => {
@@ -107,6 +125,299 @@ app.post('/api/document-upload', upload.single('file'), async (req, res) => {
   } catch (error) {
     console.error('Erro no upload para R2:', error);
     return res.status(500).json({ error: 'Erro no upload para R2' });
+  }
+});
+
+app.get('/api/credits/wallet', async (req, res) => {
+  try {
+    const userId = typeof req.query.userId === 'string' ? req.query.userId.trim() : '';
+    if (!userId) {
+      return res.status(400).json({ error: 'userId é obrigatório.' });
+    }
+
+    const supabase = getSupabaseAdmin();
+    if (!supabase) {
+      return res.status(500).json({ error: 'Configuração do Supabase ausente no servidor.' });
+    }
+
+    const { error: upsertError } = await supabase
+      .from('credit_wallets')
+      .upsert({ user_id: userId, balance_cents: 0, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+
+    if (upsertError) {
+      throw upsertError;
+    }
+
+    const { data: wallet, error: walletError } = await supabase
+      .from('credit_wallets')
+      .select('balance_cents')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (walletError) {
+      throw walletError;
+    }
+
+    const { data: transactions, error: txError } = await supabase
+      .from('credit_transactions')
+      .select('id, type, amount_cents, payment_id, status, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(8);
+
+    if (txError) {
+      throw txError;
+    }
+
+    return res.json({
+      balanceCents: wallet?.balance_cents || 0,
+      recentTransactions: transactions || [],
+    });
+  } catch (error) {
+    console.error('Erro ao buscar saldo de créditos:', error);
+    return res.status(500).json({ error: 'Erro ao buscar saldo de créditos.' });
+  }
+});
+
+app.post('/api/credits/create-pix', async (req, res) => {
+  try {
+    const userId = typeof req.body?.userId === 'string' ? req.body.userId.trim() : '';
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim() : '';
+    const amountCents = Number(req.body?.amountCents);
+
+    if (!userId || !email) {
+      return res.status(400).json({ error: 'userId e email são obrigatórios.' });
+    }
+
+    if (!Number.isInteger(amountCents) || amountCents < 500 || amountCents > 10000) {
+      return res.status(400).json({ error: 'O valor da recarga deve ficar entre R$ 5,00 e R$ 100,00.' });
+    }
+
+    if (!mercadoPagoAccessToken) {
+      return res.status(500).json({ error: 'MERCADO_PAGO_ACCESS_TOKEN não configurado.' });
+    }
+
+    const response = await fetch('https://api.mercadopago.com/v1/payments', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${mercadoPagoAccessToken}`,
+        'Content-Type': 'application/json',
+        'X-Idempotency-Key': `${userId}-${amountCents}-${Date.now()}`,
+      },
+      body: JSON.stringify({
+        transaction_amount: amountCents / 100,
+        description: 'Recarga de créditos ELHA',
+        payment_method_id: 'pix',
+        payer: {
+          email,
+        },
+        external_reference: userId,
+      }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      return res.status(response.status).json({ error: text || 'Não foi possível gerar o Pix.' });
+    }
+
+    const payment = await response.json();
+    const qrCode = payment?.point_of_interaction?.transaction_data?.qr_code || '';
+    const qrCodeBase64 = payment?.point_of_interaction?.transaction_data?.qr_code_base64 || '';
+    const ticketUrl = payment?.point_of_interaction?.transaction_data?.ticket_url || null;
+
+    const supabase = getSupabaseAdmin();
+    if (!supabase) {
+      return res.status(500).json({ error: 'Configuração do Supabase ausente no servidor.' });
+    }
+
+    const { error: insertError } = await supabase.from('credit_transactions').insert({
+      user_id: userId,
+      type: 'topup',
+      amount_cents: amountCents,
+      payment_id: String(payment.id),
+      status: 'pending',
+      metadata: {
+        qr_code: qrCode,
+        qr_code_base64: qrCodeBase64,
+        ticket_url: ticketUrl,
+        mercado_pago_status: payment?.status || 'pending',
+      },
+    });
+
+    if (insertError) {
+      throw insertError;
+    }
+
+    return res.json({
+      paymentId: String(payment.id),
+      qrCode,
+      qrCodeBase64,
+      ticketUrl,
+      status: payment?.status || 'pending',
+    });
+  } catch (error) {
+    console.error('Erro ao criar Pix do Mercado Pago:', error);
+    return res.status(500).json({ error: 'Erro ao criar Pix do Mercado Pago.' });
+  }
+});
+
+app.get('/api/credits/payment-status', async (req, res) => {
+  try {
+    const paymentId = typeof req.query.paymentId === 'string' ? req.query.paymentId.trim() : '';
+    if (!paymentId) {
+      return res.status(400).json({ error: 'paymentId é obrigatório.' });
+    }
+
+    const supabase = getSupabaseAdmin();
+    if (!supabase) {
+      return res.status(500).json({ error: 'Configuração do Supabase ausente no servidor.' });
+    }
+
+    const { data: tx, error: txError } = await supabase
+      .from('credit_transactions')
+      .select('id, user_id, amount_cents, status, metadata, payment_id')
+      .eq('payment_id', paymentId)
+      .maybeSingle();
+
+    if (txError) {
+      throw txError;
+    }
+
+    if (!mercadoPagoAccessToken) {
+      return res.status(500).json({ error: 'MERCADO_PAGO_ACCESS_TOKEN não configurado.' });
+    }
+
+    const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+      headers: {
+        Authorization: `Bearer ${mercadoPagoAccessToken}`,
+      },
+    });
+
+    if (!paymentResponse.ok) {
+      const text = await paymentResponse.text();
+      return res.status(paymentResponse.status).json({ error: text || 'Não foi possível consultar o pagamento.' });
+    }
+
+    const payment = await paymentResponse.json();
+    const paymentStatus = payment?.status || 'pending';
+
+    if (tx && paymentStatus === 'approved' && tx.status !== 'approved') {
+      const { data: wallet } = await supabase
+        .from('credit_wallets')
+        .select('balance_cents')
+        .eq('user_id', tx.user_id)
+        .maybeSingle();
+
+      const currentBalance = wallet?.balance_cents || 0;
+      const nextBalance = currentBalance + tx.amount_cents;
+
+      const { error: walletError } = await supabase
+        .from('credit_wallets')
+        .upsert({ user_id: tx.user_id, balance_cents: nextBalance, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+
+      if (walletError) {
+        throw walletError;
+      }
+
+      const { error: updateError } = await supabase
+        .from('credit_transactions')
+        .update({
+          status: 'approved',
+          metadata: {
+            ...(tx.metadata || {}),
+            mercado_pago_status: paymentStatus,
+          },
+        })
+        .eq('id', tx.id)
+        .neq('status', 'approved');
+
+      if (updateError) {
+        throw updateError;
+      }
+    }
+
+    const { data: wallet } = await supabase
+      .from('credit_wallets')
+      .select('balance_cents')
+      .eq('user_id', tx?.user_id || payment?.external_reference || '')
+      .maybeSingle();
+
+    const { data: recentTransactions } = await supabase
+      .from('credit_transactions')
+      .select('id, type, amount_cents, payment_id, status, created_at')
+      .eq('user_id', tx?.user_id || payment?.external_reference || '')
+      .order('created_at', { ascending: false })
+      .limit(8);
+
+    return res.json({
+      paymentStatus,
+      balanceCents: wallet?.balance_cents || 0,
+      recentTransactions: recentTransactions || [],
+    });
+  } catch (error) {
+    console.error('Erro ao verificar pagamento:', error);
+    return res.status(500).json({ error: 'Erro ao verificar pagamento.' });
+  }
+});
+
+app.post('/api/credits/consume', async (req, res) => {
+  try {
+    const userId = typeof req.body?.userId === 'string' ? req.body.userId.trim() : '';
+    const amountCents = Number(req.body?.amountCents);
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId é obrigatório.' });
+    }
+
+    if (!Number.isInteger(amountCents) || amountCents <= 0) {
+      return res.status(400).json({ error: 'amountCents inválido.' });
+    }
+
+    const supabase = getSupabaseAdmin();
+    if (!supabase) {
+      return res.status(500).json({ error: 'Configuração do Supabase ausente no servidor.' });
+    }
+
+    const { data: wallet } = await supabase
+      .from('credit_wallets')
+      .select('balance_cents')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    const currentBalance = wallet?.balance_cents || 0;
+    if (currentBalance < amountCents) {
+      return res.status(400).json({ error: 'Saldo insuficiente. Recarregue créditos para continuar.' });
+    }
+
+    const nextBalance = currentBalance - amountCents;
+
+    const { error: walletError } = await supabase
+      .from('credit_wallets')
+      .upsert({ user_id: userId, balance_cents: nextBalance, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+
+    if (walletError) {
+      throw walletError;
+    }
+
+    const { error: insertError } = await supabase.from('credit_transactions').insert({
+      user_id: userId,
+      type: 'debit',
+      amount_cents: amountCents,
+      payment_id: null,
+      status: 'completed',
+      metadata: {
+        reason: 'analysis',
+      },
+    });
+
+    if (insertError) {
+      throw insertError;
+    }
+
+    return res.json({ balanceCents: nextBalance, recentTransactions: [] });
+  } catch (error) {
+    console.error('Erro ao consumir crédito:', error);
+    return res.status(500).json({ error: 'Erro ao consumir crédito.' });
   }
 });
 

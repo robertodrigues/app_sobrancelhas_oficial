@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { uploadPhotoToR2 } from '@/lib/r2';
 import { useUser } from '@/lib/auth';
 import type { AnalysisImage } from '@/services/types';
+import { consumeAnalysisCredit } from '@/services/credits';
 
 const ANALYSIS_MODES = [
   { id: 'single', label: 'Sem Comparações', icon: FileText },
@@ -208,6 +209,8 @@ const Capture = () => {
 
     setIsAnalyzing(true);
     try {
+      await consumeAnalysisCredit(user.id);
+
       const result = await performDualAnalysis(capturedImages, analysisMode);
 
       if (analysisMode === 'comparison') {
