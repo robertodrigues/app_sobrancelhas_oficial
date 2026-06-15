@@ -68,7 +68,16 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   };
 
   useEffect(() => {
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
     return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+
       if (renderRafRef.current !== null) {
         window.cancelAnimationFrame(renderRafRef.current);
       }
@@ -281,7 +290,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex h-[100dvh] w-[100vw] flex-col overflow-hidden bg-[#1C3A2B] text-[#E8DECE]">
+    <div className="fixed inset-0 z-50 flex h-[100dvh] w-[100vw] max-h-[100dvh] max-w-[100vw] flex-col overflow-hidden bg-[#1C3A2B] text-[#E8DECE]">
       <div className="flex shrink-0 items-center justify-between border-b border-[#4A7A5C]/30 bg-[#1C3A2B] px-3 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] text-[#E8DECE] sm:px-4">
         <Button variant="ghost" size="icon" onClick={onCancel} className="text-[#E8DECE] hover:bg-white/10">
           <X size={24} />
@@ -296,7 +305,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
       </div>
 
       <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-[#1C3A2B]/90 px-2 py-2">
-        <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-2xl border border-[#4A7A5C]/20 bg-[#10261C]">
+        <div className="relative flex h-full w-full min-h-0 min-w-0 items-center justify-center overflow-hidden rounded-2xl border border-[#4A7A5C]/20 bg-[#10261C]">
           <canvas
             ref={mainCanvasRef}
             onMouseDown={startDrawing}
@@ -306,14 +315,11 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
             onTouchStart={startDrawing}
             onTouchMove={draw}
             onTouchEnd={stopDrawing}
-            className="block h-full w-full touch-none cursor-crosshair"
+            className="block h-full w-full max-h-full max-w-full touch-none cursor-crosshair"
             style={{
               touchAction: 'none',
               width: '100%',
               height: '100%',
-              maxWidth: '100%',
-              maxHeight: '100%',
-              objectFit: 'contain',
             }}
           />
 
