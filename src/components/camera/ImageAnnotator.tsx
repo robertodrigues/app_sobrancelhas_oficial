@@ -14,6 +14,7 @@ interface ImageAnnotatorProps {
   image: string;
   onSave: (annotatedImage: string, bboxes: Record<string, RegionBBox>) => void;
   onCancel: () => void;
+  mode?: 'single' | 'comparison' | 'tricoscopia';
 }
 
 type Region = 'ponto_inicial' | 'meio' | 'cauda' | null;
@@ -23,7 +24,7 @@ type DrawingSnapshot = {
   bboxes: Record<string, RegionBBox>;
 };
 
-const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel }) => {
+const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel, mode = 'single' }) => {
   const mainCanvasRef = useRef<HTMLCanvasElement>(null);
   const drawingCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const renderRafRef = useRef<number | null>(null);
@@ -41,6 +42,19 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
     meio: '#EAB308',
     cauda: '#DC2626',
   };
+
+  const footerLabels =
+    mode === 'tricoscopia'
+      ? {
+          ponto_inicial: 'Pele',
+          meio: 'Óstios',
+          cauda: 'Fio',
+        }
+      : {
+          ponto_inicial: 'Início',
+          meio: 'Meio',
+          cauda: 'Cauda',
+        };
 
   const render = () => {
     const canvas = mainCanvasRef.current;
@@ -366,7 +380,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
             )}
           >
             <div className="h-6 w-6 rounded-full bg-[#16A34A]" />
-            <span className="font-label-category text-[9px] text-[#E8DECE]">Início</span>
+            <span className="font-label-category text-[9px] text-[#E8DECE]">{footerLabels.ponto_inicial}</span>
           </button>
 
           <button
@@ -377,7 +391,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
             )}
           >
             <div className="h-6 w-6 rounded-full bg-[#EAB308]" />
-            <span className="font-label-category text-[9px] text-[#E8DECE]">Meio</span>
+            <span className="font-label-category text-[9px] text-[#E8DECE]">{footerLabels.meio}</span>
           </button>
 
           <button
@@ -388,7 +402,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
             )}
           >
             <div className="h-6 w-6 rounded-full bg-[#DC2626]" />
-            <span className="font-label-category text-[9px] text-[#E8DECE]">Cauda</span>
+            <span className="font-label-category text-[9px] text-[#E8DECE]">{footerLabels.cauda}</span>
           </button>
         </div>
 

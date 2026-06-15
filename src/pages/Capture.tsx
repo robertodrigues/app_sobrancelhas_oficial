@@ -261,6 +261,7 @@ const Capture = () => {
     return (
       <ImageAnnotator
         image={currentImage}
+        mode={analysisMode}
         onSave={(img, boxes) => addImageToFlow(img, boxes)}
         onCancel={() => setIsAnnotating(false)}
       />
