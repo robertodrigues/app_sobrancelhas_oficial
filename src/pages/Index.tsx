@@ -48,9 +48,9 @@ const Index = () => {
           return;
         }
 
-        const { count: clientCount, error: clientError } = await supabase
+        const { data: clientRows, error: clientError } = await supabase
           .from("clients")
-          .select("*", { count: "exact", head: true })
+          .select("id")
           .eq("user_id", user.id);
 
         if (clientError) {
@@ -77,7 +77,7 @@ const Index = () => {
           throw recentError;
         }
 
-        setStats({ clients: clientCount || 0, analyses: analysisCount || 0 });
+        setStats({ clients: clientRows?.length || 0, analyses: analysisCount || 0 });
         setRecentActivities(recent || []);
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
