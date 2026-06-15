@@ -461,6 +461,15 @@ const Edition = () => {
             </Button>
           </div>
 
+          <div className="w-full max-w-[340px] mt-3">
+            <Button
+              onClick={exportCollage}
+              className="btn-elha-primary w-full h-12 text-xs"
+            >
+              <Download size={14} className="mr-1.5" /> Exportar Montagem Final
+            </Button>
+          </div>
+
           <input type="file" ref={beforeInputRef} onChange={(e) => handleImageUpload(e, 'before')} accept="image/*" className="hidden" />
           <input type="file" ref={afterInputRef} onChange={(e) => handleImageUpload(e, 'after')} accept="image/*" className="hidden" />
         </div>
@@ -761,12 +770,6 @@ const Edition = () => {
           </CardContent>
         </Card>
 
-        <Button 
-          onClick={exportCollage}
-          className="btn-elha-primary w-full h-12 text-xs"
-        >
-          <Download size={14} className="mr-1.5" /> Exportar Montagem Final
-        </Button>
       </main>
     </div>
   );
