@@ -397,20 +397,20 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
             variant="outline"
             onClick={undo}
             disabled={history.length <= 1}
-            className="btn-elha-outline h-14 w-full gap-2 border-[#4A7A5C] text-[#E8DECE] hover:bg-[#3D6B52]/50 disabled:opacity-30"
+            className="h-14 w-full gap-2 border-[#D4C9B5] bg-[#F5F0E8] text-[#1C3A2B] shadow-sm hover:bg-[#E8DECE] active:bg-[#E8DECE] disabled:opacity-40"
           >
             <Undo2 size={18} />
-            Desfazer
+            <span className="font-semibold">Desfazer</span>
           </Button>
 
           <Button
             variant="outline"
             onClick={redo}
             disabled={redoHistory.length === 0}
-            className="btn-elha-outline h-14 w-full gap-2 border-[#4A7A5C] text-[#E8DECE] hover:bg-[#3D6B52]/50 disabled:opacity-30"
+            className="h-14 w-full gap-2 border-[#D4C9B5] bg-[#F5F0E8] text-[#1C3A2B] shadow-sm hover:bg-[#E8DECE] active:bg-[#E8DECE] disabled:opacity-40"
           >
             <Redo2 size={18} />
-            Refazer
+            <span className="font-semibold">Refazer</span>
           </Button>
         </div>
       </div>
