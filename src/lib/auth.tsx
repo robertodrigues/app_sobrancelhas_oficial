@@ -10,6 +10,7 @@ import {
 } from '@clerk/clerk-react';
 import { ptBR } from '@clerk/localizations';
 import SupabaseAuthBridge from '@/components/SupabaseAuthBridge';
+import { getUserStorageItem } from '@/lib/userStorage';
 
 // Usa a chave do ambiente ou a chave que você forneceu como fallback para o preview
 const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "pk_test_d29uZHJvdXMtbG9jdXN0LTg1LmNsZXJrLmFjY291bnRzLmRldiQ";
@@ -63,7 +64,7 @@ export const HybridAuthProvider = ({ children }: { children: React.ReactNode }) 
       firstName: 'Especialista',
       lastName: 'Elha',
       fullName: 'Especialista Elha',
-      imageUrl: localStorage.getItem('elha_user_avatar_mock-user-id') || null,
+      imageUrl: getUserStorageItem('mock-user-id', 'avatar'),
       emailAddresses: [{ emailAddress: email }]
     };
     setUser(mockUser);
@@ -76,7 +77,7 @@ export const HybridAuthProvider = ({ children }: { children: React.ReactNode }) 
       firstName: firstName,
       lastName: lastName,
       fullName: `${firstName} ${lastName}`,
-      imageUrl: localStorage.getItem('elha_user_avatar_mock-user-id') || null,
+      imageUrl: getUserStorageItem('mock-user-id', 'avatar'),
       emailAddresses: [{ emailAddress: email }]
     };
     setUser(mockUser);

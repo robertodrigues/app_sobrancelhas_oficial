@@ -8,7 +8,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useUser, useClerk } from "@/lib/auth";
 import { showSuccess, showError } from "@/utils/toast";
-import { createUserStorageKey } from "@/lib/userStorage";
+import { getUserStorageItem, setUserStorageItem } from "@/lib/userStorage";
 
 const Index = () => {
   const { user } = useUser();
@@ -27,7 +27,7 @@ const Index = () => {
 
   useEffect(() => {
     if (user?.id) {
-      const savedAvatar = localStorage.getItem(createUserStorageKey(user.id, "avatar"));
+      const savedAvatar = getUserStorageItem(user.id, "avatar");
       setCustomAvatar(savedAvatar);
     } else {
       setCustomAvatar(null);
@@ -112,7 +112,7 @@ const Index = () => {
       const base64 = event.target?.result as string;
       setCustomAvatar(base64);
       if (user?.id) {
-        localStorage.setItem(createUserStorageKey(user.id, "avatar"), base64);
+        setUserStorageItem(user.id, "avatar", base64);
       }
       showSuccess("Foto de perfil atualizada com sucesso!");
       setMenuOpen(false);
