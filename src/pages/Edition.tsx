@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 import { uploadPhotoToR2 } from '@/lib/r2';
 import { useUser } from '@/lib/auth';
 import { createUserStorageKey } from '@/lib/userStorage';
+import PhotoEditorFrame, { type PhotoTransform } from '@/components/edition/PhotoEditorFrame';
 
 const SUPPORTED_UPLOAD_TYPES = new Set([
   'image/png',
@@ -36,6 +37,14 @@ const SUPPORTED_UPLOAD_TYPES = new Set([
   'image/webp',
   'image/gif',
 ]);
+
+const createDefaultTransform = (): PhotoTransform => ({
+  x: 0,
+  y: 0,
+  scale: 1,
+});
+
+const clampScale = (scale: number) => Math.min(3, Math.max(1, scale));
 
 const dataUrlToFile = (dataUrl: string, filename: string) => {
   const [header, base64Data] = dataUrl.split(',');
@@ -94,6 +103,8 @@ const Edition = () => {
   // Imagens de Antes e Depois
   const [beforeImg, setBeforeImg] = useState<string | null>(null);
   const [afterImg, setAfterImg] = useState<string | null>(null);
+  const [beforeTransform, setBeforeTransform] = useState<PhotoTransform>(createDefaultTransform());
+  const [afterTransform, setAfterTransform] = useState<PhotoTransform>(createDefaultTransform());
   
   // Configurações de Layout
   const [layoutSize, setLayoutSize] = useState<'feed' | 'story'>('feed');
@@ -139,6 +150,8 @@ const Edition = () => {
   useEffect(() => {
     setBeforeImg(null);
     setAfterImg(null);
+    setBeforeTransform(createDefaultTransform());
+    setAfterTransform(createDefaultTransform());
     setLayoutSize('feed');
     setSplitDirection('horizontal');
     setSeparationType('straight');
@@ -228,8 +241,14 @@ const Edition = () => {
     const reader = new FileReader();
     reader.onload = (event) => {
       const result = event.target?.result as string;
-      if (type === 'before') setBeforeImg(result);
-      if (type === 'after') setAfterImg(result);
+      if (type === 'before') {
+        setBeforeImg(result);
+        setBeforeTransform(createDefaultTransform());
+      }
+      if (type === 'after') {
+        setAfterImg(result);
+        setAfterTransform(createDefaultTransform());
+      }
       if (type === 'logo') setLogoImg(result);
     };
     reader.readAsDataURL(file);
@@ -342,105 +361,166 @@ const Edition = () => {
 
         {/* Preview da Montagem (Centralizado e Otimizado) */}
         <div className="flex flex-col items-center justify-center w-full">
-          <div 
-            ref={collageRef}
-            className={cn(
-              "relative overflow-hidden bg-[#1C3A2B] shadow-xl rounded-2xl border-2 border-[#E8DECE] transition-all duration-300 flex w-full",
-              layoutSize === 'feed' ? "aspect-square max-w-[340px]" : "aspect-[9/16] max-w-[290px]",
-              splitDirection === 'vertical' ? "flex-col" : "flex-row"
-            )}
-          >
-            {/* Foto Antes */}
-            <div className="relative flex-1 overflow-hidden h-full w-full">
-              {beforeImg ? (
-                <img src={beforeImg} className="w-full h-full object-cover" alt="Antes" />
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-[#8FAF8A] bg-[#1C3A2B]/90 p-4 text-center">
-                  <ImageIcon size={24} className="mb-1 text-[#8FAF8A]/60" />
-                  <span className="font-label-category text-[8px] text-[#E8DECE]">Foto Antes</span>
-                </div>
-              )}
-              <div className="absolute top-2.5 left-2.5 bg-[#1C3A2B]/80 backdrop-blur-md text-[#E8DECE] font-label-category text-[8px] px-2 py-0.5 rounded-full">
-                Antes
-              </div>
-            </div>
-
-            {/* Linha de Separação */}
-            {separationType === 'straight' ? (
-              <div className={cn(
-                "bg-[#E8DECE] z-10 shadow-md",
-                splitDirection === 'horizontal' ? "w-0.5 h-full" : "h-0.5 w-full"
-              )} />
-            ) : (
-              <div className={cn(
-                "absolute z-10 pointer-events-none bg-gradient-to-r from-transparent via-black/40 to-transparent",
-                splitDirection === 'horizontal' 
-                  ? "top-0 bottom-0 left-1/2 -translate-x-1/2 w-8 bg-gradient-to-r" 
-                  : "left-0 right-0 top-1/2 -translate-y-1/2 h-8 bg-gradient-to-b"
-              )} />
-            )}
-
-            {/* Foto Depois */}
-            <div className="relative flex-1 overflow-hidden h-full w-full">
-              {afterImg ? (
-                <img src={afterImg} className="w-full h-full object-cover" alt="Depois" />
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-[#8FAF8A] bg-[#1C3A2B]/90 p-4 text-center">
-                  <ImageIcon size={24} className="mb-1 text-[#8FAF8A]/60" />
-                  <span className="font-label-category text-[8px] text-[#E8DECE]">Foto Depois</span>
-                </div>
-              )}
-              <div className="absolute top-2.5 right-2.5 bg-[#4A7A5C] text-[#E8DECE] font-label-category text-[8px] px-2 py-0.5 rounded-full">
-                Depois
-              </div>
-            </div>
-
-            {/* Canvas de Desenho Livre */}
-            <canvas
-              ref={canvasRef}
-              onMouseDown={startDrawing}
-              onMouseMove={draw}
-              onMouseUp={stopDrawing}
-              onMouseLeave={stopDrawing}
-              onTouchStart={startDrawing}
-              onTouchMove={draw}
-              onTouchEnd={stopDrawing}
+          <div className="relative overflow-hidden rounded-2xl border-2 border-[#E8DECE] bg-[#1C3A2B] shadow-xl w-full max-w-[340px]">
+            <div 
+              ref={collageRef}
               className={cn(
-                "absolute inset-0 z-20 touch-none",
-                isDrawingMode ? "cursor-crosshair pointer-events-auto" : "pointer-events-none"
+                "relative overflow-hidden rounded-none bg-[#1C3A2B] flex w-full",
+                layoutSize === 'feed' ? "aspect-square" : "aspect-[9/16]",
+                splitDirection === 'vertical' ? "flex-col" : "flex-row"
               )}
-            />
-
-            {/* Marca d'água / Texto */}
-            {text && (
-              <div 
-                style={{ 
-                  left: `${textX}%`, 
-                  top: `${textY}%`, 
-                  color: textColor, 
-                  fontSize: `${textSize}px` 
-                }}
-                className="absolute z-30 -translate-x-1/2 -translate-y-1/2 font-bold drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.8)] pointer-events-none whitespace-nowrap tracking-wide"
-              >
-                {text}
+            >
+              {/* Foto Antes */}
+              <div className="relative flex-1 overflow-hidden h-full w-full">
+                <PhotoEditorFrame
+                  src={beforeImg}
+                  label="Antes"
+                  value={beforeTransform}
+                  onChange={setBeforeTransform}
+                />
               </div>
-            )}
 
-            {/* Logo do Usuário */}
-            {logoImg && (
-              <img 
-                src={logoImg} 
-                style={{ 
-                  left: `${logoX}%`, 
-                  top: `${logoY}%`, 
-                  width: `${logoSize}px`,
-                  height: 'auto'
-                }}
-                className="absolute z-30 -translate-x-1/2 -translate-y-1/2 pointer-events-none drop-shadow-md"
-                alt="Logo"
+              {/* Linha de Separação */}
+              {separationType === 'straight' ? (
+                <div className={cn(
+                  "bg-[#E8DECE] z-10 shadow-md",
+                  splitDirection === 'horizontal' ? "w-0.5 h-full" : "h-0.5 w-full"
+                )} />
+              ) : (
+                <div className={cn(
+                  "absolute z-10 pointer-events-none bg-gradient-to-r from-transparent via-black/40 to-transparent",
+                  splitDirection === 'horizontal' 
+                    ? "top-0 bottom-0 left-1/2 -translate-x-1/2 w-8 bg-gradient-to-r" 
+                    : "left-0 right-0 top-1/2 -translate-y-1/2 h-8 bg-gradient-to-b"
+                )} />
+              )}
+
+              {/* Foto Depois */}
+              <div className="relative flex-1 overflow-hidden h-full w-full">
+                <PhotoEditorFrame
+                  src={afterImg}
+                  label="Depois"
+                  value={afterTransform}
+                  onChange={setAfterTransform}
+                />
+              </div>
+
+              {/* Canvas de Desenho Livre */}
+              <canvas
+                ref={canvasRef}
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+                className={cn(
+                  "absolute inset-0 z-20 touch-none",
+                  isDrawingMode ? "cursor-crosshair pointer-events-auto" : "pointer-events-none"
+                )}
               />
-            )}
+
+              {/* Marca d'água / Texto */}
+              {text && (
+                <div 
+                  style={{ 
+                    left: `${textX}%`, 
+                    top: `${textY}%`, 
+                    color: textColor, 
+                    fontSize: `${textSize}px` 
+                  }}
+                  className="absolute z-30 -translate-x-1/2 -translate-y-1/2 font-bold drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.8)] pointer-events-none whitespace-nowrap tracking-wide"
+                >
+                  {text}
+                </div>
+              )}
+
+              {/* Logo do Usuário */}
+              {logoImg && (
+                <img 
+                  src={logoImg} 
+                  style={{ 
+                    left: `${logoX}%`, 
+                    top: `${logoY}%`, 
+                    width: `${logoSize}px`,
+                    height: 'auto'
+                  }}
+                  className="absolute z-30 -translate-x-1/2 -translate-y-1/2 pointer-events-none drop-shadow-md"
+                  alt="Logo"
+                />
+              )}
+            </div>
           </div>
+
+          {/* Ajustes finos */}
+          {(beforeImg || afterImg) && (
+            <Card className="mt-4 w-full border border-[#D4C9B5] bg-[#E8DECE] rounded-2xl shadow-sm overflow-hidden">
+              <CardContent className="p-4 space-y-4">
+                <div className="flex items-center gap-2">
+                  <Sliders size={14} className="text-[#4A7A5C]" />
+                  <h3 className="font-label-category text-[9px] text-[#1C3A2B]">Ajuste fino das fotos</h3>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {[
+                    {
+                      key: 'before' as const,
+                      label: 'Antes',
+                      transform: beforeTransform,
+                      setTransform: setBeforeTransform,
+                      hasImage: !!beforeImg,
+                    },
+                    {
+                      key: 'after' as const,
+                      label: 'Depois',
+                      transform: afterTransform,
+                      setTransform: setAfterTransform,
+                      hasImage: !!afterImg,
+                    },
+                  ].map(({ key, label, transform, setTransform, hasImage }) => (
+                    <div key={key} className="space-y-3 rounded-xl border border-[#D4C9B5] bg-[#F5F0E8] p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <p className="font-heading text-sm text-[#1C3A2B]">{label}</p>
+                          <p className="text-[10px] text-[#4A7A5C]">Arraste a imagem no quadro</p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="btn-elha-outline h-8 px-3 text-[9px]"
+                          onClick={() => setTransform(createDefaultTransform())}
+                          disabled={!hasImage}
+                        >
+                          Centralizar
+                        </Button>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-[10px] text-[#4A7A5C]">
+                          <span>Zoom</span>
+                          <span>{Math.round(transform.scale * 100)}%</span>
+                        </div>
+                        <Slider
+                          value={[transform.scale]}
+                          onValueChange={(val) =>
+                            setTransform((prev) => ({
+                              ...prev,
+                              scale: clampScale(val[0]),
+                            }))
+                          }
+                          min={1}
+                          max={3}
+                          step={0.01}
+                          disabled={!hasImage}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Botões Rápidos de Upload */}
           <div className="flex gap-2 mt-3 w-full max-w-[340px]">
