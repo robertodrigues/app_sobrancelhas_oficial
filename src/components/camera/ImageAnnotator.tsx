@@ -315,11 +315,11 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
             onTouchStart={startDrawing}
             onTouchMove={draw}
             onTouchEnd={stopDrawing}
-            className="block h-full w-full max-h-full max-w-full touch-none cursor-crosshair"
+            className="block h-auto w-auto max-h-full max-w-full touch-none cursor-crosshair"
             style={{
               touchAction: 'none',
-              width: '100%',
-              height: '100%',
+              width: 'auto',
+              height: 'auto',
             }}
           />
 
