@@ -265,19 +265,6 @@ const Capture = () => {
   }
 
   const hasAtLeastOneImage = capturedImages.length >= 1;
-  const captureTitle =
-    analysisMode === 'tricoscopia'
-      ? 'Tricoscopia'
-      : analysisMode === 'comparison'
-        ? 'Comparação Técnica'
-        : 'Captura Técnica';
-
-  const captureSubtitle =
-    analysisMode === 'tricoscopia'
-      ? 'Diagnóstico Capilar • Tricoscopia'
-      : analysisMode === 'comparison'
-        ? 'Diagnóstico Capilar • Antes e Depois'
-        : 'Diagnóstico Capilar';
 
   return (
     <div className="min-h-screen bg-[#1C3A2B] text-[#E8DECE] pb-28">
@@ -290,8 +277,7 @@ const Capture = () => {
           </button>
 
           <div className="text-center flex-1">
-            <h1 className="font-heading text-lg font-normal">{captureTitle}</h1>
-            <p className="font-label-category text-[9px] text-[#8FAF8A] mt-0.5">{captureSubtitle}</p>
+            <h1 className="font-heading text-lg font-normal">Análise Inteligente</h1>
           </div>
 
           <button onClick={resetFlow} className="p-2 rounded-full hover:bg-white/10 transition-colors text-red-300">
