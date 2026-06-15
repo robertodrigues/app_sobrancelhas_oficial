@@ -19,38 +19,55 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!email.trim() || !password.trim()) {
       showError("Por favor, preencha todos os campos.");
       return;
     }
-    
+
     if (!isLoaded) return;
 
     setLoading(true);
+
     try {
       if (isClerkConfigured) {
-        // Autenticação real com Clerk usando nosso formulário customizado
-        const result = await signIn.create({
+        const signInAttempt = await signIn.create({
           identifier: email.trim(),
-          password: password,
         });
 
-        if (result.status === "complete") {
-          await setActive({ session: result.createdSessionId });
+        if (signInAttempt.status === "complete") {
+          await setActive({ session: signInAttempt.createdSessionId });
           showSuccess("Login realizado com sucesso!");
           navigate("/");
-        } else {
-          showError("Não foi possível concluir o login. Verifique seus dados.");
+          return;
         }
+
+        const passwordAttempt = await signInAttempt.attemptFirstFactor({
+          strategy: "password",
+          password,
+        });
+
+        if (passwordAttempt.status === "complete") {
+          await setActive({ session: passwordAttempt.createdSessionId });
+          showSuccess("Login realizado com sucesso!");
+          navigate("/");
+          return;
+        }
+
+        showError("Não foi possível concluir o login. Verifique seus dados.");
       } else {
-        // Modo de simulação (Preview)
         await signIn.create({ identifier: email.trim() });
         showSuccess("Login simulado realizado com sucesso!");
         navigate("/");
       }
     } catch (err: any) {
       console.error("Erro de login:", err);
-      showError(err.errors?.[0]?.message || err.message || "Erro ao realizar login.");
+      showError(
+        err?.errors?.[0]?.longMessage ||
+          err?.errors?.[0]?.message ||
+          err?.message ||
+          "Erro ao realizar login.",
+      );
     } finally {
       setLoading(false);
     }
@@ -83,8 +100,6 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-[#F5F0E8] text-[#1C3A2B] px-4 py-10 flex items-center justify-center">
       <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center -translate-y-[12%]">
-        
-        {/* Logo ELHA */}
         <div className="mb-6 flex justify-center">
           <Logo className="w-36 h-36 drop-shadow-md" />
         </div>
@@ -97,11 +112,11 @@ const Login = () => {
         <form onSubmit={handleLogin} className="w-full space-y-5 bg-[#E8DECE] p-6 rounded-3xl shadow-sm border border-[#D4C9B5]">
           <div className="space-y-2">
             <Label htmlFor="email" className="font-label-category text-[10px] text-[#1C3A2B]">Seu e-mail</Label>
-            <Input 
-              id="email" 
+            <Input
+              id="email"
               type="email"
-              placeholder="Digite o endereço de e-mail" 
-              required 
+              placeholder="Digite o endereço de e-mail"
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
@@ -121,11 +136,11 @@ const Login = () => {
 
           <div className="space-y-2">
             <Label htmlFor="password" className="font-label-category text-[10px] text-[#1C3A2B]">Senha</Label>
-            <Input 
-              id="password" 
+            <Input
+              id="password"
               type="password"
-              placeholder="Digite sua senha" 
-              required 
+              placeholder="Digite sua senha"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
@@ -137,7 +152,6 @@ const Login = () => {
             {loading ? <Loader2 className="animate-spin" /> : <><LogIn size={14} /> Entrar</>}
           </Button>
 
-          {/* Selo de Segurança do Clerk */}
           <div className="flex items-center justify-center gap-1.5 text-[10px] text-[#4A7A5C]/70 pt-2 border-t border-[#D4C9B5]/40">
             <ShieldCheck size={14} className="text-[#4A7A5C]" />
             <span className="font-label-category text-[8px] tracking-[2px] uppercase">Secured by Clerk</span>
