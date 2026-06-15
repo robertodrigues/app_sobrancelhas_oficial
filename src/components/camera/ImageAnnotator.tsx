@@ -281,13 +281,13 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#1C3A2B] text-[#E8DECE]">
-      <div className="flex items-center justify-between border-b border-[#4A7A5C]/30 bg-[#1C3A2B] p-4 pt-6 text-[#E8DECE]">
+    <div className="fixed inset-0 z-50 flex h-[100dvh] w-[100vw] flex-col overflow-hidden bg-[#1C3A2B] text-[#E8DECE]">
+      <div className="flex shrink-0 items-center justify-between border-b border-[#4A7A5C]/30 bg-[#1C3A2B] px-3 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] text-[#E8DECE] sm:px-4">
         <Button variant="ghost" size="icon" onClick={onCancel} className="text-[#E8DECE] hover:bg-white/10">
           <X size={24} />
         </Button>
-        <div className="text-center">
-          <h2 className="font-heading text-base font-normal text-[#E8DECE]">Mapeamento Técnico</h2>
+        <div className="min-w-0 flex-1 px-2 text-center">
+          <h2 className="truncate font-heading text-base font-normal text-[#E8DECE]">Mapeamento Técnico</h2>
           <p className="font-label-category text-[9px] text-[#8FAF8A]">Circule as regiões</p>
         </div>
         <Button variant="ghost" size="icon" onClick={handleSave} className="text-[#8FAF8A] hover:bg-white/10">
@@ -295,38 +295,41 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
         </Button>
       </div>
 
-      <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-[#1C3A2B]/90">
-        <canvas
-          ref={mainCanvasRef}
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-          onTouchStart={startDrawing}
-          onTouchMove={draw}
-          onTouchEnd={stopDrawing}
-          className="block max-h-full max-w-full touch-none cursor-crosshair"
-          style={{
-            touchAction: 'none',
-            width: 'auto',
-            height: 'auto',
-            maxWidth: '100%',
-            maxHeight: '100%',
-          }}
-        />
+      <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-[#1C3A2B]/90 px-2 py-2">
+        <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-2xl border border-[#4A7A5C]/20 bg-[#10261C]">
+          <canvas
+            ref={mainCanvasRef}
+            onMouseDown={startDrawing}
+            onMouseMove={draw}
+            onMouseUp={stopDrawing}
+            onMouseLeave={stopDrawing}
+            onTouchStart={startDrawing}
+            onTouchMove={draw}
+            onTouchEnd={stopDrawing}
+            className="block h-full w-full touch-none cursor-crosshair"
+            style={{
+              touchAction: 'none',
+              width: '100%',
+              height: '100%',
+              maxWidth: '100%',
+              maxHeight: '100%',
+              objectFit: 'contain',
+            }}
+          />
 
-        {!activeRegion && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className="max-w-xs rounded-3xl border border-[#4A7A5C] bg-[#1C3A2B]/90 p-6 text-center backdrop-blur-md">
-              <MousePointer2 className="mx-auto mb-3 animate-bounce text-[#8FAF8A]" size={32} />
-              <p className="font-heading text-base font-normal text-[#E8DECE]">Selecione uma cor abaixo</p>
-              <p className="mt-1 font-body text-xs text-[#8FAF8A]">e circule a região correspondente na sobrancelha</p>
+          {!activeRegion && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div className="max-w-xs rounded-3xl border border-[#4A7A5C] bg-[#1C3A2B]/90 p-6 text-center backdrop-blur-md">
+                <MousePointer2 className="mx-auto mb-3 animate-bounce text-[#8FAF8A]" size={32} />
+                <p className="font-heading text-base font-normal text-[#E8DECE]">Selecione uma cor abaixo</p>
+                <p className="mt-1 font-body text-xs text-[#8FAF8A]">e circule a região correspondente na sobrancelha</p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      <div className="space-y-6 border-t border-[#4A7A5C]/30 bg-[#1C3A2B] p-6">
+      <div className="shrink-0 space-y-4 border-t border-[#4A7A5C]/30 bg-[#1C3A2B] px-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-4 sm:px-6">
         <div className="flex items-center justify-center gap-6 rounded-2xl border border-[#4A7A5C] bg-[#3D6B52]/50 p-3">
           <button
             onClick={() => setBrushSize(4)}
