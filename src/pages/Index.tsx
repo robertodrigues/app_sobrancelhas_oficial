@@ -6,7 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { useUser, useClerk } from "@/lib/auth";
+import { useUser, useClerk, isClerkConfigured } from "@/lib/auth";
 import { showSuccess, showError } from "@/utils/toast";
 import { getUserStorageItem, setUserStorageItem } from "@/lib/userStorage";
 
@@ -26,7 +26,7 @@ const Index = () => {
   const firstName = user?.firstName || user?.fullName?.split(" ")[0] || "Especialista";
 
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && !isClerkConfigured) {
       const savedAvatar = getUserStorageItem(user.id, "avatar");
       setCustomAvatar(savedAvatar);
     } else {
@@ -103,17 +103,23 @@ const Index = () => {
     };
   }, [user?.id]);
 
-  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const base64 = event.target?.result as string;
       setCustomAvatar(base64);
+
       if (user?.id) {
-        setUserStorageItem(user.id, "avatar", base64);
+        if (isClerkConfigured && typeof (user as any)?.setProfileImage === "function") {
+          await (user as any).setProfileImage({ file });
+        } else {
+          setUserStorageItem(user.id, "avatar", base64);
+        }
       }
+
       showSuccess("Foto de perfil atualizada com sucesso!");
       setMenuOpen(false);
     };
