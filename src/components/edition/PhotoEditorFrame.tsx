@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,33 +22,180 @@ const MAX_SCALE = 3;
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
 
+const distanceBetween = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+  Math.hypot(b.x - a.x, b.y - a.y);
+
+const centerBetween = (a: { x: number; y: number }, b: { x: number; y: number }) => ({
+  x: (a.x + b.x) / 2,
+  y: (a.y + b.y) / 2,
+});
+
 const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: PhotoEditorFrameProps) => {
   const dragStartRef = useRef({ x: 0, y: 0 });
+  const frameRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
+  const pointersRef = useRef(new Map<number, { x: number; y: number }>());
+  const gestureRef = useRef<{
+    type: "drag" | "pinch" | null;
+    startDistance: number;
+    startScale: number;
+    startX: number;
+    startY: number;
+    startCenter: { x: number; y: number } | null;
+  }>({
+    type: null,
+    startDistance: 0,
+    startScale: 1,
+    startX: 0,
+    startY: 0,
+    startCenter: null,
+  });
+  const rafRef = useRef<number | null>(null);
+  const pendingValueRef = useRef(value);
+
+  useEffect(() => {
+    pendingValueRef.current = value;
+  }, [value]);
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, []);
+
+  const scheduleChange = (nextValue: PhotoTransform) => {
+    pendingValueRef.current = nextValue;
+
+    if (rafRef.current !== null) return;
+
+    rafRef.current = window.requestAnimationFrame(() => {
+      rafRef.current = null;
+      onChange(pendingValueRef.current);
+    });
+  };
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!src) return;
-    dragStartRef.current = { x: event.clientX, y: event.clientY };
-    setDragging(true);
-    event.currentTarget.setPointerCapture(event.pointerId);
+
+    event.preventDefault();
+
+    const currentTarget = event.currentTarget;
+    currentTarget.setPointerCapture(event.pointerId);
+
+    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (pointersRef.current.size === 1) {
+      gestureRef.current = { ...gestureRef.current, type: "drag" };
+      dragStartRef.current = { x: event.clientX, y: event.clientY };
+      setDragging(true);
+      return;
+    }
+
+    if (pointersRef.current.size === 2) {
+      const [first, second] = Array.from(pointersRef.current.values());
+      gestureRef.current = {
+        type: "pinch",
+        startDistance: distanceBetween(first, second),
+        startScale: pendingValueRef.current.scale,
+        startX: pendingValueRef.current.x,
+        startY: pendingValueRef.current.y,
+        startCenter: centerBetween(first, second),
+      };
+      setDragging(true);
+    }
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragging || !src) return;
+    if (!src || !pointersRef.current.has(event.pointerId)) return;
+
+    event.preventDefault();
+
+    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (gestureRef.current.type === "pinch" && pointersRef.current.size >= 2) {
+      const [first, second] = Array.from(pointersRef.current.values());
+      const currentDistance = distanceBetween(first, second);
+      const currentCenter = centerBetween(first, second);
+      const scaleRatio = gestureRef.current.startDistance > 0 ? currentDistance / gestureRef.current.startDistance : 1;
+
+      const nextScale = clamp(gestureRef.current.startScale * scaleRatio, MIN_SCALE, MAX_SCALE);
+      const centerDelta = gestureRef.current.startCenter
+        ? {
+            x: currentCenter.x - gestureRef.current.startCenter.x,
+            y: currentCenter.y - gestureRef.current.startCenter.y,
+          }
+        : { x: 0, y: 0 };
+
+      scheduleChange({
+        scale: nextScale,
+        x: gestureRef.current.startX + centerDelta.x,
+        y: gestureRef.current.startY + centerDelta.y,
+      });
+      return;
+    }
+
+    if (gestureRef.current.type !== "drag" || pointersRef.current.size > 1) return;
 
     const deltaX = event.clientX - dragStartRef.current.x;
     const deltaY = event.clientY - dragStartRef.current.y;
 
     dragStartRef.current = { x: event.clientX, y: event.clientY };
 
-    onChange({
-      ...value,
-      x: value.x + deltaX,
-      y: value.y + deltaY,
+    scheduleChange({
+      ...pendingValueRef.current,
+      x: pendingValueRef.current.x + deltaX,
+      y: pendingValueRef.current.y + deltaY,
     });
   };
 
-  const stopDragging = () => setDragging(false);
+  const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    pointersRef.current.delete(event.pointerId);
+
+    if (pointersRef.current.size === 0) {
+      gestureRef.current = {
+        type: null,
+        startDistance: 0,
+        startScale: pendingValueRef.current.scale,
+        startX: pendingValueRef.current.x,
+        startY: pendingValueRef.current.y,
+        startCenter: null,
+      };
+      setDragging(false);
+      return;
+    }
+
+    if (pointersRef.current.size === 1) {
+      const [remainingPointer] = Array.from(pointersRef.current.values());
+      gestureRef.current = {
+        type: "drag",
+        startDistance: 0,
+        startScale: pendingValueRef.current.scale,
+        startX: pendingValueRef.current.x,
+        startY: pendingValueRef.current.y,
+        startCenter: null,
+      };
+      dragStartRef.current = { x: remainingPointer.x, y: remainingPointer.y };
+      setDragging(true);
+    }
+  };
+
+  const handlePointerCancel = (event: React.PointerEvent<HTMLDivElement>) => {
+    pointersRef.current.delete(event.pointerId);
+
+    if (pointersRef.current.size === 0) {
+      gestureRef.current = {
+        type: null,
+        startDistance: 0,
+        startScale: pendingValueRef.current.scale,
+        startX: pendingValueRef.current.x,
+        startY: pendingValueRef.current.y,
+        startCenter: null,
+      };
+      setDragging(false);
+    }
+  };
 
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     if (!src) return;
@@ -60,7 +207,7 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
 
   if (!src) {
     return (
-      <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-[#10261C] text-center select-none">
+      <div className="relative flex h-full w-full select-none items-center justify-center overflow-hidden bg-[#10261C] text-center">
         <div className="space-y-2 px-4">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[#8FAF8A]">
             <ImageIcon size={22} />
@@ -74,15 +221,16 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
 
   return (
     <div
+      ref={frameRef}
       className={cn(
-        "relative h-full w-full overflow-hidden bg-[#10261C] select-none touch-none",
+        "relative h-full w-full select-none overflow-hidden bg-[#10261C]",
         dragging ? "cursor-grabbing" : "cursor-grab",
       )}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
-      onPointerUp={stopDragging}
-      onPointerCancel={stopDragging}
-      onPointerLeave={stopDragging}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
+      onPointerLeave={handlePointerCancel}
       onWheel={handleWheel}
       style={{ touchAction: "none" }}
     >
@@ -90,7 +238,7 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
         src={src}
         alt={label}
         draggable={false}
-        className="absolute left-1/2 top-1/2 h-full w-full max-w-none max-h-none object-cover"
+        className="absolute left-1/2 top-1/2 h-full w-full max-w-none max-h-none object-cover will-change-transform"
         style={{
           transform: `translate(-50%, -50%) translate(${value.x}px, ${value.y}px) scale(${value.scale})`,
           transformOrigin: "center center",

@@ -21,10 +21,11 @@ type Region = 'ponto_inicial' | 'meio' | 'cauda' | null;
 const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel }) => {
   const mainCanvasRef = useRef<HTMLCanvasElement>(null);
   const drawingCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const renderRafRef = useRef<number | null>(null);
   const [activeRegion, setActiveRegion] = useState<Region>(null);
   const [brushSize, setBrushSize] = useState(8);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [history, setHistory] = useState<{data: string, bboxes: Record<string, RegionBBox>}[]>([]);
+  const [history, setHistory] = useState<{ data: string; bboxes: Record<string, RegionBBox> }[]>([]);
   const [currentBBoxes, setCurrentBBoxes] = useState<Record<string, RegionBBox>>({});
   const imageRef = useRef<HTMLImageElement | null>(null);
 
@@ -50,6 +51,23 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
     ctx.globalAlpha = 1.0;
   };
 
+  const scheduleRender = () => {
+    if (renderRafRef.current !== null) return;
+
+    renderRafRef.current = window.requestAnimationFrame(() => {
+      renderRafRef.current = null;
+      render();
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (renderRafRef.current !== null) {
+        window.cancelAnimationFrame(renderRafRef.current);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     const img = new Image();
     if (image.startsWith('http')) {
@@ -71,7 +89,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
 
       setCurrentBBoxes({});
       setHistory([{ data: drawingCanvas.toDataURL(), bboxes: {} }]);
-      
+
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -87,7 +105,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   }, [image]);
 
   const updateBBox = (region: string, x: number, y: number) => {
-    setCurrentBBoxes(prev => {
+    setCurrentBBoxes((prev) => {
       const current = prev[region] || { minX: x, minY: y, maxX: x, maxY: y };
       return {
         ...prev,
@@ -96,9 +114,20 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
           minY: Math.min(current.minY, y - brushSize / 2),
           maxX: Math.max(current.maxX, x + brushSize / 2),
           maxY: Math.max(current.maxY, y + brushSize / 2),
-        }
+        },
       };
     });
+  };
+
+  const getStrokeWidth = () => {
+    const canvas = mainCanvasRef.current;
+    if (!canvas) return brushSize;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = rect.width ? canvas.width / rect.width : 1;
+    const scaleY = rect.height ? canvas.height / rect.height : 1;
+
+    return brushSize * Math.max(scaleX, scaleY);
   };
 
   const getPointerPosition = (e: React.MouseEvent | React.TouchEvent) => {
@@ -108,8 +137,10 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    
-    let clientX, clientY;
+
+    let clientX: number;
+    let clientY: number;
+
     if ('touches' in e) {
       clientX = e.touches[0].clientX;
       clientY = e.touches[0].clientY;
@@ -126,7 +157,11 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
 
   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
     if (!activeRegion || !drawingCanvasRef.current) return;
-    
+
+    if ('preventDefault' in e) {
+      e.preventDefault();
+    }
+
     const position = getPointerPosition(e);
     if (!position) return;
 
@@ -137,9 +172,10 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
       dCtx.lineCap = 'round';
       dCtx.lineJoin = 'round';
       dCtx.strokeStyle = colors[activeRegion];
-      dCtx.lineWidth = brushSize;
+      dCtx.lineWidth = getStrokeWidth();
       dCtx.globalCompositeOperation = 'source-over';
       updateBBox(activeRegion, position.x, position.y);
+      scheduleRender();
     }
 
     setIsDrawing(true);
@@ -148,32 +184,41 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   const draw = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isDrawing || !drawingCanvasRef.current || !mainCanvasRef.current || !activeRegion) return;
 
+    if ('preventDefault' in e) {
+      e.preventDefault();
+    }
+
     const position = getPointerPosition(e);
     if (!position) return;
 
     const dCtx = drawingCanvasRef.current.getContext('2d');
     if (dCtx) {
+      dCtx.lineWidth = getStrokeWidth();
       dCtx.lineTo(position.x, position.y);
       dCtx.stroke();
       updateBBox(activeRegion, position.x, position.y);
-      render();
+      scheduleRender();
     }
   };
 
   const stopDrawing = () => {
     if (isDrawing && drawingCanvasRef.current) {
-      setHistory(prev => [...prev, { data: drawingCanvasRef.current!.toDataURL(), bboxes: { ...currentBBoxes } }]);
+      setHistory((prev) => [
+        ...prev,
+        { data: drawingCanvasRef.current!.toDataURL(), bboxes: { ...currentBBoxes } },
+      ]);
     }
     setIsDrawing(false);
+    scheduleRender();
   };
 
   const undo = () => {
     if (history.length <= 1 || !drawingCanvasRef.current) return;
-    
+
     const newHistory = [...history];
     newHistory.pop();
     const lastState = newHistory[newHistory.length - 1];
-    
+
     const img = new Image();
     img.onload = () => {
       const dCtx = drawingCanvasRef.current?.getContext('2d');
@@ -182,7 +227,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
         dCtx.drawImage(img, 0, 0);
         setHistory(newHistory);
         setCurrentBBoxes(lastState.bboxes);
-        render();
+        scheduleRender();
       }
     };
     img.src = lastState.data;
@@ -195,8 +240,8 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   };
 
   return (
-    <div className="fixed inset-0 bg-[#1C3A2B] z-50 flex flex-col text-[#E8DECE]">
-      <div className="p-4 flex items-center justify-between bg-[#1C3A2B] border-b border-[#4A7A5C]/30 text-[#E8DECE] pt-6">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#1C3A2B] text-[#E8DECE]">
+      <div className="flex items-center justify-between border-b border-[#4A7A5C]/30 bg-[#1C3A2B] p-4 pt-6 text-[#E8DECE]">
         <Button variant="ghost" size="icon" onClick={onCancel} className="text-[#E8DECE] hover:bg-white/10">
           <X size={24} />
         </Button>
@@ -209,7 +254,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
         </Button>
       </div>
 
-      <div className="flex-1 relative overflow-hidden flex items-center justify-center bg-[#1C3A2B]/90">
+      <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-[#1C3A2B]/90">
         <canvas
           ref={mainCanvasRef}
           onMouseDown={startDrawing}
@@ -219,29 +264,39 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
           onTouchStart={startDrawing}
           onTouchMove={draw}
           onTouchEnd={stopDrawing}
-          className="max-w-full max-h-full object-contain touch-none cursor-crosshair"
+          className="h-full w-full max-w-full max-h-full touch-none cursor-crosshair"
+          style={{ touchAction: 'none' }}
         />
-        
+
         {!activeRegion && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="bg-[#1C3A2B]/90 backdrop-blur-md p-6 rounded-3xl text-center border border-[#4A7A5C] max-w-xs">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className="max-w-xs rounded-3xl border border-[#4A7A5C] bg-[#1C3A2B]/90 p-6 text-center backdrop-blur-md">
               <MousePointer2 className="mx-auto mb-3 animate-bounce text-[#8FAF8A]" size={32} />
               <p className="font-heading text-base font-normal text-[#E8DECE]">Selecione uma cor abaixo</p>
-              <p className="font-body text-xs text-[#8FAF8A] mt-1">e circule a região correspondente na sobrancelha</p>
+              <p className="mt-1 font-body text-xs text-[#8FAF8A]">e circule a região correspondente na sobrancelha</p>
             </div>
           </div>
         )}
       </div>
 
-      <div className="p-6 bg-[#1C3A2B] space-y-6 border-t border-[#4A7A5C]/30">
-        <div className="flex items-center justify-center gap-6 bg-[#3D6B52]/50 border border-[#4A7A5C] p-3 rounded-2xl">
-          <button onClick={() => setBrushSize(4)} className={cn("p-2 rounded-full transition-all", brushSize === 4 ? "bg-[#16A34A] text-white" : "text-[#8FAF8A]/70")}>
+      <div className="space-y-6 border-t border-[#4A7A5C]/30 bg-[#1C3A2B] p-6">
+        <div className="flex items-center justify-center gap-6 rounded-2xl border border-[#4A7A5C] bg-[#3D6B52]/50 p-3">
+          <button
+            onClick={() => setBrushSize(4)}
+            className={cn('rounded-full p-2 transition-all', brushSize === 4 ? 'bg-[#16A34A] text-white' : 'text-[#8FAF8A]/70')}
+          >
             <Circle size={8} fill="currentColor" />
           </button>
-          <button onClick={() => setBrushSize(8)} className={cn("p-2 rounded-full transition-all", brushSize === 8 ? "bg-[#EAB308] text-white" : "text-[#8FAF8A]/70")}>
+          <button
+            onClick={() => setBrushSize(8)}
+            className={cn('rounded-full p-2 transition-all', brushSize === 8 ? 'bg-[#EAB308] text-white' : 'text-[#8FAF8A]/70')}
+          >
             <Circle size={14} fill="currentColor" />
           </button>
-          <button onClick={() => setBrushSize(14)} className={cn("p-2 rounded-full transition-all", brushSize === 14 ? "bg-[#DC2626] text-white" : "text-[#8FAF8A]/70")}>
+          <button
+            onClick={() => setBrushSize(14)}
+            className={cn('rounded-full p-2 transition-all', brushSize === 14 ? 'bg-[#DC2626] text-white' : 'text-[#8FAF8A]/70')}
+          >
             <Circle size={20} fill="currentColor" />
           </button>
         </div>
@@ -250,33 +305,33 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
           <button
             onClick={() => setActiveRegion('ponto_inicial')}
             className={cn(
-              "flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all",
-              activeRegion === 'ponto_inicial' ? "border-[#16A34A] bg-[#16A34A]/20" : "border-[#4A7A5C] bg-[#3D6B52]/30"
+              'flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all',
+              activeRegion === 'ponto_inicial' ? 'border-[#16A34A] bg-[#16A34A]/20' : 'border-[#4A7A5C] bg-[#3D6B52]/30',
             )}
           >
-            <div className="w-6 h-6 rounded-full bg-[#16A34A]" />
+            <div className="h-6 w-6 rounded-full bg-[#16A34A]" />
             <span className="font-label-category text-[9px] text-[#E8DECE]">Início</span>
           </button>
-          
+
           <button
             onClick={() => setActiveRegion('meio')}
             className={cn(
-              "flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all",
-              activeRegion === 'meio' ? "border-[#EAB308] bg-[#EAB308]/20" : "border-[#4A7A5C] bg-[#3D6B52]/30"
+              'flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all',
+              activeRegion === 'meio' ? 'border-[#EAB308] bg-[#EAB308]/20' : 'border-[#4A7A5C] bg-[#3D6B52]/30',
             )}
           >
-            <div className="w-6 h-6 rounded-full bg-[#EAB308]" />
+            <div className="h-6 w-6 rounded-full bg-[#EAB308]" />
             <span className="font-label-category text-[9px] text-[#E8DECE]">Meio</span>
           </button>
 
           <button
             onClick={() => setActiveRegion('cauda')}
             className={cn(
-              "flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all",
-              activeRegion === 'cauda' ? "border-[#DC2626] bg-[#DC2626]/20" : "border-[#4A7A5C] bg-[#3D6B52]/30"
+              'flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all',
+              activeRegion === 'cauda' ? 'border-[#DC2626] bg-[#DC2626]/20' : 'border-[#4A7A5C] bg-[#3D6B52]/30',
             )}
           >
-            <div className="w-6 h-6 rounded-full bg-[#DC2626]" />
+            <div className="h-6 w-6 rounded-full bg-[#DC2626]" />
             <span className="font-label-category text-[9px] text-[#E8DECE]">Cauda</span>
           </button>
         </div>
@@ -285,7 +340,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
           variant="outline"
           onClick={undo}
           disabled={history.length <= 1}
-          className="btn-elha-outline w-full h-14 gap-2 border-[#4A7A5C] text-[#E8DECE] hover:bg-[#3D6B52]/50 disabled:opacity-30"
+          className="btn-elha-outline h-14 w-full gap-2 border-[#4A7A5C] text-[#E8DECE] hover:bg-[#3D6B52]/50 disabled:opacity-30"
         >
           <Undo2 size={18} />
           Desfazer Último Traço
