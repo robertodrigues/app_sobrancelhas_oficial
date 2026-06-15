@@ -23,26 +23,57 @@ const Login = () => {
   const [step, setStep] = useState<LoginStep>("credentials");
 
   const startEmailVerification = async () => {
-    if (!isClerkConfigured) return;
-
-    const emailCodeAttempt = await signIn.create({
-      identifier: email.trim(),
-      strategy: "email_code",
-    });
-
-    if (emailCodeAttempt.status === "complete") {
-      await setActive({ session: emailCodeAttempt.createdSessionId });
-      showSuccess("Login realizado com sucesso!");
-      navigate("/");
+    if (!email.trim()) {
+      showError("Por favor, informe seu e-mail.");
       return;
     }
 
-    await signIn.prepareFirstFactor({
-      strategy: "email_code",
-    });
+    if (!isLoaded) return;
 
-    setStep("verify-email");
-    showSuccess("Enviamos um código de confirmação para seu e-mail.");
+    setVerificationLoading(true);
+
+    try {
+      if (isClerkConfigured) {
+        const signInAttempt = await signIn.create({
+          identifier: email.trim(),
+        });
+
+        if (signInAttempt.status === "complete") {
+          await setActive({ session: signInAttempt.createdSessionId });
+          showSuccess("Login realizado com sucesso!");
+          navigate("/");
+          return;
+        }
+
+        const emailFactor = signInAttempt.supportedFirstFactors?.find(
+          (factor: any) => factor.strategy === "email_code",
+        );
+
+        const emailAddressId = emailFactor?.emailAddressId;
+
+        if (!emailAddressId) {
+          throw new Error("Não foi possível iniciar o login por código.");
+        }
+
+        await signIn.prepareFirstFactor({
+          strategy: "email_code",
+          emailAddressId,
+        });
+      }
+
+      setStep("verify-email");
+      showSuccess("Enviamos um código de confirmação para seu e-mail.");
+    } catch (err: any) {
+      console.error("Erro ao iniciar verificação por e-mail:", err);
+      showError(
+        err?.errors?.[0]?.longMessage ||
+          err?.errors?.[0]?.message ||
+          err?.message ||
+          "Não foi possível enviar o código.",
+      );
+    } finally {
+      setVerificationLoading(false);
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -75,7 +106,6 @@ const Login = () => {
         return;
       }
 
-      await signIn.create({ identifier: email.trim() });
       showSuccess("Login simulado realizado com sucesso!");
       navigate("/");
     } catch (err: any) {
@@ -86,15 +116,6 @@ const Login = () => {
         err?.errors?.[0]?.message ||
         err?.message ||
         "Erro ao realizar login.";
-
-      if (isClerkConfigured) {
-        try {
-          await startEmailVerification();
-          return;
-        } catch (verificationErr: any) {
-          console.error("Erro ao iniciar verificação por e-mail:", verificationErr);
-        }
-      }
 
       showError(message);
     } finally {
@@ -147,14 +168,33 @@ const Login = () => {
       return;
     }
 
-    if (!isLoaded || !isClerkConfigured) return;
+    if (!isLoaded) return;
 
     setVerificationLoading(true);
-    try {
-      await signIn.prepareFirstFactor({
-        strategy: "email_code",
-      });
 
+    try {
+      if (isClerkConfigured) {
+        const signInAttempt = await signIn.create({
+          identifier: email.trim(),
+        });
+
+        const emailFactor = signInAttempt.supportedFirstFactors?.find(
+          (factor: any) => factor.strategy === "email_code",
+        );
+
+        const emailAddressId = emailFactor?.emailAddressId;
+
+        if (!emailAddressId) {
+          throw new Error("Não foi possível reenviar o código.");
+        }
+
+        await signIn.prepareFirstFactor({
+          strategy: "email_code",
+          emailAddressId,
+        });
+      }
+
+      setStep("verify-email");
       showSuccess("Código reenviado para seu e-mail.");
     } catch (err: any) {
       console.error("Erro ao reenviar código:", err);
@@ -222,7 +262,7 @@ const Login = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
+                disabled={loading || verificationLoading}
                 className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] placeholder-[#4A7A5C]/70 h-11 rounded-xl text-sm focus-visible:ring-[#1C3A2B]"
               />
               <div className="flex justify-end">
@@ -248,13 +288,30 @@ const Login = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
+                disabled={loading || verificationLoading}
                 className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] placeholder-[#4A7A5C]/70 h-11 rounded-xl text-sm focus-visible:ring-[#1C3A2B]"
               />
             </div>
 
             <Button type="submit" className="btn-elha-primary w-full gap-2 h-12" disabled={loading}>
               {loading ? <Loader2 className="animate-spin" /> : <><LogIn size={14} /> Entrar</>}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={startEmailVerification}
+              disabled={verificationLoading || loading}
+              className="btn-elha-outline w-full h-12 gap-2"
+            >
+              {verificationLoading ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <>
+                  <Mail size={14} />
+                  Entrar com código
+                </>
+              )}
             </Button>
 
             <div className="flex items-center justify-center gap-1.5 text-[10px] text-[#4A7A5C]/70 pt-2 border-t border-[#D4C9B5]/40">
