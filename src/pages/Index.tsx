@@ -48,14 +48,19 @@ const Index = () => {
           return;
         }
 
-        const { data: clientRows, error: clientError } = await supabase
+        const { count: clientCount, error: clientError } = await supabase
           .from("clients")
-          .select("id")
+          .select("*", { count: "exact", head: true })
           .eq("user_id", user.id);
 
         if (clientError) {
           throw clientError;
         }
+
+        setStats((prev) => ({
+          ...prev,
+          clients: clientCount || 0,
+        }));
 
         const { count: analysisCount, error: analysisError } = await supabase
           .from("analyses")
@@ -65,6 +70,12 @@ const Index = () => {
         if (analysisError) {
           throw analysisError;
         }
+
+        setStats((prev) => ({
+          ...prev,
+          clients: clientCount || 0,
+          analyses: analysisCount || 0,
+        }));
 
         const { data: recent, error: recentError } = await supabase
           .from("analyses")
@@ -77,11 +88,14 @@ const Index = () => {
           throw recentError;
         }
 
-        setStats({ clients: clientRows?.length || 0, analyses: analysisCount || 0 });
         setRecentActivities(recent || []);
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
-        setStats({ clients: 0, analyses: 0 });
+        setStats((prev) => ({
+          ...prev,
+          clients: prev.clients || 0,
+          analyses: prev.analyses || 0,
+        }));
         setRecentActivities([]);
       } finally {
         setLoading(false);
