@@ -51,6 +51,8 @@ const AnalysisResult = () => {
     );
   }
 
+  const isTricoscopia = analysis.modoAnalise === 'tricoscopia';
+
   const getRegionTheme = (key: string) => {
     switch (key) {
       case 'inicio':
@@ -101,6 +103,13 @@ const AnalysisResult = () => {
   };
 
   const hasTwoImages = allImages && Array.isArray(allImages) && allImages.length >= 2;
+
+  const textValue = (value: unknown) => {
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number') return String(value);
+    if (Array.isArray(value)) return value.filter(Boolean).join(' • ');
+    return '';
+  };
 
   const handleGeneratePdf = async () => {
     const element = reportRef.current;
@@ -185,7 +194,7 @@ const AnalysisResult = () => {
           </button>
           <div>
             <h1 className="font-heading text-2xl font-normal text-[#1C3A2B]">
-              {analysis.isComparativo ? 'Relatório de Evolução' : 'Relatório Técnico'}
+              {analysis.isComparativo ? 'Relatório de Evolução' : isTricoscopia ? 'Relatório Tricoscópico' : 'Relatório Técnico'}
             </h1>
             <p className="font-label-category text-[10px] text-[#4A7A5C] mt-0.5">Tricologia de Sobrancelhas</p>
           </div>
@@ -269,118 +278,182 @@ const AnalysisResult = () => {
             </div>
           )}
 
-          <section className="space-y-4">
-            <h2 className="font-label-category text-xs font-medium text-[#1C3A2B] flex items-center gap-2">
-              <Target size={18} className="text-[#4A7A5C]" />
-              Diagnóstico por Região
-            </h2>
-            
-            {Object.entries(analysis.regioes).map(([key, data]: [string, any]) => {
-              const theme = getRegionTheme(key);
-              const percent = data.densidade?.percentual || 50;
-              return (
-                <Card key={key} className={cn("border-none shadow-sm rounded-2xl overflow-hidden p-6", theme.bg)}>
-                  <div className="space-y-4">
-                    <p className={cn("text-[10px] font-normal uppercase tracking-[3px]", theme.labelColor)}>
-                      {theme.label}
-                    </p>
-                    
-                    <h3 className={cn("font-heading text-3xl font-medium tracking-[1px]", theme.valueColor)}>
-                      {data.densidade?.classificacao || 'Densidade'} ({percent}%)
-                    </h3>
+          {isTricoscopia ? (
+            <section className="space-y-4">
+              <h2 className="font-label-category text-xs font-medium text-[#1C3A2B] flex items-center gap-2">
+                <Target size={18} className="text-[#4A7A5C]" />
+                Relatório Tricoscópico
+              </h2>
 
-                    <p className={cn("text-xs font-light leading-relaxed", theme.subColor)}>
-                      {data.descricao}
-                    </p>
-
-                    <div className="space-y-1.5">
-                      <div className={cn("w-full h-1 rounded-full overflow-hidden", theme.progressBg)}>
-                        <div 
-                          className={cn("h-full rounded-full", theme.progressFill)} 
-                          style={{ width: `${percent}%` }}
-                        />
-                      </div>
-                      <div className="flex justify-between text-[9px] opacity-80">
-                        <span className={theme.labelColor}>Densidade Estimada</span>
-                        <span className={theme.valueColor}>{percent}%</span>
-                      </div>
+              <Card className="border-none shadow-sm rounded-2xl overflow-hidden bg-[#1C3A2B] text-[#E8DECE]">
+                <CardContent className="p-6 space-y-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <Eye size={18} className="text-[#8FAF8A]" />
+                      <h3 className="font-heading text-lg font-normal">Análise da Pele e Fios</h3>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-black/5">
-                      <div className="p-2 rounded-lg bg-black/5">
-                        <p className={cn("text-[9px] font-medium uppercase tracking-[1px]", theme.labelColor)}>Espessura</p>
-                        <p className={cn("text-xs font-medium", theme.valueColor)}>{data.espessura}</p>
-                      </div>
-                      <div className="p-2 rounded-lg bg-black/5">
-                        <p className={cn("text-[9px] font-medium uppercase tracking-[1px]", theme.labelColor)}>Pele Exposta</p>
-                        <p className={cn("text-xs font-medium", theme.valueColor)}>{data.peleExposta ? 'Sim' : 'Não'}</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-2">
-                      {data.peleDescricao && (
-                        <div className="bg-black/5 p-3 rounded-lg flex items-start gap-2">
-                          <Eye size={14} className={cn("mt-0.5", theme.labelColor)} />
-                          <div>
-                            <p className={cn("text-[9px] font-medium uppercase tracking-[1px]", theme.labelColor)}>Exposição da Pele</p>
-                            <p className={cn("text-xs", theme.valueColor)}>{data.peleDescricao}</p>
-                          </div>
-                        </div>
-                      )}
-                      {data.direcaoFios && (
-                        <div className="bg-black/5 p-3 rounded-lg flex items-start gap-2">
-                          <MoveUpRight size={14} className={cn("mt-0.5", theme.labelColor)} />
-                          <div>
-                            <p className={cn("text-[9px] font-medium uppercase tracking-[1px]", theme.labelColor)}>Direção dos Fios</p>
-                            <p className={cn("text-xs", theme.valueColor)}>{data.direcaoFios}</p>
-                          </div>
-                        </div>
-                      )}
-                      {data.caracteristicasEspeciais && (
-                        <div className="bg-black/5 p-3 rounded-lg flex items-start gap-2">
-                          <Info size={14} className={cn("mt-0.5", theme.labelColor)} />
-                          <div>
-                            <p className={cn("text-[9px] font-medium uppercase tracking-[1px]", theme.labelColor)}>Características dos Fios</p>
-                            <p className={cn("text-xs", theme.valueColor)}>{data.caracteristicasEspeciais}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {data.prognostico && (
-                      <div className="p-3 bg-black/5 rounded-xl">
-                        <p className={cn("text-[9px] font-medium uppercase tracking-[1px] mb-1", theme.labelColor)}>Prognóstico</p>
-                        <p className={cn("text-xs italic", theme.subColor)}>"{data.prognostico}"</p>
-                      </div>
-                    )}
-
-                    {data.statusMelhoria && (
-                      <div className="pt-2 border-t border-black/5">
-                        <p className={cn("text-[9px] font-medium uppercase tracking-[1px] mb-1", theme.labelColor)}>Status de Melhoria</p>
-                        <p className={cn("text-xs font-medium", theme.valueColor)}>{data.statusMelhoria.descricao}</p>
-                      </div>
-                    )}
+                    <div className="tag-elha">Tricoscopia</div>
                   </div>
-                </Card>
-              );
-            })}
-          </section>
 
-          <Card className="border border-[#D4C9B5] bg-[#E8DECE] rounded-3xl">
-            <CardHeader>
-              <CardTitle className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
-                <ShieldCheck className="text-[#4A7A5C]" size={18} />
-                Visão Geral e Objetivo
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="font-body text-xs text-[#1C3A2B]/90 leading-relaxed">{analysis.visaoGeral?.descricao}</p>
-              <div className="p-4 bg-[#F5F0E8] rounded-2xl border border-[#D4C9B5]">
-                <p className="font-label-category text-[9px] text-[#4A7A5C] mb-1">Objetivo do Tratamento</p>
-                <p className="font-heading text-sm font-medium text-[#1C3A2B]">{analysis.visaoGeral?.objetivo}</p>
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="grid gap-3">
+                    <div className="rounded-2xl bg-white/10 p-4 space-y-2">
+                      <p className="font-label-category text-[10px] text-[#8FAF8A]">Região analisada</p>
+                      <p className="font-body text-xs text-[#E8DECE]/90">{textValue(analysis.regiaoAnalisada)}</p>
+                    </div>
+
+                    <div className="rounded-2xl bg-white/10 p-4 space-y-3">
+                      <p className="font-label-category text-[10px] text-[#8FAF8A]">Análise da pele</p>
+                      <p className="text-xs text-[#E8DECE]/90">{textValue(analysis.analiseDaPele?.conclusao || analysis.analiseDaPele)}</p>
+                      <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.analiseDaPele?.descamacaoInterfolicular)}</p>
+                      <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.analiseDaPele?.descamacaoPerifolicular)}</p>
+                      <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.analiseDaPele?.coloracaoDescamacao)}</p>
+                      <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.analiseDaPele?.sinaisProcedimentosAgressivos)}</p>
+                    </div>
+
+                    <div className="rounded-2xl bg-white/10 p-4 space-y-3">
+                      <p className="font-label-category text-[10px] text-[#8FAF8A]">Análise dos fios</p>
+                      <p className="text-xs text-[#E8DECE]/90">{textValue(analysis.analiseDosFios?.classificacaoFiosPresentes)}</p>
+                      <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.analiseDosFios?.fioReferencia)}</p>
+                      <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.analiseDosFios?.pigmentacao)}</p>
+                      <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.analiseDosFios?.quantidadeDistribuicao)}</p>
+                    </div>
+
+                    <div className="rounded-2xl bg-white/10 p-4 space-y-3">
+                      <p className="font-label-category text-[10px] text-[#8FAF8A]">Óstios foliculares</p>
+                      <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.analiseDosOstiosFoliculares?.ostioVazio)}</p>
+                      <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.analiseDosOstiosFoliculares?.ostioComFio)}</p>
+                      <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.analiseDosOstiosFoliculares?.presencaSebo)}</p>
+                      <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.analiseDosOstiosFoliculares?.atrofiaOuCicatrizFolicular)}</p>
+                    </div>
+
+                    <div className="rounded-2xl bg-white/10 p-4 space-y-3">
+                      <p className="font-label-category text-[10px] text-[#8FAF8A]">Conclusão tricoscópica</p>
+                      <p className="text-xs text-[#E8DECE]/90">{textValue(analysis.conclusaoTricoscopica?.estadoGeral)}</p>
+                      <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.conclusaoTricoscopica?.indicadoresPositivos)}</p>
+                      <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.conclusaoTricoscopica?.pontosDeAtencao)}</p>
+                      <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.conclusaoTricoscopica?.correlacaoAnaliseVisual)}</p>
+                      <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.conclusaoTricoscopica?.principaisAchados)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+          ) : (
+            <>
+              <section className="space-y-4">
+                <h2 className="font-label-category text-xs font-medium text-[#1C3A2B] flex items-center gap-2">
+                  <Target size={18} className="text-[#4A7A5C]" />
+                  Diagnóstico por Região
+                </h2>
+                
+                {Object.entries(analysis.regioes).map(([key, data]: [string, any]) => {
+                  const theme = getRegionTheme(key);
+                  const percent = data.densidade?.percentual || 50;
+                  return (
+                    <Card key={key} className={cn("border-none shadow-sm rounded-2xl overflow-hidden p-6", theme.bg)}>
+                      <div className="space-y-4">
+                        <p className={cn("text-[10px] font-normal uppercase tracking-[3px]", theme.labelColor)}>
+                          {theme.label}
+                        </p>
+                        
+                        <h3 className={cn("font-heading text-3xl font-medium tracking-[1px]", theme.valueColor)}>
+                          {data.densidade?.classificacao || 'Densidade'} ({percent}%)
+                        </h3>
+
+                        <p className={cn("text-xs font-light leading-relaxed", theme.subColor)}>
+                          {data.descricao}
+                        </p>
+
+                        <div className="space-y-1.5">
+                          <div className={cn("w-full h-1 rounded-full overflow-hidden", theme.progressBg)}>
+                            <div 
+                              className={cn("h-full rounded-full", theme.progressFill)} 
+                              style={{ width: `${percent}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between text-[9px] opacity-80">
+                            <span className={theme.labelColor}>Densidade Estimada</span>
+                            <span className={theme.valueColor}>{percent}%</span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-black/5">
+                          <div className="p-2 rounded-lg bg-black/5">
+                            <p className={cn("text-[9px] font-medium uppercase tracking-[1px]", theme.labelColor)}>Espessura</p>
+                            <p className={cn("text-xs font-medium", theme.valueColor)}>{data.espessura}</p>
+                          </div>
+                          <div className="p-2 rounded-lg bg-black/5">
+                            <p className={cn("text-[9px] font-medium uppercase tracking-[1px]", theme.labelColor)}>Pele Exposta</p>
+                            <p className={cn("text-xs font-medium", theme.valueColor)}>{data.peleExposta ? 'Sim' : 'Não'}</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-2">
+                          {data.peleDescricao && (
+                            <div className="bg-black/5 p-3 rounded-lg flex items-start gap-2">
+                              <Eye size={14} className={cn("mt-0.5", theme.labelColor)} />
+                              <div>
+                                <p className={cn("text-[9px] font-medium uppercase tracking-[1px]", theme.labelColor)}>Exposição da Pele</p>
+                                <p className={cn("text-xs", theme.valueColor)}>{data.peleDescricao}</p>
+                              </div>
+                            </div>
+                          )}
+                          {data.direcaoFios && (
+                            <div className="bg-black/5 p-3 rounded-lg flex items-start gap-2">
+                              <MoveUpRight size={14} className={cn("mt-0.5", theme.labelColor)} />
+                              <div>
+                                <p className={cn("text-[9px] font-medium uppercase tracking-[1px]", theme.labelColor)}>Direção dos Fios</p>
+                                <p className={cn("text-xs", theme.valueColor)}>{data.direcaoFios}</p>
+                              </div>
+                            </div>
+                          )}
+                          {data.caracteristicasEspeciais && (
+                            <div className="bg-black/5 p-3 rounded-lg flex items-start gap-2">
+                              <Info size={14} className={cn("mt-0.5", theme.labelColor)} />
+                              <div>
+                                <p className={cn("text-[9px] font-medium uppercase tracking-[1px]", theme.labelColor)}>Características dos Fios</p>
+                                <p className={cn("text-xs", theme.valueColor)}>{data.caracteristicasEspeciais}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {data.prognostico && (
+                          <div className="p-3 bg-black/5 rounded-xl">
+                            <p className={cn("text-[9px] font-medium uppercase tracking-[1px] mb-1", theme.labelColor)}>Prognóstico</p>
+                            <p className={cn("text-xs italic", theme.subColor)}>"{data.prognostico}"</p>
+                          </div>
+                        )}
+
+                        {data.statusMelhoria && (
+                          <div className="pt-2 border-t border-black/5">
+                            <p className={cn("text-[9px] font-medium uppercase tracking-[1px] mb-1", theme.labelColor)}>Status de Melhoria</p>
+                            <p className={cn("text-xs font-medium", theme.valueColor)}>{data.statusMelhoria.descricao}</p>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  );
+                })}
+              </section>
+
+              <Card className="border border-[#D4C9B5] bg-[#E8DECE] rounded-3xl">
+                <CardHeader>
+                  <CardTitle className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
+                    <ShieldCheck className="text-[#4A7A5C]" size={18} />
+                    Visão Geral e Objetivo
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="font-body text-xs text-[#1C3A2B]/90 leading-relaxed">{analysis.visaoGeral?.descricao}</p>
+                  <div className="p-4 bg-[#F5F0E8] rounded-2xl border border-[#D4C9B5]">
+                    <p className="font-label-category text-[9px] text-[#4A7A5C] mb-1">Objetivo do Tratamento</p>
+                    <p className="font-heading text-sm font-medium text-[#1C3A2B]">{analysis.visaoGeral?.objetivo}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
 
         </div>
 

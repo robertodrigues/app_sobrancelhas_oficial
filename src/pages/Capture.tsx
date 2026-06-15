@@ -208,7 +208,7 @@ const Capture = () => {
 
     setIsAnalyzing(true);
     try {
-      const result = await performDualAnalysis(capturedImages);
+      const result = await performDualAnalysis(capturedImages, analysisMode);
 
       if (analysisMode === 'comparison') {
         result.isComparativo = true;
@@ -299,7 +299,6 @@ const Capture = () => {
           </button>
         </header>
 
-        {/* Card de Seleção de Cliente e Modo */}
         <Card className="border border-[#4A7A5C]/40 bg-[#3D6B52]/35 text-[#E8DECE] rounded-2xl shadow-sm">
           <CardContent className="p-4 space-y-4">
             <div className="flex items-center gap-2 text-[#8FAF8A]">
@@ -353,7 +352,6 @@ const Capture = () => {
           </CardContent>
         </Card>
 
-        {/* Card de Preview da Imagem */}
         <Card className="border border-[#4A7A5C]/30 bg-[#1C3A2B]/70 text-[#E8DECE] rounded-2xl shadow-sm overflow-hidden">
           <CardContent className="p-3">
             <div className="relative overflow-hidden rounded-xl border border-[#4A7A5C]/50 bg-[#10261C] min-h-[280px] flex items-center justify-center">
@@ -422,7 +420,6 @@ const Capture = () => {
           </CardContent>
         </Card>
 
-        {/* Card de Ações de Upload e Câmera */}
         <Card className="border border-[#D4C9B5] bg-[#E8DECE] text-[#1C3A2B] rounded-2xl shadow-sm">
           <CardContent className="p-4 space-y-3">
             <div className="grid grid-cols-2 gap-2">
