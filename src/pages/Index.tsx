@@ -166,11 +166,13 @@ const Index = () => {
               transition={{ delay: 0.2, duration: 0.8 }}
               className="text-center space-y-4"
             >
-              <h1 className="font-brand-logo text-5xl font-medium text-[#1C3A2B] uppercase translate-x-[6px]">
-                ELHA
-              </h1>
+              <img
+                src="/elha-logo.png"
+                alt="ELHA"
+                className="mx-auto h-40 w-40 object-contain"
+              />
               <p className="font-body text-[11px] font-light text-[#4A7A5C] tracking-[4px] uppercase">
-                Tricologia de Sobrancelhas
+                Análise Inteligente
               </p>
             </motion.div>
           </motion.div>
