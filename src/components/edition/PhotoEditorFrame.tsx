@@ -13,6 +13,7 @@ interface PhotoEditorFrameProps {
   label: string;
   value: PhotoTransform;
   onChange: (value: PhotoTransform) => void;
+  showGuides?: boolean;
 }
 
 const MIN_SCALE = 1;
@@ -21,7 +22,7 @@ const MAX_SCALE = 3;
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
 
-const PhotoEditorFrame = ({ src, label, value, onChange }: PhotoEditorFrameProps) => {
+const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: PhotoEditorFrameProps) => {
   const dragStartRef = useRef({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
 
@@ -65,7 +66,7 @@ const PhotoEditorFrame = ({ src, label, value, onChange }: PhotoEditorFrameProps
             <ImageIcon size={22} />
           </div>
           <p className="font-label-category text-[9px] text-[#E8DECE]">{label}</p>
-          <p className="font-body text-[10px] text-[#8FAF8A]">Envie uma foto para começar</p>
+          {showGuides && <p className="font-body text-[10px] text-[#8FAF8A]">Envie uma foto para começar</p>}
         </div>
       </div>
     );
@@ -96,14 +97,18 @@ const PhotoEditorFrame = ({ src, label, value, onChange }: PhotoEditorFrameProps
         }}
       />
 
-      <div className="absolute left-3 top-3 rounded-full bg-black/55 px-3 py-1 text-[9px] font-semibold uppercase tracking-[2px] text-white backdrop-blur-sm">
-        {label}
-      </div>
+      {showGuides && (
+        <>
+          <div className="absolute left-3 top-3 rounded-full bg-black/55 px-3 py-1 text-[9px] font-semibold uppercase tracking-[2px] text-white backdrop-blur-sm">
+            {label}
+          </div>
 
-      <div className="absolute inset-0 border border-white/10" />
-      <div className="absolute bottom-3 left-3 right-3 text-[10px] font-medium text-white/80">
-        Arraste para reposicionar
-      </div>
+          <div className="absolute inset-0 border border-white/10" />
+          <div className="absolute bottom-3 left-3 right-3 text-[10px] font-medium text-white/80">
+            Arraste para reposicionar
+          </div>
+        </>
+      )}
     </div>
   );
 };

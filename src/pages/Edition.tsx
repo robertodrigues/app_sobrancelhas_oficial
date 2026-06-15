@@ -126,6 +126,7 @@ const Edition = () => {
 
   const [pdfLogo, setPdfLogo] = useState<string | null>(null);
   const [pdfBgColor, setPdfBgColor] = useState('#F5F0E8');
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     if (!user?.id) {
@@ -319,6 +320,10 @@ const Edition = () => {
     if (!element) return;
 
     try {
+      setIsExporting(true);
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(true)));
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(true)));
+
       const canvas = await html2canvas(element, {
         useCORS: true,
         allowTaint: true,
@@ -333,6 +338,8 @@ const Edition = () => {
     } catch (error) {
       showError('Erro ao exportar imagem.');
       console.error(error);
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -364,6 +371,7 @@ const Edition = () => {
                   label="Antes"
                   value={beforeTransform}
                   onChange={setBeforeTransform}
+                  showGuides={!isExporting}
                 />
               </div>
 
@@ -387,6 +395,7 @@ const Edition = () => {
                   label="Depois"
                   value={afterTransform}
                   onChange={setAfterTransform}
+                  showGuides={!isExporting}
                 />
               </div>
 
