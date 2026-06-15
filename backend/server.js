@@ -46,6 +46,14 @@ app.post('/api/document-upload', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'Nenhum arquivo foi enviado.' });
     }
 
+    const userId = typeof req.body?.userId === 'string' ? req.body.userId.trim() : '';
+    if (!userId) {
+      return res.status(400).json({ error: 'userId é obrigatório para o upload.' });
+    }
+
+    const rawFolder = typeof req.body?.folder === 'string' ? req.body.folder.trim() : 'capturas';
+    const folder = rawFolder.replace(/[^a-zA-Z0-9_-]/g, '') || 'capturas';
+
     const file = req.file;
     const imageContentTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
@@ -81,7 +89,7 @@ app.post('/api/document-upload', upload.single('file'), async (req, res) => {
             ? 'gif'
             : 'jpg';
 
-    const key = `photos/${uuidv4()}.${extension}`;
+    const key = `usuarios/${userId}/${folder}/${uuidv4()}.${extension}`;
 
     await client.send(
       new PutObjectCommand({

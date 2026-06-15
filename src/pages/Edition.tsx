@@ -27,6 +27,8 @@ import { showSuccess, showError } from '@/utils/toast';
 import html2canvas from 'html2canvas';
 import { cn } from '@/lib/utils';
 import { uploadPhotoToR2 } from '@/lib/r2';
+import { useUser } from '@/lib/auth';
+import { createUserStorageKey } from '@/lib/userStorage';
 
 const SUPPORTED_UPLOAD_TYPES = new Set([
   'image/png',
@@ -87,6 +89,8 @@ const normalizeImageForUpload = async (file: File) => {
 };
 
 const Edition = () => {
+  const { user } = useUser();
+
   // Imagens de Antes e Depois
   const [beforeImg, setBeforeImg] = useState<string | null>(null);
   const [afterImg, setAfterImg] = useState<string | null>(null);
@@ -120,20 +124,55 @@ const Edition = () => {
 
   // Carregar configurações salvas do PDF
   useEffect(() => {
-    const savedLogo = localStorage.getItem('pdf_custom_logo');
-    const savedBg = localStorage.getItem('pdf_custom_bg_color');
-    if (savedLogo) setPdfLogo(savedLogo);
-    if (savedBg) setPdfBgColor(savedBg);
-  }, []);
+    if (!user?.id) {
+      setPdfLogo(null);
+      setPdfBgColor('#F5F0E8');
+      return;
+    }
+
+    const savedLogo = localStorage.getItem(createUserStorageKey(user.id, 'pdf_custom_logo'));
+    const savedBg = localStorage.getItem(createUserStorageKey(user.id, 'pdf_custom_bg_color'));
+    setPdfLogo(savedLogo);
+    setPdfBgColor(savedBg || '#F5F0E8');
+  }, [user?.id]);
+
+  useEffect(() => {
+    setBeforeImg(null);
+    setAfterImg(null);
+    setLayoutSize('feed');
+    setSplitDirection('horizontal');
+    setSeparationType('straight');
+    setText('');
+    setTextColor('#E8DECE');
+    setTextSize(16);
+    setTextX(50);
+    setTextY(90);
+    setLogoImg(null);
+    setLogoSize(80);
+    setLogoX(50);
+    setLogoY(10);
+    setPenColor('#8FAF8A');
+    setPenWidth(4);
+    setIsDrawingMode(false);
+
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      ctx?.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }, [user?.id]);
 
   // Salvar configurações do PDF
   const savePdfSettings = (logo: string | null, bg: string) => {
+    if (!user?.id) return;
+
     if (logo) {
-      localStorage.setItem('pdf_custom_logo', logo);
+      localStorage.setItem(createUserStorageKey(user.id, 'pdf_custom_logo'), logo);
     } else {
-      localStorage.removeItem('pdf_custom_logo');
+      localStorage.removeItem(createUserStorageKey(user.id, 'pdf_custom_logo'));
     }
-    localStorage.setItem('pdf_custom_bg_color', bg);
+
+    localStorage.setItem(createUserStorageKey(user.id, 'pdf_custom_bg_color'), bg);
     showSuccess('Ajustes do PDF salvos com sucesso!');
   };
 
@@ -165,9 +204,17 @@ const Edition = () => {
     if (!file) return;
 
     if (type === 'pdfLogo') {
+      if (!user?.id) {
+        showError('Sessão inválida. Faça login novamente.');
+        return;
+      }
+
       try {
         const normalizedFile = await normalizeImageForUpload(file);
-        const uploadRes = await uploadPhotoToR2(normalizedFile);
+        const uploadRes = await uploadPhotoToR2(normalizedFile, {
+          userId: user.id,
+          folder: 'pdf-logo',
+        });
         setPdfLogo(uploadRes.url);
         savePdfSettings(uploadRes.url, pdfBgColor);
         showSuccess('Logo do PDF enviada com sucesso!');

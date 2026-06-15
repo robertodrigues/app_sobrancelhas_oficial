@@ -6,35 +6,75 @@ import { Label } from '@/components/ui/label';
 import { Plus, CreditCard, Wallet, TrendingUp, Loader2, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
+import { useUser } from '@/lib/auth';
+import { createUserStorageKey } from '@/lib/userStorage';
+
+type PurchaseRecord = {
+  amount: number;
+  createdAt: string;
+};
+
+const DEFAULT_CREDITS = 0;
 
 const Credits = () => {
   const navigate = useNavigate();
+  const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const [creditAmount, setCreditAmount] = useState('');
-  const [currentCredits, setCurrentCredits] = useState(0);
+  const [currentCredits, setCurrentCredits] = useState(DEFAULT_CREDITS);
+  const [purchaseHistory, setPurchaseHistory] = useState<PurchaseRecord[]>([]);
 
   useEffect(() => {
-    setCurrentCredits(150);
-  }, []);
+    if (!user?.id) {
+      setCurrentCredits(DEFAULT_CREDITS);
+      setPurchaseHistory([]);
+      return;
+    }
+
+    const balanceKey = createUserStorageKey(user.id, 'credits-balance');
+    const historyKey = createUserStorageKey(user.id, 'credits-history');
+
+    const savedBalance = localStorage.getItem(balanceKey);
+    const savedHistory = localStorage.getItem(historyKey);
+
+    setCurrentCredits(savedBalance ? Number(savedBalance) || DEFAULT_CREDITS : DEFAULT_CREDITS);
+    setPurchaseHistory(savedHistory ? JSON.parse(savedHistory) : []);
+  }, [user?.id]);
+
+  const persistCredits = (balance: number, history: PurchaseRecord[]) => {
+    if (!user?.id) return;
+
+    localStorage.setItem(createUserStorageKey(user.id, 'credits-balance'), String(balance));
+    localStorage.setItem(createUserStorageKey(user.id, 'credits-history'), JSON.stringify(history));
+  };
 
   const handleBuyCredits = async () => {
+    if (!user?.id) {
+      showError('Sessão inválida. Faça login novamente.');
+      return;
+    }
+
     if (!creditAmount.trim() || parseInt(creditAmount) <= 0) {
       showError('Por favor, insira um valor válido.');
       return;
     }
 
     setLoading(true);
-    try {
-      setTimeout(() => {
-        showSuccess(`Compra de ${creditAmount} créditos realizada com sucesso!`);
-        setCurrentCredits(prev => prev + parseInt(creditAmount));
-        setCreditAmount('');
-        setLoading(false);
-      }, 2000);
-    } catch (error) {
-      showError('Erro ao processar pagamento. Tente novamente.');
-      setLoading(false);
-    }
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    const amount = parseInt(creditAmount);
+    const nextBalance = currentCredits + amount;
+    const nextHistory = [
+      { amount, createdAt: new Date().toISOString() },
+      ...purchaseHistory,
+    ];
+
+    setCurrentCredits(nextBalance);
+    setPurchaseHistory(nextHistory);
+    persistCredits(nextBalance, nextHistory);
+    setCreditAmount('');
+    setLoading(false);
+    showSuccess(`Compra de ${creditAmount} créditos realizada com sucesso!`);
   };
 
   const handleBack = () => {
@@ -128,15 +168,33 @@ const Credits = () => {
             <div className="pt-4 border-t border-[#D4C9B5]">
               <h3 className="font-label-category text-[10px] text-[#1C3A2B] mb-3">Histórico de Compras</h3>
 
-              <div className="text-center py-8 bg-[#F5F0E8] rounded-xl border border-dashed border-[#D4C9B5]">
-                <div className="w-10 h-10 rounded-full bg-[#E8DECE] flex items-center justify-center mx-auto mb-3">
-                  <CreditCard size={16} className="text-[#4A7A5C]" />
+              {purchaseHistory.length > 0 ? (
+                <div className="space-y-2">
+                  {purchaseHistory.map((purchase, index) => (
+                    <div key={`${purchase.createdAt}-${index}`} className="flex items-center justify-between rounded-xl border border-[#D4C9B5] bg-[#F5F0E8] px-4 py-3">
+                      <div>
+                        <p className="font-heading text-sm font-medium text-[#1C3A2B]">
+                          +{purchase.amount} créditos
+                        </p>
+                        <p className="font-body text-[10px] text-[#4A7A5C]">
+                          {new Date(purchase.createdAt).toLocaleDateString('pt-BR')} às{' '}
+                          {new Date(purchase.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <p className="font-heading text-sm font-medium text-[#1C3A2B]">Nenhuma compra registrada</p>
-                <p className="font-body text-[10px] text-[#4A7A5C] mt-1">
-                  Suas compras de créditos vão aparecer aqui.
-                </p>
-              </div>
+              ) : (
+                <div className="text-center py-8 bg-[#F5F0E8] rounded-xl border border-dashed border-[#D4C9B5]">
+                  <div className="w-10 h-10 rounded-full bg-[#E8DECE] flex items-center justify-center mx-auto mb-3">
+                    <CreditCard size={16} className="text-[#4A7A5C]" />
+                  </div>
+                  <p className="font-heading text-sm font-medium text-[#1C3A2B]">Nenhuma compra registrada</p>
+                  <p className="font-body text-[10px] text-[#4A7A5C] mt-1">
+                    Suas compras de créditos vão aparecer aqui.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

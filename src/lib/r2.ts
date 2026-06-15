@@ -7,9 +7,16 @@ export interface UploadR2Response {
   key: string;
 }
 
-export async function uploadPhotoToR2(file: File): Promise<UploadR2Response> {
+export interface UploadR2Options {
+  userId: string;
+  folder?: string;
+}
+
+export async function uploadPhotoToR2(file: File, options: UploadR2Options): Promise<UploadR2Response> {
   const formData = new FormData();
   formData.append("file", file, file.name);
+  formData.append("userId", options.userId);
+  formData.append("folder", options.folder || "capturas");
 
   const response = await fetch(R2_UPLOAD_ENDPOINT, {
     method: "POST",

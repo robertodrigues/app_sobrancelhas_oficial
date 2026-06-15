@@ -66,44 +66,19 @@ const Clients = () => {
 
   const fetchClients = async () => {
     setLoading(true);
+    setClients([]);
+
     try {
-      let data = null;
-      let error = null;
-
-      if (user?.id) {
-        // Tenta buscar filtrando por user_id
-        const { data: firstData, error: firstError } = await supabase
-          .from('clients')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('name');
-        
-        data = firstData;
-        error = firstError;
-
-        // Se falhar porque a coluna 'user_id' não existe, busca todos os clientes
-        if (firstError && (
-          firstError.message.includes('user_id') || 
-          firstError.code === 'PGRST204' || 
-          firstError.message.includes('column')
-        )) {
-          const { data: fallbackData, error: fallbackError } = await supabase
-            .from('clients')
-            .select('*')
-            .order('name');
-          
-          data = fallbackData;
-          error = fallbackError;
-        }
-      } else {
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('clients')
-          .select('*')
-          .order('name');
-        
-        data = fallbackData;
-        error = fallbackError;
+      if (!user?.id) {
+        setLoading(false);
+        return;
       }
+
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('name');
 
       if (error) {
         throw error;
@@ -137,6 +112,11 @@ const Clients = () => {
 
     if (!editingClient) return;
 
+    if (!user?.id) {
+      showError('Sessão inválida. Faça login novamente.');
+      return;
+    }
+
     if (!editForm.name.trim()) {
       showError('O nome é obrigatório.');
       return;
@@ -145,41 +125,18 @@ const Clients = () => {
     setEditLoading(true);
 
     try {
-      const updateData: any = {
+      const updateData = {
         name: editForm.name.trim(),
         email: editForm.email.trim() || null,
         phone: editForm.phone.trim() || null,
+        user_id: user.id,
       };
 
-      let error = null;
-
-      if (user?.id && editingClient.user_id) {
-        const { error: firstError } = await supabase
-          .from('clients')
-          .update({ ...updateData, user_id: user.id })
-          .eq('id', editingClient.id)
-          .eq('user_id', user.id);
-        
-        error = firstError;
-
-        if (firstError && (
-          firstError.message.includes('user_id') || 
-          firstError.code === 'PGRST204' || 
-          firstError.message.includes('column')
-        )) {
-          const { error: fallbackError } = await supabase
-            .from('clients')
-            .update(updateData)
-            .eq('id', editingClient.id);
-          error = fallbackError;
-        }
-      } else {
-        const { error: fallbackError } = await supabase
-          .from('clients')
-          .update(updateData)
-          .eq('id', editingClient.id);
-        error = fallbackError;
-      }
+      const { error } = await supabase
+        .from('clients')
+        .update(updateData)
+        .eq('id', editingClient.id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -203,38 +160,19 @@ const Clients = () => {
   const handleDeleteClient = async () => {
     if (!deletingClient) return;
 
+    if (!user?.id) {
+      showError('Sessão inválida. Faça login novamente.');
+      return;
+    }
+
     setDeleteLoading(true);
 
     try {
-      let error = null;
-
-      if (user?.id && deletingClient.user_id) {
-        const { error: firstError } = await supabase
-          .from('clients')
-          .delete()
-          .eq('id', deletingClient.id)
-          .eq('user_id', user.id);
-        
-        error = firstError;
-
-        if (firstError && (
-          firstError.message.includes('user_id') || 
-          firstError.code === 'PGRST204' || 
-          firstError.message.includes('column')
-        )) {
-          const { error: fallbackError } = await supabase
-            .from('clients')
-            .delete()
-            .eq('id', deletingClient.id);
-          error = fallbackError;
-        }
-      } else {
-        const { error: fallbackError } = await supabase
-          .from('clients')
-          .delete()
-          .eq('id', deletingClient.id);
-        error = fallbackError;
-      }
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', deletingClient.id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
 

@@ -8,6 +8,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useUser, useClerk } from "@/lib/auth";
 import { showSuccess, showError } from "@/utils/toast";
+import { createUserStorageKey } from "@/lib/userStorage";
 
 const Index = () => {
   const { user } = useUser();
@@ -26,12 +27,10 @@ const Index = () => {
 
   useEffect(() => {
     if (user?.id) {
-      const savedAvatar = localStorage.getItem(`elha_user_avatar_${user.id}`);
-      if (savedAvatar) {
-        setCustomAvatar(savedAvatar);
-      } else {
-        setCustomAvatar(null);
-      }
+      const savedAvatar = localStorage.getItem(createUserStorageKey(user.id, "avatar"));
+      setCustomAvatar(savedAvatar);
+    } else {
+      setCustomAvatar(null);
     }
 
     const timer = setTimeout(() => {
@@ -40,10 +39,12 @@ const Index = () => {
 
     const fetchData = async () => {
       setLoading(true);
+      setStats({ clients: 0, analyses: 0 });
+      setRecentActivities([]);
+
       try {
         if (!user?.id) {
-          setStats({ clients: 0, analyses: 0 });
-          setRecentActivities([]);
+          setLoading(false);
           return;
         }
 
@@ -52,14 +53,8 @@ const Index = () => {
           .select("*", { count: "exact", head: true })
           .eq("user_id", user.id);
 
-        if (clientError && (
-          clientError.message.includes("user_id") ||
-          clientError.code === "PGRST204" ||
-          clientError.message.includes("column")
-        )) {
-          setStats({ clients: 0, analyses: 0 });
-          setRecentActivities([]);
-          return;
+        if (clientError) {
+          throw clientError;
         }
 
         const { count: analysisCount, error: analysisError } = await supabase
@@ -67,14 +62,8 @@ const Index = () => {
           .select("*", { count: "exact", head: true })
           .eq("user_id", user.id);
 
-        if (analysisError && (
-          analysisError.message.includes("user_id") ||
-          analysisError.code === "PGRST204" ||
-          analysisError.message.includes("column")
-        )) {
-          setStats({ clients: 0, analyses: 0 });
-          setRecentActivities([]);
-          return;
+        if (analysisError) {
+          throw analysisError;
         }
 
         const { data: recent, error: recentError } = await supabase
@@ -84,14 +73,8 @@ const Index = () => {
           .order("created_at", { ascending: false })
           .limit(5);
 
-        if (recentError && (
-          recentError.message.includes("user_id") ||
-          recentError.code === "PGRST204" ||
-          recentError.message.includes("column")
-        )) {
-          setStats({ clients: 0, analyses: 0 });
-          setRecentActivities([]);
-          return;
+        if (recentError) {
+          throw recentError;
         }
 
         setStats({ clients: clientCount || 0, analyses: analysisCount || 0 });
@@ -129,7 +112,7 @@ const Index = () => {
       const base64 = event.target?.result as string;
       setCustomAvatar(base64);
       if (user?.id) {
-        localStorage.setItem(`elha_user_avatar_${user.id}`, base64);
+        localStorage.setItem(createUserStorageKey(user.id, "avatar"), base64);
       }
       showSuccess("Foto de perfil atualizada com sucesso!");
       setMenuOpen(false);
@@ -143,8 +126,9 @@ const Index = () => {
   const handleLogout = async () => {
     try {
       await signOut();
+      sessionStorage.clear();
       showSuccess("Sessão encerrada com sucesso!");
-      navigate("/login");
+      navigate("/login", { replace: true });
     } catch (error) {
       showError("Erro ao sair da conta.");
     }

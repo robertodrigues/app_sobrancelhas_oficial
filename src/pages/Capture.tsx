@@ -100,45 +100,34 @@ const Capture = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    setCapturedImages([]);
+    setCurrentImage(null);
+    setIsAnnotating(false);
+    setSelectedClientId('');
+    setAnalysisMode('single');
+    setIsAnalyzing(false);
+  }, [user?.id]);
+
+  useEffect(() => {
     const fetchClients = async () => {
+      setClients([]);
+
+      if (!user?.id) {
+        return;
+      }
+
       try {
-        let data = null;
-        let error = null;
-
-        if (user?.id) {
-          const { data: firstData, error: firstError } = await supabase
-            .from('clients')
-            .select('id, name')
-            .eq('user_id', user.id)
-            .order('name');
-          
-          data = firstData;
-          error = firstError;
-
-          if (firstError && (
-            firstError.message.includes('user_id') || 
-            firstError.code === 'PGRST204' || 
-            firstError.message.includes('column')
-          )) {
-            const { data: fallbackData, error: fallbackError } = await supabase
-              .from('clients')
-              .select('id, name')
-              .order('name');
-            
-            data = fallbackData;
-            error = fallbackError;
-          }
-        } else {
-          const { data: fallbackData, error: fallbackError } = await supabase
-            .from('clients')
-            .select('id, name')
-            .order('name');
-          
-          data = fallbackData;
-          error = fallbackError;
+        const { data, error } = await supabase
+          .from('clients')
+          .select('id, name')
+          .eq('user_id', user.id)
+          .order('name');
+        
+        if (error) {
+          throw error;
         }
 
-        if (data) setClients(data);
+        setClients(data || []);
       } catch (err) {
         console.error('Erro ao buscar clientes:', err);
       }
@@ -163,6 +152,11 @@ const Capture = () => {
   };
 
   const addImageToFlow = async (annotatedBase64: string, bboxes: Record<string, RegionBBox>) => {
+    if (!user?.id) {
+      showError('Sessão inválida. Faça login novamente.');
+      return;
+    }
+
     setIsPreparingImage(true);
     try {
       const file = dataURLtoFile(annotatedBase64, `annotated-${Date.now()}.jpg`);
@@ -171,31 +165,17 @@ const Capture = () => {
       let uploadSuccess = false;
 
       try {
-        const uploadRes = await uploadPhotoToR2(file);
+        const uploadRes = await uploadPhotoToR2(file, {
+          userId: user.id,
+          folder: 'capturas',
+        });
+
         if (uploadRes?.url) {
           imageUrl = uploadRes.url;
           uploadSuccess = true;
         }
       } catch (r2Error) {
-        console.warn('R2 upload failed, trying Supabase storage...', r2Error);
-
-        try {
-          const fileName = `photos/${Date.now()}-${Math.random().toString(36).substring(2)}.jpg`;
-          const { data, error } = await supabase.storage.from('photos').upload(fileName, file, {
-            cacheControl: '3600',
-            upsert: false,
-          });
-
-          if (!error && data) {
-            const {
-              data: { publicUrl },
-            } = supabase.storage.from('photos').getPublicUrl(fileName);
-            imageUrl = publicUrl;
-            uploadSuccess = true;
-          }
-        } catch (supabaseError) {
-          console.warn('Supabase storage upload failed, using base64 fallback:', supabaseError);
-        }
+        console.warn('R2 upload failed, keeping local image URL fallback:', r2Error);
       }
 
       setCapturedImages((prev) => [...prev, { url: imageUrl, dataUrl: annotatedBase64, bboxes }]);
@@ -211,6 +191,11 @@ const Capture = () => {
   };
 
   const handleConfirm = async () => {
+    if (!user?.id) {
+      showError('Sessão inválida. Faça login novamente.');
+      return;
+    }
+
     if (!selectedClientId) {
       showError('Por favor, selecione um cliente.');
       return;
@@ -229,28 +214,14 @@ const Capture = () => {
         result.isComparativo = true;
       }
 
-      const insertData: any = {
+      const insertData = {
         client_id: selectedClientId,
+        user_id: user.id,
         image_url: capturedImages[capturedImages.length - 1].url,
         result,
       };
 
-      if (user?.id) {
-        insertData.user_id = user.id;
-      }
-
-      let { error } = await supabase.from('analyses').insert([insertData]);
-
-      if (error && (
-        error.message.includes('user_id') || 
-        error.code === 'PGRST204' || 
-        error.message.includes('column')
-      )) {
-        // Fallback sem user_id
-        delete insertData.user_id;
-        const { error: fallbackError } = await supabase.from('analyses').insert([insertData]);
-        error = fallbackError;
-      }
+      const { error } = await supabase.from('analyses').insert([insertData]);
 
       if (error) throw error;
 

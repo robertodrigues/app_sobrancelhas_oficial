@@ -21,6 +21,12 @@ const NewClient = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!user?.id) {
+      showError('Sessão inválida. Faça login novamente.');
+      return;
+    }
+
     if (!formData.name.trim()) {
       showError('O nome é obrigatório');
       return;
@@ -29,39 +35,16 @@ const NewClient = () => {
     setLoading(true);
     
     try {
-      const dataToSave: any = {
+      const dataToSave = {
         name: formData.name.trim(),
         email: formData.email.trim() || null,
         phone: formData.phone.trim() || null,
+        user_id: user.id,
       };
 
-      let error = null;
-
-      // Tenta salvar com user_id se o usuário estiver logado
-      if (user?.id) {
-        const { error: firstError } = await supabase
-          .from('clients')
-          .insert([{ ...dataToSave, user_id: user.id }]);
-        
-        error = firstError;
-
-        // Se falhar porque a coluna 'user_id' não existe no banco de dados, tenta salvar sem ela
-        if (firstError && (
-          firstError.message.includes('user_id') || 
-          firstError.code === 'PGRST204' || 
-          firstError.message.includes('column')
-        )) {
-          const { error: fallbackError } = await supabase
-            .from('clients')
-            .insert([dataToSave]);
-          error = fallbackError;
-        }
-      } else {
-        const { error: fallbackError } = await supabase
-          .from('clients')
-          .insert([dataToSave]);
-        error = fallbackError;
-      }
+      const { error } = await supabase
+        .from('clients')
+        .insert([dataToSave]);
 
       if (error) {
         throw error;
