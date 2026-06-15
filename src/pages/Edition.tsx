@@ -100,40 +100,33 @@ const normalizeImageForUpload = async (file: File) => {
 const Edition = () => {
   const { user } = useUser();
 
-  // Imagens de Antes e Depois
   const [beforeImg, setBeforeImg] = useState<string | null>(null);
   const [afterImg, setAfterImg] = useState<string | null>(null);
   const [beforeTransform, setBeforeTransform] = useState<PhotoTransform>(createDefaultTransform());
   const [afterTransform, setAfterTransform] = useState<PhotoTransform>(createDefaultTransform());
   
-  // Configurações de Layout
   const [layoutSize, setLayoutSize] = useState<'feed' | 'story'>('feed');
   const [splitDirection, setSplitDirection] = useState<'horizontal' | 'vertical'>('horizontal');
   const [separationType, setSeparationType] = useState<'straight' | 'faded'>('straight');
 
-  // Configurações de Texto (@)
   const [text, setText] = useState('');
   const [textColor, setTextColor] = useState('#E8DECE');
   const [textSize, setTextSize] = useState(16);
   const [textX, setTextX] = useState(50);
   const [textY, setTextY] = useState(90);
 
-  // Configurações de Logo da Montagem
   const [logoImg, setLogoImg] = useState<string | null>(null);
   const [logoSize, setLogoSize] = useState(80);
   const [logoX, setLogoX] = useState(50);
   const [logoY, setLogoY] = useState(10);
 
-  // Caneta Desenho Livre
   const [penColor, setPenColor] = useState('#8FAF8A');
   const [penWidth, setPenWidth] = useState(4);
   const [isDrawingMode, setIsDrawingMode] = useState(false);
 
-  // --- AJUSTES DO PDF (Salvos no localStorage) ---
   const [pdfLogo, setPdfLogo] = useState<string | null>(null);
   const [pdfBgColor, setPdfBgColor] = useState('#F5F0E8');
 
-  // Carregar configurações salvas do PDF
   useEffect(() => {
     if (!user?.id) {
       setPdfLogo(null);
@@ -175,7 +168,6 @@ const Edition = () => {
     }
   }, [user?.id]);
 
-  // Salvar configurações do PDF
   const savePdfSettings = (logo: string | null, bg: string) => {
     if (!user?.id) return;
 
@@ -189,7 +181,6 @@ const Edition = () => {
     showSuccess('Ajustes do PDF salvos com sucesso!');
   };
 
-  // Refs
   const beforeInputRef = useRef<HTMLInputElement>(null);
   const afterInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -349,8 +340,6 @@ const Edition = () => {
     <div className="min-h-screen bg-[#F5F0E8] text-[#1C3A2B] pb-28">
       <Navbar />
       <main className="max-w-md mx-auto px-4 py-4 space-y-4">
-        
-        {/* Header Compacto */}
         <header className="text-center pt-2">
           <div className="w-10 h-10 rounded-xl bg-[#4A7A5C]/10 flex items-center justify-center text-[#4A7A5C] mb-1.5 mx-auto">
             <Sparkles size={20} />
@@ -359,7 +348,6 @@ const Edition = () => {
           <p className="font-body text-[10px] text-[#4A7A5C] font-light">Crie montagens profissionais para suas redes</p>
         </header>
 
-        {/* Preview da Montagem (Centralizado e Otimizado) */}
         <div className="flex flex-col items-center justify-center w-full">
           <div className="relative overflow-hidden rounded-2xl border-2 border-[#E8DECE] bg-[#1C3A2B] shadow-xl w-full max-w-[340px]">
             <div 
@@ -370,7 +358,6 @@ const Edition = () => {
                 splitDirection === 'vertical' ? "flex-col" : "flex-row"
               )}
             >
-              {/* Foto Antes */}
               <div className="relative flex-1 overflow-hidden h-full w-full">
                 <PhotoEditorFrame
                   src={beforeImg}
@@ -380,7 +367,6 @@ const Edition = () => {
                 />
               </div>
 
-              {/* Linha de Separação */}
               {separationType === 'straight' ? (
                 <div className={cn(
                   "bg-[#E8DECE] z-10 shadow-md",
@@ -395,7 +381,6 @@ const Edition = () => {
                 )} />
               )}
 
-              {/* Foto Depois */}
               <div className="relative flex-1 overflow-hidden h-full w-full">
                 <PhotoEditorFrame
                   src={afterImg}
@@ -405,7 +390,6 @@ const Edition = () => {
                 />
               </div>
 
-              {/* Canvas de Desenho Livre */}
               <canvas
                 ref={canvasRef}
                 onMouseDown={startDrawing}
@@ -421,7 +405,6 @@ const Edition = () => {
                 )}
               />
 
-              {/* Marca d'água / Texto */}
               {text && (
                 <div 
                   style={{ 
@@ -436,7 +419,6 @@ const Edition = () => {
                 </div>
               )}
 
-              {/* Logo do Usuário */}
               {logoImg && (
                 <img 
                   src={logoImg} 
@@ -453,76 +435,6 @@ const Edition = () => {
             </div>
           </div>
 
-          {/* Ajustes finos */}
-          {(beforeImg || afterImg) && (
-            <Card className="mt-4 w-full border border-[#D4C9B5] bg-[#E8DECE] rounded-2xl shadow-sm overflow-hidden">
-              <CardContent className="p-4 space-y-4">
-                <div className="flex items-center gap-2">
-                  <Sliders size={14} className="text-[#4A7A5C]" />
-                  <h3 className="font-label-category text-[9px] text-[#1C3A2B]">Ajuste fino das fotos</h3>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  {[
-                    {
-                      key: 'before' as const,
-                      label: 'Antes',
-                      transform: beforeTransform,
-                      setTransform: setBeforeTransform,
-                      hasImage: !!beforeImg,
-                    },
-                    {
-                      key: 'after' as const,
-                      label: 'Depois',
-                      transform: afterTransform,
-                      setTransform: setAfterTransform,
-                      hasImage: !!afterImg,
-                    },
-                  ].map(({ key, label, transform, setTransform, hasImage }) => (
-                    <div key={key} className="space-y-3 rounded-xl border border-[#D4C9B5] bg-[#F5F0E8] p-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <div>
-                          <p className="font-heading text-sm text-[#1C3A2B]">{label}</p>
-                          <p className="text-[10px] text-[#4A7A5C]">Arraste a imagem no quadro</p>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="btn-elha-outline h-8 px-3 text-[9px]"
-                          onClick={() => setTransform(createDefaultTransform())}
-                          disabled={!hasImage}
-                        >
-                          Centralizar
-                        </Button>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-[10px] text-[#4A7A5C]">
-                          <span>Zoom</span>
-                          <span>{Math.round(transform.scale * 100)}%</span>
-                        </div>
-                        <Slider
-                          value={[transform.scale]}
-                          onValueChange={(val) =>
-                            setTransform((prev) => ({
-                              ...prev,
-                              scale: clampScale(val[0]),
-                            }))
-                          }
-                          min={1}
-                          max={3}
-                          step={0.01}
-                          disabled={!hasImage}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Botões Rápidos de Upload */}
           <div className="flex gap-2 mt-3 w-full max-w-[340px]">
             <Button 
               onClick={() => beforeInputRef.current?.click()} 
@@ -544,7 +456,6 @@ const Edition = () => {
           <input type="file" ref={afterInputRef} onChange={(e) => handleImageUpload(e, 'after')} accept="image/*" className="hidden" />
         </div>
 
-        {/* Painel de Controle em Abas (Estilo Canva Mobile) */}
         <Card className="border border-[#D4C9B5] bg-[#E8DECE] rounded-2xl shadow-sm overflow-hidden">
           <Tabs defaultValue="layout" className="w-full">
             <TabsList className="grid grid-cols-4 bg-[#1C3A2B]/10 p-1 rounded-t-2xl rounded-b-none h-12">
@@ -563,8 +474,6 @@ const Edition = () => {
             </TabsList>
 
             <CardContent className="p-4 space-y-4">
-              
-              {/* ABA: LAYOUT */}
               <TabsContent value="layout" className="space-y-4 mt-0">
                 <div className="space-y-2">
                   <Label className="font-label-category text-[9px] text-[#1C3A2B]">Tamanho da Edição</Label>
@@ -627,7 +536,6 @@ const Edition = () => {
                 </div>
               </TabsContent>
 
-              {/* ABA: TEXTO */}
               <TabsContent value="texto" className="space-y-4 mt-0">
                 <div className="space-y-1.5">
                   <Label htmlFor="watermark" className="font-label-category text-[9px] text-[#1C3A2B]">Seu @ ou Nome</Label>
@@ -685,7 +593,6 @@ const Edition = () => {
                 )}
               </TabsContent>
 
-              {/* ABA: LOGO */}
               <TabsContent value="logo" className="space-y-4 mt-0">
                 <div className="flex items-center gap-2">
                   <Button 
@@ -733,7 +640,6 @@ const Edition = () => {
                 )}
               </TabsContent>
 
-              {/* ABA: DESENHO */}
               <TabsContent value="desenho" className="space-y-4 mt-0">
                 <div className="flex items-center justify-between bg-[#F5F0E8] p-2.5 rounded-xl border border-[#D4C9B5]">
                   <span className="font-label-category text-[9px] text-[#1C3A2B]">Modo Caneta</span>
@@ -788,12 +694,10 @@ const Edition = () => {
                   </div>
                 )}
               </TabsContent>
-
             </CardContent>
           </Tabs>
         </Card>
 
-        {/* Ajustes do Relatório PDF (Compacto e Elegante) */}
         <Card className="border border-[#D4C9B5] bg-[#E8DECE] rounded-2xl shadow-sm overflow-hidden">
           <CardContent className="p-4 space-y-3">
             <h3 className="font-label-category text-[9px] text-[#1C3A2B] flex items-center gap-1.5">
@@ -848,14 +752,12 @@ const Edition = () => {
           </CardContent>
         </Card>
 
-        {/* Botão de Exportar */}
         <Button 
           onClick={exportCollage}
           className="btn-elha-primary w-full h-12 text-xs"
         >
           <Download size={14} className="mr-1.5" /> Exportar Montagem Final
         </Button>
-
       </main>
     </div>
   );
