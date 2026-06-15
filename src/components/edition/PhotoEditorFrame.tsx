@@ -18,6 +18,7 @@ interface PhotoEditorFrameProps {
 
 const MIN_SCALE = 1;
 const MAX_SCALE = 3;
+const MAX_DISPLAY_DIMENSION = 1920;
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
@@ -29,6 +30,17 @@ const centerBetween = (a: { x: number; y: number }, b: { x: number; y: number })
   x: (a.x + b.x) / 2,
   y: (a.y + b.y) / 2,
 });
+
+const loadImage = (src: string) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Não foi possível carregar a imagem."));
+    if (src.startsWith("http")) {
+      img.crossOrigin = "anonymous";
+    }
+    img.src = src;
+  });
 
 const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: PhotoEditorFrameProps) => {
   const dragStartRef = useRef({ x: 0, y: 0 });
@@ -51,6 +63,7 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
     startCenter: null,
   });
   const pendingValueRef = useRef(value);
+  const [displaySrc, setDisplaySrc] = useState<string | null>(null);
 
   const getTransformString = (transform: PhotoTransform) =>
     `translate(-50%, -50%) translate3d(${transform.x}px, ${transform.y}px, 0) scale(${transform.scale})`;
@@ -69,6 +82,76 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
     pendingValueRef.current = value;
     applyTransform(value);
   }, [value, src]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl: string | null = null;
+
+    const prepareDisplayImage = async () => {
+      if (!src) {
+        setDisplaySrc(null);
+        return;
+      }
+
+      try {
+        const img = await loadImage(src);
+
+        if (cancelled) return;
+
+        const needsResize =
+          img.naturalWidth > MAX_DISPLAY_DIMENSION || img.naturalHeight > MAX_DISPLAY_DIMENSION;
+
+        if (!needsResize) {
+          setDisplaySrc(src);
+          return;
+        }
+
+        const scale = Math.min(
+          MAX_DISPLAY_DIMENSION / img.naturalWidth,
+          MAX_DISPLAY_DIMENSION / img.naturalHeight,
+        );
+
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          setDisplaySrc(src);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const blob = await new Promise<Blob | null>((resolve) => {
+          canvas.toBlob(resolve, "image/jpeg", 0.9);
+        });
+
+        if (cancelled) return;
+
+        if (!blob) {
+          setDisplaySrc(src);
+          return;
+        }
+
+        objectUrl = URL.createObjectURL(blob);
+        setDisplaySrc(objectUrl);
+      } catch {
+        if (!cancelled) {
+          setDisplaySrc(src);
+        }
+      }
+    };
+
+    prepareDisplayImage();
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [src]);
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!src) return;
@@ -242,7 +325,7 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
     >
       <img
         ref={imgRef}
-        src={src}
+        src={displaySrc || src}
         alt={label}
         draggable={false}
         className="absolute left-1/2 top-1/2 h-full w-full max-w-none max-h-none object-cover will-change-transform"
@@ -250,6 +333,7 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
           transform: getTransformString(value),
           transformOrigin: "center center",
           imageRendering: "auto",
+          backfaceVisibility: "hidden",
         }}
       />
 
