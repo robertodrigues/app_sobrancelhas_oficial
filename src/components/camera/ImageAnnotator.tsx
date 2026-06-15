@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Undo2, Check, X, MousePointer2, Circle } from 'lucide-react';
+import { Undo2, Redo2, Check, X, MousePointer2, Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface RegionBBox {
@@ -18,6 +18,11 @@ interface ImageAnnotatorProps {
 
 type Region = 'ponto_inicial' | 'meio' | 'cauda' | null;
 
+type DrawingSnapshot = {
+  data: string;
+  bboxes: Record<string, RegionBBox>;
+};
+
 const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel }) => {
   const mainCanvasRef = useRef<HTMLCanvasElement>(null);
   const drawingCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -25,8 +30,10 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   const [activeRegion, setActiveRegion] = useState<Region>(null);
   const [brushSize, setBrushSize] = useState(8);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [history, setHistory] = useState<{ data: string; bboxes: Record<string, RegionBBox> }[]>([]);
+  const [history, setHistory] = useState<DrawingSnapshot[]>([]);
+  const [redoHistory, setRedoHistory] = useState<DrawingSnapshot[]>([]);
   const [currentBBoxes, setCurrentBBoxes] = useState<Record<string, RegionBBox>>({});
+  const currentBBoxesRef = useRef<Record<string, RegionBBox>>({});
   const imageRef = useRef<HTMLImageElement | null>(null);
 
   const colors = {
@@ -87,8 +94,10 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
       drawingCanvas.height = canvas.height;
       drawingCanvasRef.current = drawingCanvas;
 
+      currentBBoxesRef.current = {};
       setCurrentBBoxes({});
       setHistory([{ data: drawingCanvas.toDataURL(), bboxes: {} }]);
+      setRedoHistory([]);
 
       const ctx = canvas.getContext('2d');
       if (ctx) {
@@ -107,7 +116,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   const updateBBox = (region: string, x: number, y: number) => {
     setCurrentBBoxes((prev) => {
       const current = prev[region] || { minX: x, minY: y, maxX: x, maxY: y };
-      return {
+      const next = {
         ...prev,
         [region]: {
           minX: Math.min(current.minX, x - brushSize / 2),
@@ -116,6 +125,9 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
           maxY: Math.max(current.maxY, y + brushSize / 2),
         },
       };
+
+      currentBBoxesRef.current = next;
+      return next;
     });
   };
 
@@ -203,39 +215,68 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
 
   const stopDrawing = () => {
     if (isDrawing && drawingCanvasRef.current) {
-      setHistory((prev) => [
-        ...prev,
-        { data: drawingCanvasRef.current!.toDataURL(), bboxes: { ...currentBBoxes } },
-      ]);
+      const snapshot: DrawingSnapshot = {
+        data: drawingCanvasRef.current.toDataURL(),
+        bboxes: { ...currentBBoxesRef.current },
+      };
+
+      setHistory((prev) => [...prev, snapshot]);
+      setRedoHistory([]);
     }
+
     setIsDrawing(false);
     scheduleRender();
   };
 
-  const undo = () => {
-    if (history.length <= 1 || !drawingCanvasRef.current) return;
-
-    const newHistory = [...history];
-    newHistory.pop();
-    const lastState = newHistory[newHistory.length - 1];
+  const restoreSnapshot = (snapshot: DrawingSnapshot) => {
+    if (!drawingCanvasRef.current) return;
 
     const img = new Image();
     img.onload = () => {
       const dCtx = drawingCanvasRef.current?.getContext('2d');
-      if (dCtx) {
-        dCtx.clearRect(0, 0, drawingCanvasRef.current!.width, drawingCanvasRef.current!.height);
-        dCtx.drawImage(img, 0, 0);
-        setHistory(newHistory);
-        setCurrentBBoxes(lastState.bboxes);
-        scheduleRender();
-      }
+      if (!dCtx || !drawingCanvasRef.current) return;
+
+      dCtx.clearRect(0, 0, drawingCanvasRef.current.width, drawingCanvasRef.current.height);
+      dCtx.drawImage(img, 0, 0);
+
+      currentBBoxesRef.current = snapshot.bboxes;
+      setCurrentBBoxes(snapshot.bboxes);
+      scheduleRender();
     };
-    img.src = lastState.data;
+    img.src = snapshot.data;
+  };
+
+  const undo = () => {
+    if (history.length <= 1) return;
+
+    const nextHistory = [...history];
+    const currentSnapshot = nextHistory.pop();
+    if (currentSnapshot) {
+      setRedoHistory((prev) => [...prev, currentSnapshot]);
+    }
+
+    const previousSnapshot = nextHistory[nextHistory.length - 1];
+    if (!previousSnapshot) return;
+
+    setHistory(nextHistory);
+    restoreSnapshot(previousSnapshot);
+  };
+
+  const redo = () => {
+    if (redoHistory.length === 0) return;
+
+    const nextRedo = [...redoHistory];
+    const snapshot = nextRedo.pop();
+    if (!snapshot) return;
+
+    setRedoHistory(nextRedo);
+    setHistory((prev) => [...prev, snapshot]);
+    restoreSnapshot(snapshot);
   };
 
   const handleSave = () => {
     if (mainCanvasRef.current) {
-      onSave(mainCanvasRef.current.toDataURL('image/jpeg', 0.9), currentBBoxes);
+      onSave(mainCanvasRef.current.toDataURL('image/jpeg', 0.9), currentBBoxesRef.current);
     }
   };
 
@@ -264,8 +305,14 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
           onTouchStart={startDrawing}
           onTouchMove={draw}
           onTouchEnd={stopDrawing}
-          className="h-full w-full max-w-full max-h-full touch-none cursor-crosshair"
-          style={{ touchAction: 'none' }}
+          className="block max-h-full max-w-full touch-none cursor-crosshair"
+          style={{
+            touchAction: 'none',
+            width: 'auto',
+            height: 'auto',
+            maxWidth: '100%',
+            maxHeight: '100%',
+          }}
         />
 
         {!activeRegion && (
@@ -336,15 +383,27 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
           </button>
         </div>
 
-        <Button
-          variant="outline"
-          onClick={undo}
-          disabled={history.length <= 1}
-          className="btn-elha-outline h-14 w-full gap-2 border-[#4A7A5C] text-[#E8DECE] hover:bg-[#3D6B52]/50 disabled:opacity-30"
-        >
-          <Undo2 size={18} />
-          Desfazer Último Traço
-        </Button>
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            variant="outline"
+            onClick={undo}
+            disabled={history.length <= 1}
+            className="btn-elha-outline h-14 w-full gap-2 border-[#4A7A5C] text-[#E8DECE] hover:bg-[#3D6B52]/50 disabled:opacity-30"
+          >
+            <Undo2 size={18} />
+            Desfazer
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={redo}
+            disabled={redoHistory.length === 0}
+            className="btn-elha-outline h-14 w-full gap-2 border-[#4A7A5C] text-[#E8DECE] hover:bg-[#3D6B52]/50 disabled:opacity-30"
+          >
+            <Redo2 size={18} />
+            Refazer
+          </Button>
+        </div>
       </div>
     </div>
   );

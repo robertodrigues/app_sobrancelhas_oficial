@@ -32,7 +32,7 @@ const centerBetween = (a: { x: number; y: number }, b: { x: number; y: number })
 
 const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: PhotoEditorFrameProps) => {
   const dragStartRef = useRef({ x: 0, y: 0 });
-  const frameRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const [dragging, setDragging] = useState(false);
   const pointersRef = useRef(new Map<number, { x: number; y: number }>());
   const gestureRef = useRef<{
@@ -50,39 +50,31 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
     startY: 0,
     startCenter: null,
   });
-  const rafRef = useRef<number | null>(null);
   const pendingValueRef = useRef(value);
+
+  const getTransformString = (transform: PhotoTransform) =>
+    `translate(-50%, -50%) translate3d(${transform.x}px, ${transform.y}px, 0) scale(${transform.scale})`;
+
+  const applyTransform = (transform: PhotoTransform) => {
+    const img = imgRef.current;
+    if (!img) return;
+    img.style.transform = getTransformString(transform);
+  };
+
+  const commitTransform = () => {
+    onChange(pendingValueRef.current);
+  };
 
   useEffect(() => {
     pendingValueRef.current = value;
-  }, [value]);
-
-  useEffect(() => {
-    return () => {
-      if (rafRef.current !== null) {
-        window.cancelAnimationFrame(rafRef.current);
-      }
-    };
-  }, []);
-
-  const scheduleChange = (nextValue: PhotoTransform) => {
-    pendingValueRef.current = nextValue;
-
-    if (rafRef.current !== null) return;
-
-    rafRef.current = window.requestAnimationFrame(() => {
-      rafRef.current = null;
-      onChange(pendingValueRef.current);
-    });
-  };
+    applyTransform(value);
+  }, [value, src]);
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!src) return;
 
     event.preventDefault();
-
-    const currentTarget = event.currentTarget;
-    currentTarget.setPointerCapture(event.pointerId);
+    event.currentTarget.setPointerCapture(event.pointerId);
 
     pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
 
@@ -111,7 +103,6 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
     if (!src || !pointersRef.current.has(event.pointerId)) return;
 
     event.preventDefault();
-
     pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
 
     if (gestureRef.current.type === "pinch" && pointersRef.current.size >= 2) {
@@ -128,11 +119,14 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
           }
         : { x: 0, y: 0 };
 
-      scheduleChange({
+      const nextValue = {
         scale: nextScale,
         x: gestureRef.current.startX + centerDelta.x,
         y: gestureRef.current.startY + centerDelta.y,
-      });
+      };
+
+      pendingValueRef.current = nextValue;
+      applyTransform(nextValue);
       return;
     }
 
@@ -143,11 +137,14 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
 
     dragStartRef.current = { x: event.clientX, y: event.clientY };
 
-    scheduleChange({
+    const nextValue = {
       ...pendingValueRef.current,
       x: pendingValueRef.current.x + deltaX,
       y: pendingValueRef.current.y + deltaY,
-    });
+    };
+
+    pendingValueRef.current = nextValue;
+    applyTransform(nextValue);
   };
 
   const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -163,6 +160,7 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
         startCenter: null,
       };
       setDragging(false);
+      commitTransform();
       return;
     }
 
@@ -194,6 +192,7 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
         startCenter: null,
       };
       setDragging(false);
+      commitTransform();
     }
   };
 
@@ -202,7 +201,11 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
     event.preventDefault();
 
     const nextScale = clamp(value.scale - event.deltaY * 0.0015, MIN_SCALE, MAX_SCALE);
-    onChange({ ...value, scale: nextScale });
+    const nextValue = { ...value, scale: nextScale };
+
+    pendingValueRef.current = nextValue;
+    applyTransform(nextValue);
+    onChange(nextValue);
   };
 
   if (!src) {
@@ -221,7 +224,6 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
 
   return (
     <div
-      ref={frameRef}
       className={cn(
         "relative h-full w-full select-none overflow-hidden bg-[#10261C]",
         dragging ? "cursor-grabbing" : "cursor-grab",
@@ -232,16 +234,22 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
       onPointerCancel={handlePointerCancel}
       onPointerLeave={handlePointerCancel}
       onWheel={handleWheel}
-      style={{ touchAction: "none" }}
+      style={{
+        touchAction: "none",
+        WebkitUserSelect: "none",
+        userSelect: "none",
+      }}
     >
       <img
+        ref={imgRef}
         src={src}
         alt={label}
         draggable={false}
         className="absolute left-1/2 top-1/2 h-full w-full max-w-none max-h-none object-cover will-change-transform"
         style={{
-          transform: `translate(-50%, -50%) translate(${value.x}px, ${value.y}px) scale(${value.scale})`,
+          transform: getTransformString(value),
           transformOrigin: "center center",
+          imageRendering: "auto",
         }}
       />
 
