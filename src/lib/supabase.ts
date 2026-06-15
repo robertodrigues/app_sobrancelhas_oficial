@@ -6,16 +6,9 @@ const supabaseAnonKey =
 
 type SupabaseAccessTokenGetter = () => Promise<string | null | undefined> | string | null | undefined;
 
-let accessTokenGetter: SupabaseAccessTokenGetter | null = null;
-
-export const setSupabaseAccessTokenGetter = (getter: SupabaseAccessTokenGetter | null) => {
-  accessTokenGetter = getter;
-};
-
-const resolveAccessToken = async () => {
-  if (!accessTokenGetter) return null;
-  const token = await accessTokenGetter();
-  return token ?? null;
+export const setSupabaseAccessTokenGetter = (_getter: SupabaseAccessTokenGetter | null) => {
+  // Mantido apenas para compatibilidade com o bridge de auth.
+  // O Supabase agora usa somente a chave pública.
 };
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -23,27 +16,5 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: false,
     autoRefreshToken: false,
     detectSessionInUrl: false,
-  },
-  global: {
-    fetch: async (input, init) => {
-      const token = await resolveAccessToken();
-
-      if (!token) {
-        return fetch(input, init);
-      }
-
-      const headers = new Headers(
-        init?.headers ?? (input instanceof Request ? input.headers : undefined),
-      );
-
-      if (!headers.has('Authorization')) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-
-      return fetch(input, {
-        ...init,
-        headers,
-      });
-    },
   },
 });
