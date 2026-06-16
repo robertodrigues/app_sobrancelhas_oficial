@@ -200,6 +200,7 @@ app.post('/api/credits/create-pix', async (req, res) => {
         payment_method_id: 'pix',
         transaction_amount: transactionAmount,
         description: 'Recarga de créditos - Elha App',
+        external_reference: userId,
         payer: {
           email: 'pagador@elhaapp.com.br',
         },
@@ -226,6 +227,115 @@ app.post('/api/credits/create-pix', async (req, res) => {
   } catch (error) {
     console.error('Erro ao criar Pix do Mercado Pago:', error);
     return res.status(500).json({ error: 'Erro ao criar Pix do Mercado Pago.' });
+  }
+});
+
+app.post('/api/credits/webhook', async (req, res) => {
+  try {
+    const notificationType = req.body?.type;
+    const paymentId = req.body?.data?.id ? String(req.body.data.id).trim() : '';
+
+    if (notificationType !== 'payment' || !paymentId) {
+      return res.status(200).json({ received: true });
+    }
+
+    if (!mercadoPagoAccessToken) {
+      console.error('Webhook do Mercado Pago: MERCADO_PAGO_ACCESS_TOKEN não configurado.');
+      return res.status(200).json({ received: true });
+    }
+
+    const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${mercadoPagoAccessToken}`,
+      },
+    });
+
+    if (!paymentResponse.ok) {
+      const text = await paymentResponse.text();
+      console.error('Webhook do Mercado Pago: falha ao consultar pagamento.', text);
+      return res.status(200).json({ received: true });
+    }
+
+    const payment = await paymentResponse.json();
+
+    if (payment?.status !== 'approved') {
+      return res.status(200).json({ received: true });
+    }
+
+    const userId = typeof payment?.external_reference === 'string' ? payment.external_reference.trim() : '';
+    if (!userId) {
+      console.error('Webhook do Mercado Pago: external_reference ausente.');
+      return res.status(200).json({ received: true });
+    }
+
+    const supabase = getSupabaseAdmin();
+    if (!supabase) {
+      console.error('Webhook do Mercado Pago: configuração do Supabase ausente.');
+      return res.status(200).json({ received: true });
+    }
+
+    const { data: alreadyProcessed, error: alreadyProcessedError } = await supabase
+      .from('credit_transactions')
+      .select('id')
+      .eq('payment_id', paymentId)
+      .eq('status', 'approved')
+      .maybeSingle();
+
+    if (alreadyProcessedError) {
+      throw alreadyProcessedError;
+    }
+
+    if (alreadyProcessed) {
+      return res.status(200).json({ received: true });
+    }
+
+    const amountCents = Math.round(Number(payment?.transaction_amount || 0) * 100);
+
+    const { data: wallet, error: walletError } = await supabase
+      .from('credit_wallets')
+      .select('balance_cents')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (walletError) {
+      throw walletError;
+    }
+
+    const currentBalance = wallet?.balance_cents || 0;
+    const nextBalance = currentBalance + amountCents;
+
+    const { error: walletUpsertError } = await supabase
+      .from('credit_wallets')
+      .upsert(
+        { user_id: userId, balance_cents: nextBalance, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' },
+      );
+
+    if (walletUpsertError) {
+      throw walletUpsertError;
+    }
+
+    const { error: transactionError } = await supabase.from('credit_transactions').insert({
+      user_id: userId,
+      type: 'recharge',
+      amount_cents: amountCents,
+      payment_id: paymentId,
+      status: 'approved',
+      metadata: {
+        marketplace: 'mercado_pago',
+        webhook: true,
+      },
+    });
+
+    if (transactionError) {
+      throw transactionError;
+    }
+
+    return res.status(200).json({ received: true });
+  } catch (error) {
+    console.error('Erro no webhook do Mercado Pago:', error);
+    return res.status(200).json({ received: true });
   }
 });
 
