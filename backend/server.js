@@ -202,6 +202,7 @@ app.post('/api/credits/create-pix', async (req, res) => {
       headers: {
         Authorization: `Bearer ${mercadoPagoAccessToken}`,
         'Content-Type': 'application/json',
+        'X-Idempotency-Key': `${userId}-${Date.now()}`,
       },
       body: JSON.stringify({
         payment_method_id: 'pix',
