@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
+const crypto = require('crypto');
 const { Anthropic } = require('@anthropic-ai/sdk');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { v4: uuidv4 } = require('uuid');
@@ -35,6 +36,55 @@ const getSupabaseAdmin = () => {
 };
 
 const formatError = (message, status = 500) => ({ error: message, status });
+
+const parseMercadoPagoSignature = (signatureHeader) => {
+  if (!signatureHeader || typeof signatureHeader !== 'string') {
+    return null;
+  }
+
+  const parts = signatureHeader.split(',').reduce((acc, part) => {
+    const [key, value] = part.split('=').map((item) => item.trim());
+    if (key && value) {
+      acc[key] = value;
+    }
+    return acc;
+  }, {});
+
+  if (!parts.ts || !parts.v1) {
+    return null;
+  }
+
+  return {
+    ts: parts.ts,
+    v1: parts.v1,
+  };
+};
+
+const verifyMercadoPagoWebhookSignature = ({ signatureHeader, requestId, paymentId, secret }) => {
+  if (!secret || !signatureHeader || !requestId || !paymentId) {
+    return false;
+  }
+
+  const parsed = parseMercadoPagoSignature(signatureHeader);
+  if (!parsed) {
+    return false;
+  }
+
+  const manifest = `id:${paymentId};request-id:${requestId};ts:${parsed.ts};`;
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(manifest)
+    .digest('hex');
+
+  const receivedBuffer = Buffer.from(parsed.v1, 'hex');
+  const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+
+  if (receivedBuffer.length !== expectedBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(receivedBuffer, expectedBuffer);
+};
 
 app.use(cors());
 app.options('*', cors());
@@ -234,6 +284,20 @@ app.post('/api/credits/webhook', async (req, res) => {
   try {
     const notificationType = req.body?.type;
     const paymentId = req.body?.data?.id ? String(req.body.data.id).trim() : '';
+    const signatureHeader = req.get('x-signature');
+    const requestId = req.get('x-request-id');
+    const webhookSecret = process.env.MERCADO_PAGO_WEBHOOK_SECRET;
+
+    const signatureIsValid = verifyMercadoPagoWebhookSignature({
+      signatureHeader,
+      requestId,
+      paymentId,
+      secret: webhookSecret,
+    });
+
+    if (!signatureIsValid) {
+      return res.status(200).json({ received: true });
+    }
 
     if (notificationType !== 'payment' || !paymentId) {
       return res.status(200).json({ received: true });
