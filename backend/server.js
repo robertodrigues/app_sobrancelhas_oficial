@@ -182,15 +182,11 @@ app.get('/api/credits/wallet', async (req, res) => {
 app.post('/api/credits/create-pix', async (req, res) => {
   try {
     const userId = typeof req.body?.userId === 'string' ? req.body.userId.trim() : '';
-    const email = typeof req.body?.email === 'string' ? req.body.email.trim() : '';
-    const amountCents = Number(req.body?.amountCents);
+    const amount = Number(req.body?.amount ?? req.body?.amountCents);
+    const transactionAmount = Number.isFinite(amount) && amount > 100 ? amount / 100 : amount;
 
-    if (!userId || !email) {
-      return res.status(400).json({ error: 'userId e email são obrigatórios.' });
-    }
-
-    if (!Number.isInteger(amountCents) || amountCents < 500 || amountCents > 10000) {
-      return res.status(400).json({ error: 'O valor da recarga deve ficar entre R$ 5,00 e R$ 100,00.' });
+    if (!userId || !Number.isFinite(transactionAmount)) {
+      return res.status(400).json({ error: 'userId e amount são obrigatórios.' });
     }
 
     if (!mercadoPagoAccessToken) {
@@ -202,16 +198,14 @@ app.post('/api/credits/create-pix', async (req, res) => {
       headers: {
         Authorization: `Bearer ${mercadoPagoAccessToken}`,
         'Content-Type': 'application/json',
-        'X-Idempotency-Key': `${userId}-${amountCents}-${Date.now()}`,
       },
       body: JSON.stringify({
-        transaction_amount: amountCents / 100,
-        description: 'Recarga de créditos ELHA',
         payment_method_id: 'pix',
+        transaction_amount: transactionAmount,
+        description: 'Recarga de créditos - Elha App',
         payer: {
-          email,
+          email: 'pagador@email.com',
         },
-        external_reference: userId,
       }),
     });
 
@@ -223,37 +217,11 @@ app.post('/api/credits/create-pix', async (req, res) => {
     const payment = await response.json();
     const qrCode = payment?.point_of_interaction?.transaction_data?.qr_code || '';
     const qrCodeBase64 = payment?.point_of_interaction?.transaction_data?.qr_code_base64 || '';
-    const ticketUrl = payment?.point_of_interaction?.transaction_data?.ticket_url || null;
-
-    const supabase = getSupabaseAdmin();
-    if (!supabase) {
-      return res.status(500).json({ error: 'Configuração do Supabase ausente no servidor.' });
-    }
-
-    const { error: insertError } = await supabase.from('credit_transactions').insert({
-      user_id: userId,
-      type: 'topup',
-      amount_cents: amountCents,
-      payment_id: String(payment.id),
-      status: 'pending',
-      metadata: {
-        qr_code: qrCode,
-        qr_code_base64: qrCodeBase64,
-        ticket_url: ticketUrl,
-        mercado_pago_status: payment?.status || 'pending',
-      },
-    });
-
-    if (insertError) {
-      throw insertError;
-    }
 
     return res.json({
       paymentId: String(payment.id),
       qrCode,
       qrCodeBase64,
-      ticketUrl,
-      status: payment?.status || 'pending',
     });
   } catch (error) {
     console.error('Erro ao criar Pix do Mercado Pago:', error);
@@ -261,7 +229,93 @@ app.post('/api/credits/create-pix', async (req, res) => {
   }
 });
 
+app.post('/api/credits/confirm', async (req, res) => {
+  try {
+    const userId = typeof req.body?.userId === 'string' ? req.body.userId.trim() : '';
+    const paymentId = typeof req.body?.paymentId === 'string' ? req.body.paymentId.trim() : '';
+
+    if (!userId || !paymentId) {
+      return res.status(400).json({ error: 'userId e paymentId são obrigatórios.' });
+    }
+
+    if (!mercadoPagoAccessToken) {
+      return res.status(500).json({ error: 'MERCADO_PAGO_ACCESS_TOKEN não configurado.' });
+    }
+
+    const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${mercadoPagoAccessToken}`,
+      },
+    });
+
+    if (!paymentResponse.ok) {
+      const text = await paymentResponse.text();
+      return res.status(paymentResponse.status).json({ error: text || 'Não foi possível consultar o pagamento.' });
+    }
+
+    const payment = await paymentResponse.json();
+    const status = payment?.status || 'pending';
+
+    if (status !== 'approved') {
+      return res.json({ success: false, status });
+    }
+
+    const amount = Number(payment?.transaction_amount || 0);
+    const supabase = getSupabaseAdmin();
+    if (!supabase) {
+      return res.status(500).json({ error: 'Configuração do Supabase ausente no servidor.' });
+    }
+
+    const { data: wallet, error: walletFetchError } = await supabase
+      .from('credit_wallets')
+      .select('balance_cents')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (walletFetchError) {
+      throw walletFetchError;
+    }
+
+    const currentBalance = wallet?.balance_cents || 0;
+    const rechargeAmount = Math.round(amount * 100);
+    const newBalance = currentBalance + rechargeAmount;
+
+    const { error: walletError } = await supabase
+      .from('credit_wallets')
+      .upsert(
+        { user_id: userId, balance_cents: newBalance, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' },
+      );
+
+    if (walletError) {
+      throw walletError;
+    }
+
+    const { error: transactionError } = await supabase.from('credit_transactions').insert({
+      user_id: userId,
+      type: 'recharge',
+      amount_cents: rechargeAmount,
+      payment_id: String(paymentId),
+      status: 'approved',
+      metadata: {
+        marketplace: 'mercado_pago',
+      },
+    });
+
+    if (transactionError) {
+      throw transactionError;
+    }
+
+    return res.json({ success: true, newBalance });
+  } catch (error) {
+    console.error('Erro ao confirmar Pix do Mercado Pago:', error);
+    return res.status(500).json({ error: 'Erro ao confirmar Pix do Mercado Pago.' });
+  }
+});
+
 app.get('/api/credits/payment-status', async (req, res) => {
+
   try {
     const paymentId = typeof req.query.paymentId === 'string' ? req.query.paymentId.trim() : '';
     if (!paymentId) {
