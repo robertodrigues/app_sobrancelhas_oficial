@@ -170,7 +170,7 @@ app.get('/api/credits/wallet', async (req, res) => {
     }
 
     return res.json({
-      balanceCents: wallet?.balance_cents || 0,
+      balance_cents: wallet?.balance_cents || 0,
       recentTransactions: transactions || [],
     });
   } catch (error) {
