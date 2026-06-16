@@ -229,7 +229,7 @@ const Credits = () => {
           </button>
           <div>
             <h1 className="font-heading text-2xl font-normal text-[#1C3A2B]">Créditos</h1>
-            <p className="font-label-category text-[10px] text-[#4A7A5C] mt-0.5">Recarga via Pix Mercado Pago</p>
+            <p className="font-label-category text-[10px] text-[#4A7A5C] mt-0.5">Você gastará R$ 1,90 por cada análise</p>
           </div>
           <div className="absolute right-0 w-8 h-8 rounded-full bg-[#4A7A5C]/10 flex items-center justify-center text-[#4A7A5C]">
             <Wallet size={16} />
