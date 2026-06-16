@@ -144,14 +144,6 @@ app.get('/api/credits/wallet', async (req, res) => {
       return res.status(500).json({ error: 'Configuração do Supabase ausente no servidor.' });
     }
 
-    const { error: upsertError } = await supabase
-      .from('credit_wallets')
-      .upsert({ user_id: userId, balance_cents: 0, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
-
-    if (upsertError) {
-      throw upsertError;
-    }
-
     const { data: wallet, error: walletError } = await supabase
       .from('credit_wallets')
       .select('balance_cents')
