@@ -5,6 +5,7 @@ const { Anthropic } = require('@anthropic-ai/sdk');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { v4: uuidv4 } = require('uuid');
 const { createClient } = require('@supabase/supabase-js');
+const ws = require('ws');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -23,6 +24,9 @@ const getSupabaseAdmin = () => {
   }
 
   return createClient(supabaseUrl, supabaseServiceRoleKey, {
+    realtime: {
+      transport: ws,
+    },
     auth: {
       persistSession: false,
       autoRefreshToken: false,
