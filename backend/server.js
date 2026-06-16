@@ -215,14 +215,17 @@ app.post('/api/credits/create-pix', async (req, res) => {
     }
 
     const payment = await response.json();
-    const qrCode = payment?.point_of_interaction?.transaction_data?.qr_code || '';
-    const qrCodeBase64 = payment?.point_of_interaction?.transaction_data?.qr_code_base64 || '';
+    console.log('Mercado Pago payment response:', payment);
+
+    const qrCode = payment?.point_of_interaction?.transaction_data?.qr_code || payment?.point_of_interaction?.transaction_data?.ticket_url || '';
+    const qrCodeBase64 = payment?.point_of_interaction?.transaction_data?.qr_code_base64 || payment?.point_of_interaction?.transaction_data?.ticket_url || '';
 
     return res.json({
       paymentId: String(payment.id),
       qrCode,
       qrCodeBase64,
     });
+
   } catch (error) {
     console.error('Erro ao criar Pix do Mercado Pago:', error);
     return res.status(500).json({ error: 'Erro ao criar Pix do Mercado Pago.' });
