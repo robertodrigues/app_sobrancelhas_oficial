@@ -25,15 +25,22 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
 import { useUser } from '@/lib/auth';
-import {
-  checkPixRechargeStatus,
-  createPixRecharge,
-  getCreditWallet,
-  type CreditTransaction,
-} from '@/services/credits';
+import { supabase } from '@/lib/supabase';
+import { createUserStorageKey } from '@/lib/userStorage';
 
+type CreditTransaction = {
+  id: string;
+  type: string;
+  amount_cents: number;
+  payment_id: string | null;
+  status: string;
+  created_at: string;
+};
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://app-sobrancelhas-oficial-5svn.onrender.com';
 const MIN_AMOUNT = 5;
 const MAX_AMOUNT = 100;
+const QUICK_VALUES = [10, 20, 50, 100];
 
 const formatCurrency = (value: number) =>
   value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -50,9 +57,8 @@ const Credits = () => {
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [qrCodeBase64, setQrCodeBase64] = useState('');
   const [pixCopyCode, setPixCopyCode] = useState('');
-  const [ticketUrl, setTicketUrl] = useState<string | null>(null);
-  const [rechargeAmount, setRechargeAmount] = useState(0);
-  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'approved' | 'expired'>('pending');
+  const [pendingRechargeAmount, setPendingRechargeAmount] = useState(0);
+  const [confirming, setConfirming] = useState(false);
 
   const balance = balanceCents / 100;
 
@@ -61,9 +67,18 @@ const Credits = () => {
 
     setRefreshing(true);
     try {
-      const data = await getCreditWallet(user.id);
-      setBalanceCents(data.balanceCents || 0);
-      setHistory(data.recentTransactions || []);
+      const response = await fetch(
+        `${API_BASE_URL.replace(/\/$/, '')}/api/credits/wallet?userId=${encodeURIComponent(user.id)}`,
+      );
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      const data = await response.json();
+      const nextBalance = Number(data.balance_cents ?? data.balanceCents ?? 0);
+      setBalanceCents(Number.isFinite(nextBalance) ? nextBalance : 0);
+      setHistory(Array.isArray(data.recentTransactions) ? data.recentTransactions : []);
     } catch (error: any) {
       showError(error.message || 'Não foi possível carregar seus créditos.');
     } finally {
@@ -79,39 +94,12 @@ const Credits = () => {
     setPaymentId(null);
     setQrCodeBase64('');
     setPixCopyCode('');
-    setTicketUrl(null);
-    setRechargeAmount(0);
-    setPaymentStatus('pending');
+    setPendingRechargeAmount(0);
 
     if (user?.id) {
       loadWallet();
     }
   }, [user?.id]);
-
-  useEffect(() => {
-    if (!paymentDialogOpen || !paymentId) return;
-
-    const interval = window.setInterval(async () => {
-      try {
-        const data = await checkPixRechargeStatus(paymentId);
-        setBalanceCents(data.balanceCents || 0);
-        setHistory(data.recentTransactions || []);
-
-        if (data.paymentStatus === 'approved') {
-          setPaymentStatus('approved');
-          window.clearInterval(interval);
-          showSuccess('Pagamento confirmado! Seus créditos foram liberados.');
-          setTimeout(() => {
-            setPaymentDialogOpen(false);
-          }, 1200);
-        }
-      } catch (error) {
-        console.error('Erro ao verificar pagamento:', error);
-      }
-    }, 3000);
-
-    return () => window.clearInterval(interval);
-  }, [paymentDialogOpen, paymentId]);
 
   const recentTransactions = useMemo(() => history.slice(0, 8), [history]);
 
@@ -133,30 +121,90 @@ const Credits = () => {
       return;
     }
 
-    if (!user.emailAddresses?.[0]?.emailAddress) {
-      showError('Não encontrei seu e-mail para gerar o Pix.');
-      return;
-    }
-
     setLoading(true);
     try {
-      const data = await createPixRecharge({
-        userId: user.id,
-        email: user.emailAddresses[0].emailAddress,
-        amountReais: numericAmount,
+      const response = await fetch(`${API_BASE_URL.replace(/\/$/, '')}/api/credits/create-pix`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          amount: numericAmount,
+        }),
       });
 
-      setRechargeAmount(numericAmount);
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      const data = await response.json();
+      setPendingRechargeAmount(numericAmount);
       setPaymentId(data.paymentId);
-      setQrCodeBase64(data.qrCodeBase64);
-      setPixCopyCode(data.qrCode);
-      setTicketUrl(data.ticketUrl);
-      setPaymentStatus('pending');
+      setQrCodeBase64(data.qrCodeBase64 || '');
+      setPixCopyCode(data.qrCode || '');
       setPaymentDialogOpen(true);
     } catch (error: any) {
       showError(error.message || 'Não foi possível gerar o Pix.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!user?.id || !paymentId) {
+      showError('Sessão inválida. Faça login novamente.');
+      return;
+    }
+
+    setConfirming(true);
+    try {
+      const response = await fetch(`${API_BASE_URL.replace(/\/$/, '')}/api/credits/confirm`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          paymentId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      const data = await response.json();
+
+      if (data?.success) {
+        const newBalanceValue = Number(data.newBalance ?? 0);
+        setBalanceCents(Number.isFinite(newBalanceValue) ? newBalanceValue : 0);
+        setHistory((prev) => [
+          {
+            id: `recharge-${paymentId}`,
+            type: 'recharge',
+            amount_cents: pendingRechargeAmount * 100,
+            payment_id: paymentId,
+            status: 'approved',
+            created_at: new Date().toISOString(),
+          },
+          ...prev,
+        ]);
+        showSuccess(`Pagamento confirmado! Seu saldo agora é ${formatCurrency((newBalanceValue || 0) / 100)}.`);
+        setPaymentDialogOpen(false);
+        setPaymentId(null);
+        setQrCodeBase64('');
+        setPixCopyCode('');
+        setPendingRechargeAmount(0);
+        await loadWallet();
+        return;
+      }
+
+      showError('Pagamento ainda não identificado, aguarde alguns minutos e tente novamente');
+    } catch (error: any) {
+      showError(error.message || 'Pagamento ainda não identificado, aguarde alguns minutos e tente novamente');
+    } finally {
+      setConfirming(false);
     }
   };
 
@@ -217,14 +265,9 @@ const Credits = () => {
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
-              {['10', '50', '100'].map((value) => (
-                <Button
-                  key={value}
-                  variant="outline"
-                  className="btn-elha-outline h-11"
-                  onClick={() => setAmount(value)}
-                >
+            <div className="grid grid-cols-4 gap-2">
+              {QUICK_VALUES.map((value) => (
+                <Button key={value} variant="outline" className="btn-elha-outline h-11" onClick={() => setAmount(String(value))}>
                   R$ {value}
                 </Button>
               ))}
@@ -254,9 +297,7 @@ const Credits = () => {
                         {item.type === 'debit' ? 'Uso em análise' : 'Recarga Pix'} • {new Date(item.created_at).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
-                    <div className="text-[10px] uppercase tracking-[1px] text-[#4A7A5C]">
-                      {item.status}
-                    </div>
+                    <div className="text-[10px] uppercase tracking-[1px] text-[#4A7A5C]">{item.status}</div>
                   </div>
                 ))}
               </div>
@@ -278,7 +319,7 @@ const Credits = () => {
           <DialogHeader>
             <DialogTitle className="text-[#1C3A2B]">Pague o Pix para liberar a recarga</DialogTitle>
             <DialogDescription className="text-[#4A7A5C]">
-              Assim que o Mercado Pago confirmar o pagamento de {formatCurrency(rechargeAmount)}, seus créditos serão adicionados automaticamente.
+              Assim que o Mercado Pago confirmar o pagamento de {formatCurrency(pendingRechargeAmount)}, seus créditos serão adicionados automaticamente.
             </DialogDescription>
           </DialogHeader>
 
@@ -298,31 +339,26 @@ const Credits = () => {
                 <QrCode size={16} />
                 <span className="text-[10px] uppercase tracking-[1px] font-medium">Copia e cola</span>
               </div>
-              <p className="break-all text-xs text-[#1C3A2B] bg-[#F5F0E8] rounded-xl p-3 border border-[#D4C9B5]">
-                {pixCopyCode || 'Gerando código Pix...'}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="break-all text-xs text-[#1C3A2B] bg-[#F5F0E8] rounded-xl p-3 border border-[#D4C9B5] flex-1">
+                  {pixCopyCode || 'Gerando código Pix...'}
+                </p>
+                <Button variant="outline" className="btn-elha-outline h-11 px-3" onClick={copyPixCode} disabled={!pixCopyCode}>
+                  <Copy size={14} />
+                </Button>
+              </div>
             </div>
 
-            {ticketUrl ? (
-              <a href={ticketUrl} target="_blank" rel="noreferrer" className="text-xs text-[#4A7A5C] underline">
-                Abrir comprovante do Mercado Pago
-              </a>
-            ) : null}
-
             <div className="flex items-center gap-2 text-xs text-[#4A7A5C]">
-              {paymentStatus === 'approved' ? (
-                <CheckCircle2 size={16} className="text-green-600" />
-              ) : (
-                <Loader2 size={16} className="animate-spin" />
-              )}
-              {paymentStatus === 'approved' ? 'Pagamento confirmado.' : 'Aguardando confirmação do pagamento...'}
+              {confirming ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+              {confirming ? 'Confirmando pagamento...' : 'Quando pagar, clique em “Já paguei”.'}
             </div>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" className="btn-elha-outline gap-2" onClick={copyPixCode} disabled={!pixCopyCode}>
-              <Copy size={14} />
-              Copiar código
+            <Button variant="outline" className="btn-elha-outline gap-2" onClick={handleConfirmPayment} disabled={confirming || !paymentId}>
+              <RefreshCw size={14} />
+              Já paguei
             </Button>
             <Button variant="outline" className="btn-elha-outline gap-2" onClick={loadWallet}>
               <RefreshCw size={14} />
