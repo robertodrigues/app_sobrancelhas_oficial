@@ -204,7 +204,7 @@ app.post('/api/credits/create-pix', async (req, res) => {
         transaction_amount: transactionAmount,
         description: 'Recarga de créditos - Elha App',
         payer: {
-          email: 'pagador@email.com',
+          email: 'pagador@elhaapp.com.br',
         },
       }),
     });
