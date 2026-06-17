@@ -219,7 +219,6 @@ const Capture = () => {
 
       const insertData = {
         client_id: selectedClientId,
-        user_id: user.id,
         image_url: capturedImages[capturedImages.length - 1].url,
         result,
       };
