@@ -259,7 +259,9 @@ Gere um resumo técnico da região analisada contendo:
 Use linguagem técnica e profissional, porém de fácil compreensão.
 O relatório será apresentado pela profissional à cliente e poderá embasar decisões de protocolo de tratamento.
 
-Lembre-se de que em cada foto enviada deve fazer essa análise respeitando os sinais encontrados em cada forma, respeitando a individualização, sendo que sempre serão imagens diferentes com sinais diferentes, por isso essa análise, por mais que tenha um padrão de observação, deve ser personalizada batendo as informações de acordo com cada imagem enviada e selecionada.
+Lembre-se de que em cada foto enviada deve fazer essa análise respeitando os sinais encontrados em cada forma, respeitando a individualização, sendo que sempre serão imagens diferentes com sinais diferentes, por isso essa análise, por mais que haja um padrão de observação, deve ser personalizada batendo as informações de acordo com cada imagem enviada e selecionada.
+
+IMPORTANTE: Responda APENAS com JSON válido. Não use travessões (—), aspas tipográficas (""), reticências (...) ou qualquer caractere especial dentro dos valores. Use apenas hífens (-), aspas simples retas (') e aspas duplas retas (") e pontos simples.
 
 Responda SOMENTE em JSON válido com esta estrutura:
 {

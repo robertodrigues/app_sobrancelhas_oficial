@@ -105,12 +105,15 @@ const parseAnthropicJsonResponse = (text: string) => {
 
   const sanitize = (s: string) =>
     s
-      .replace(/[\u2013\u2014]/g, "-")
-      .replace(/[\u2018\u2019]/g, "'")
-      .replace(/[\u201C\u201D]/g, '"')
-      .replace(/[\u00A0]/g, " ")
-      .replace(/\r\n/g, "\\n")
-      .replace(/\r/g, "\\n");
+      .replace(/[\u2013\u2014\u2015]/g, "-")
+      .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
+      .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
+      .replace(/[\u00A0\u202F\u2009]/g, " ")
+      .replace(/[\u2026]/g, "...")
+      .replace(/\r\n/g, " ")
+      .replace(/\r/g, " ")
+      .replace(/\n/g, " ")
+      .replace(/\t/g, " ");
 
   try {
     return JSON.parse(sanitize(jsonText));
