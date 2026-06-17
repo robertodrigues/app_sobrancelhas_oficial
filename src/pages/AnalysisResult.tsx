@@ -36,9 +36,20 @@ const AnalysisResult = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const routeState = (location.state as { analysis?: any; image?: string; allImages?: any[] } | null) || null;
-  const savedState = getSavedAnalysisState();
-  const state = routeState || savedState || {};
-  const { analysis, image, allImages } = state;
+
+  let savedState: { analysis?: any; image?: string; allImages?: any[] } | null = null;
+  try {
+    savedState = getSavedAnalysisState();
+  } catch (error) {
+    console.error('[AnalysisResult] Error reading saved analysis state:', error);
+    savedState = null;
+  }
+
+  console.log('[AnalysisResult] routeState:', routeState, '| savedState:', savedState);
+
+  const analysis = routeState?.analysis ?? savedState?.analysis ?? null;
+  const image = routeState?.image ?? savedState?.image ?? null;
+  const allImages = routeState?.allImages ?? savedState?.allImages ?? null;
   const reportRef = useRef<HTMLDivElement>(null);
 
   const [pdfLogo, setPdfLogo] = useState<string | null>(null);

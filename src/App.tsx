@@ -57,12 +57,7 @@ const App = () => {
                       <SignedOut><RedirectToSignIn /></SignedOut>
                     </>
                   } />
-                  <Route path="/resultado" element={
-                    <>
-                      <SignedIn><AnalysisResult /></SignedIn>
-                      <SignedOut><RedirectToSignIn /></SignedOut>
-                    </>
-                  } />
+                  <Route path="/resultado" element={<AnalysisResult />} />
                   <Route path="/creditos" element={
                     <>
                       <SignedIn><Credits /></SignedIn>

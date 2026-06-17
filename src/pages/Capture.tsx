@@ -207,6 +207,8 @@ const Capture = () => {
       return;
     }
 
+    let resultToNavigate: { analysis: any; image: string; allImages: AnalysisImage[] } | null = null;
+
     setIsAnalyzing(true);
     try {
       await consumeAnalysisCredit(user.id);
@@ -229,27 +231,14 @@ const Capture = () => {
 
       if (error) throw error;
 
-      sessionStorage.setItem(
-        'elha:last-analysis',
-        JSON.stringify({
-          analysis: result,
-          image: lastImageUrl,
-          allImages: capturedImages,
-        }),
-      );
+      resultToNavigate = {
+        analysis: result,
+        image: lastImageUrl,
+        allImages: capturedImages,
+      };
 
+      sessionStorage.setItem('elha:last-analysis', JSON.stringify(resultToNavigate));
       showSuccess('Análise concluída!');
-
-      navigate('/resultado', {
-        replace: true,
-        state: {
-          analysis: result,
-          image: lastImageUrl,
-          allImages: capturedImages,
-        },
-      });
-
-      return;
     } catch (error: any) {
       const message = String(error?.message || error || '');
 
@@ -264,6 +253,13 @@ const Capture = () => {
       showError('Falha na análise: ' + (error.message || 'erro desconhecido'));
     } finally {
       setIsAnalyzing(false);
+    }
+
+    if (resultToNavigate) {
+      navigate('/resultado', {
+        replace: true,
+        state: resultToNavigate,
+      });
     }
   };
 
