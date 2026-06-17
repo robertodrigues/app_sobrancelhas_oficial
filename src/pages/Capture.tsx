@@ -238,6 +238,7 @@ const Capture = () => {
       };
 
       sessionStorage.setItem('elha:last-analysis', JSON.stringify(resultToNavigate));
+      console.log('[Capture] resultToNavigate definido:', resultToNavigate);
       showSuccess('Análise concluída!');
     } catch (error: any) {
       const message = String(error?.message || error || '');
@@ -254,6 +255,8 @@ const Capture = () => {
     } finally {
       setIsAnalyzing(false);
     }
+
+    console.log('[Capture] Após finally, resultToNavigate:', resultToNavigate);
 
     if (resultToNavigate) {
       navigate('/resultado', {
