@@ -228,13 +228,17 @@ const Capture = () => {
       if (error) throw error;
 
       showSuccess('Análise concluída!');
+
       navigate('/resultado', {
+        replace: true,
         state: {
           analysis: result,
           image: capturedImages[capturedImages.length - 1].url,
           allImages: capturedImages,
         },
       });
+
+      return;
     } catch (error: any) {
       const message = String(error?.message || error || '');
 
