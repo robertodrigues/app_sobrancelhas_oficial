@@ -237,7 +237,17 @@ const Capture = () => {
         },
       });
     } catch (error: any) {
-      showError('Falha na análise: ' + error.message);
+      const message = String(error?.message || error || '');
+
+      if (message.includes('Saldo insuficiente')) {
+        showError('Saldo insuficiente. Vá em Créditos e recarregue para continuar.');
+        setTimeout(() => {
+          navigate('/creditos');
+        }, 2000);
+        return;
+      }
+
+      showError('Falha na análise: ' + (error.message || 'erro desconhecido'));
     } finally {
       setIsAnalyzing(false);
     }
