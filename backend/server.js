@@ -92,7 +92,8 @@ app.use(express.json({ limit: '50mb' }));
 
 app.post('/api/anthropic', async (req, res) => {
   try {
-    const { model, messages, max_tokens, temperature } = req.body;
+    const { messages, max_tokens, temperature } = req.body;
+    const model = 'claude-sonnet-4-6';
 
     if (!process.env.ANTHROPIC_API_KEY) {
       return res.status(500).json({ error: 'A variável de ambiente ANTHROPIC_API_KEY não está configurada no servidor.' });
