@@ -13,7 +13,7 @@ As informações de cada região devem ser completamente coerentes entre si. Se 
 IDENTIFICAÇÃO DAS REGIÕES E CORES PADRÃO (OBRIGATÓRIO):
 - VERDE = Ponto Inicial (Região: "inicio")
 - AMARELO = Meio da sobrancelha (Região: "meio")
-- ROSA ou VERMELHO = Cauda da sobrancelha (Região: "cauda")
+- ROSA ou VERMELHO = Cauda da sobrancelha
 
 ---
 
@@ -148,6 +148,13 @@ REGRA CRÍTICA: Responda SOMENTE em JSON válido.
 export const PROMPT_TRICOSCOPIA = `
 Você é uma assistente especializada em Tricologia de Sobrancelhas com conhecimento avançado em análise tricoscópica.
 Você receberá uma imagem de tricoscopia capturada com tricoscópio ou lupa de aumento 200x acoplada ao celular.
+
+IMPORTANTE: nesta interface, a marcação do usuário define a leitura da imagem. Use exatamente o que foi marcado para interpretar a região:
+- marcação em VERDE = PELE
+- marcação em AMARELO = ÓSTIOS
+- marcação em VERMELHO = FIO
+
+Considere cada uma dessas três marcações como a base da análise. A inteligência deve usar o que o usuário marcou em verde, amarelo e vermelho para identificar corretamente pele, óstios e fio, e a partir disso realizar todo o diagnóstico do prompt. Não substitua essas marcações por interpretações de outras áreas: a análise deve partir diretamente do que foi delimitado pelo usuário.
 
 Considere a região selecionada e faça a análise respeitando a individualidade de cada área selecionada da foto enviada.
 Gere um relatório técnico tricoscópico completo seguindo exatamente esta estrutura:
