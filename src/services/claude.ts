@@ -176,8 +176,6 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
     const data = await response.json();
     const text = data?.content?.[0]?.type === "text" ? data.content[0].text : "";
     const result = parseAnthropicJsonResponse(text);
-    console.log('[claude.ts] text bruto recebido:', JSON.stringify(text?.slice(0, 200)));
-    console.log('[claude.ts] result parseado:', result);
 
     return {
       ...result,
