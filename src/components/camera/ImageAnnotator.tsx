@@ -333,9 +333,10 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
           size="icon"
           onClick={handleSave}
           disabled={isSaving}
-          className="text-[#8FAF8A] hover:bg-white/10 disabled:opacity-50"
+          className="h-9 w-9 rounded-full border border-[#FFB347]/40 bg-[radial-gradient(circle_at_30%_30%,#FFD089_0%,#FF9F1C_42%,#D97706_100%)] text-white shadow-[0_8px_18px_rgba(217,119,6,0.32),inset_0_2px_4px_rgba(255,255,255,0.35),inset_0_-5px_9px_rgba(120,53,15,0.28)] transition-transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+          aria-label="Confirmar marcação e avançar"
         >
-          <Check size={24} />
+          <Check size={22} />
         </Button>
       </div>
 
