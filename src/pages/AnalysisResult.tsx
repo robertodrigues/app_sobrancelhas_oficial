@@ -45,8 +45,6 @@ const AnalysisResult = () => {
     savedState = null;
   }
 
-  console.log('[AnalysisResult] routeState:', routeState, '| savedState:', savedState);
-
   const analysis = routeState?.analysis ?? savedState?.analysis ?? null;
   const image = routeState?.image ?? savedState?.image ?? null;
   const allImages = routeState?.allImages ?? savedState?.allImages ?? null;
