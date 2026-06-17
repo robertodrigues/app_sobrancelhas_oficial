@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Undo2, Redo2, Check, X, MousePointer2, Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import AnalysisProcessingOverlay from '@/components/camera/AnalysisProcessingOverlay';
 
 export interface RegionBBox {
   minX: number;
@@ -12,7 +13,7 @@ export interface RegionBBox {
 
 interface ImageAnnotatorProps {
   image: string;
-  onSave: (annotatedImage: string, bboxes: Record<string, RegionBBox>) => void;
+  onSave: (annotatedImage: string, bboxes: Record<string, RegionBBox>) => Promise<void> | void;
   onCancel: () => void;
   mode?: 'single' | 'comparison' | 'tricoscopia';
 }
@@ -34,6 +35,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   const [history, setHistory] = useState<DrawingSnapshot[]>([]);
   const [redoHistory, setRedoHistory] = useState<DrawingSnapshot[]>([]);
   const [currentBBoxes, setCurrentBBoxes] = useState<Record<string, RegionBBox>>({});
+  const [isSaving, setIsSaving] = useState(false);
   const currentBBoxesRef = useRef<Record<string, RegionBBox>>({});
   const imageRef = useRef<HTMLImageElement | null>(null);
 
@@ -191,7 +193,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   };
 
   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!activeRegion || !drawingCanvasRef.current) return;
+    if (!activeRegion || !drawingCanvasRef.current || isSaving) return;
 
     if ('preventDefault' in e) {
       e.preventDefault();
@@ -217,7 +219,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   };
 
   const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDrawing || !drawingCanvasRef.current || !mainCanvasRef.current || !activeRegion) return;
+    if (!isDrawing || !drawingCanvasRef.current || !mainCanvasRef.current || !activeRegion || isSaving) return;
 
     if ('preventDefault' in e) {
       e.preventDefault();
@@ -237,6 +239,8 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   };
 
   const stopDrawing = () => {
+    if (isSaving) return;
+
     if (isDrawing && drawingCanvasRef.current) {
       const snapshot: DrawingSnapshot = {
         data: drawingCanvasRef.current.toDataURL(),
@@ -270,7 +274,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   };
 
   const undo = () => {
-    if (history.length <= 1) return;
+    if (isSaving || history.length <= 1) return;
 
     const nextHistory = [...history];
     const currentSnapshot = nextHistory.pop();
@@ -286,7 +290,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   };
 
   const redo = () => {
-    if (redoHistory.length === 0) return;
+    if (isSaving || redoHistory.length === 0) return;
 
     const nextRedo = [...redoHistory];
     const snapshot = nextRedo.pop();
@@ -297,23 +301,40 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
     restoreSnapshot(snapshot);
   };
 
-  const handleSave = () => {
-    if (mainCanvasRef.current) {
-      onSave(mainCanvasRef.current.toDataURL('image/jpeg', 0.9), currentBBoxesRef.current);
+  const handleSave = async () => {
+    if (isSaving) return;
+
+    setIsSaving(true);
+    try {
+      await Promise.resolve(onSave(mainCanvasRef.current?.toDataURL('image/jpeg', 0.9) || image, currentBBoxesRef.current));
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
     <div className="absolute inset-0 z-50 flex h-full w-full max-h-full max-w-full flex-col overflow-hidden bg-[#1C3A2B] text-[#E8DECE]">
       <div className="flex shrink-0 items-center justify-between border-b border-[#4A7A5C]/30 bg-[#1C3A2B] px-3 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] text-[#E8DECE] sm:px-4">
-        <Button variant="ghost" size="icon" onClick={onCancel} className="text-[#E8DECE] hover:bg-white/10">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onCancel}
+          disabled={isSaving}
+          className="text-[#E8DECE] hover:bg-white/10 disabled:opacity-50"
+        >
           <X size={24} />
         </Button>
         <div className="min-w-0 flex-1 px-2 text-center">
           <h2 className="truncate font-heading text-base font-normal text-[#E8DECE]">Mapeamento Técnico</h2>
           <p className="font-label-category text-[9px] text-[#8FAF8A]">Circule as regiões</p>
         </div>
-        <Button variant="ghost" size="icon" onClick={handleSave} className="text-[#8FAF8A] hover:bg-white/10">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleSave}
+          disabled={isSaving}
+          className="text-[#8FAF8A] hover:bg-white/10 disabled:opacity-50"
+        >
           <Check size={24} />
         </Button>
       </div>
@@ -337,7 +358,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
             }}
           />
 
-          {!activeRegion && (
+          {!activeRegion && !isSaving && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="max-w-xs rounded-3xl border border-[#4A7A5C] bg-[#1C3A2B]/90 p-6 text-center backdrop-blur-md">
                 <MousePointer2 className="mx-auto mb-3 animate-bounce text-[#8FAF8A]" size={32} />
@@ -346,6 +367,13 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
               </div>
             </div>
           )}
+
+          {isSaving && (
+            <AnalysisProcessingOverlay
+              title="Aguarde..."
+              message="Estamos enviando sua foto marcada para a próxima etapa."
+            />
+          )}
         </div>
       </div>
 
@@ -353,19 +381,22 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
         <div className="flex items-center justify-center gap-6 rounded-2xl border border-[#4A7A5C] bg-[#3D6B52]/50 p-3">
           <button
             onClick={() => setBrushSize(4)}
-            className={cn('rounded-full p-2 transition-all', brushSize === 4 ? 'bg-[#16A34A] text-white' : 'text-[#8FAF8A]/70')}
+            disabled={isSaving}
+            className={cn('rounded-full p-2 transition-all disabled:opacity-50', brushSize === 4 ? 'bg-[#16A34A] text-white' : 'text-[#8FAF8A]/70')}
           >
             <Circle size={8} fill="currentColor" />
           </button>
           <button
             onClick={() => setBrushSize(8)}
-            className={cn('rounded-full p-2 transition-all', brushSize === 8 ? 'bg-[#EAB308] text-white' : 'text-[#8FAF8A]/70')}
+            disabled={isSaving}
+            className={cn('rounded-full p-2 transition-all disabled:opacity-50', brushSize === 8 ? 'bg-[#EAB308] text-white' : 'text-[#8FAF8A]/70')}
           >
             <Circle size={14} fill="currentColor" />
           </button>
           <button
             onClick={() => setBrushSize(14)}
-            className={cn('rounded-full p-2 transition-all', brushSize === 14 ? 'bg-[#DC2626] text-white' : 'text-[#8FAF8A]/70')}
+            disabled={isSaving}
+            className={cn('rounded-full p-2 transition-all disabled:opacity-50', brushSize === 14 ? 'bg-[#DC2626] text-white' : 'text-[#8FAF8A]/70')}
           >
             <Circle size={20} fill="currentColor" />
           </button>
@@ -374,8 +405,9 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
         <div className="grid grid-cols-3 gap-3">
           <button
             onClick={() => setActiveRegion('ponto_inicial')}
+            disabled={isSaving}
             className={cn(
-              'flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all',
+              'flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all disabled:opacity-50',
               activeRegion === 'ponto_inicial' ? 'border-[#16A34A] bg-[#16A34A]/20' : 'border-[#4A7A5C] bg-[#3D6B52]/30',
             )}
           >
@@ -385,8 +417,9 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
 
           <button
             onClick={() => setActiveRegion('meio')}
+            disabled={isSaving}
             className={cn(
-              'flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all',
+              'flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all disabled:opacity-50',
               activeRegion === 'meio' ? 'border-[#EAB308] bg-[#EAB308]/20' : 'border-[#4A7A5C] bg-[#3D6B52]/30',
             )}
           >
@@ -396,8 +429,9 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
 
           <button
             onClick={() => setActiveRegion('cauda')}
+            disabled={isSaving}
             className={cn(
-              'flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all',
+              'flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all disabled:opacity-50',
               activeRegion === 'cauda' ? 'border-[#DC2626] bg-[#DC2626]/20' : 'border-[#4A7A5C] bg-[#3D6B52]/30',
             )}
           >
@@ -410,7 +444,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
           <Button
             variant="outline"
             onClick={undo}
-            disabled={history.length <= 1}
+            disabled={isSaving || history.length <= 1}
             className="h-14 w-full gap-2 border-[#D4C9B5] bg-[#F5F0E8] text-[#1C3A2B] shadow-sm hover:bg-[#E8DECE] active:bg-[#E8DECE] disabled:opacity-40"
           >
             <Undo2 size={18} />
@@ -420,7 +454,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
           <Button
             variant="outline"
             onClick={redo}
-            disabled={redoHistory.length === 0}
+            disabled={isSaving || redoHistory.length === 0}
             className="h-14 w-full gap-2 border-[#D4C9B5] bg-[#F5F0E8] text-[#1C3A2B] shadow-sm hover:bg-[#E8DECE] active:bg-[#E8DECE] disabled:opacity-40"
           >
             <Redo2 size={18} />
