@@ -53,11 +53,11 @@ const AnalysisTutorialDialog = ({ videoUrl = '' }: AnalysisTutorialDialogProps) 
           type="button"
           variant="ghost"
           size="icon"
-          className="h-10 w-10 rounded-full border border-[#FFB347]/40 bg-[radial-gradient(circle_at_30%_30%,#FFD089_0%,#FF9F1C_42%,#D97706_100%)] text-white shadow-[0_10px_22px_rgba(217,119,6,0.35),inset_0_2px_5px_rgba(255,255,255,0.35),inset_0_-6px_10px_rgba(120,53,15,0.28)] transition-transform hover:scale-105 active:scale-95"
+          className="h-7 w-7 rounded-full border border-[#FFB347]/40 bg-[radial-gradient(circle_at_30%_30%,#FFD089_0%,#FF9F1C_42%,#D97706_100%)] text-white shadow-[0_8px_18px_rgba(217,119,6,0.32),inset_0_2px_4px_rgba(255,255,255,0.35),inset_0_-5px_9px_rgba(120,53,15,0.28)] transition-transform hover:scale-105 active:scale-95"
           aria-label="Abrir tutorial da análise inteligente"
         >
-          <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.35)]">
-            <HelpCircle className="h-5 w-5 drop-shadow-sm" />
+          <span className="relative flex h-5 w-5 items-center justify-center rounded-full bg-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.35)]">
+            <HelpCircle className="h-4 w-4 drop-shadow-sm" />
           </span>
         </Button>
       </DialogTrigger>
