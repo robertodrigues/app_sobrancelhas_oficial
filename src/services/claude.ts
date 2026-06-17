@@ -189,7 +189,14 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
 
     const data = await response.json();
     const text = data?.content?.[0]?.type === "text" ? data.content[0].text : "";
-    const result = parseAnthropicJsonResponse(text);
+
+    // Se o servidor já parseou e devolveu JSON puro, usa direto
+    let result: any;
+    try {
+      result = JSON.parse(text);
+    } catch {
+      result = parseAnthropicJsonResponse(text);
+    }
 
     return {
       ...result,
