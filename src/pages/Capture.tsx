@@ -455,7 +455,7 @@ const Capture = () => {
                 </Button>
 
                 <Button
-                  className="btn-elha-primary h-11 gap-1.5 text-xs"
+                  className="w-full h-12 gap-2 text-xs bg-[#FF9F1C] text-white border border-[#F08A00] shadow-lg shadow-[#FF9F1C]/30 hover:bg-[#F08A00] hover:text-white active:bg-[#E67E00]"
                   onClick={handleAnnotateImage}
                   disabled={isPreparingImage}
                 >
@@ -478,7 +478,7 @@ const Capture = () => {
 
         {hasAtLeastOneImage && !currentImage && (
           <Button
-            className="btn-elha-primary w-full h-12 gap-2 text-xs"
+            className="w-full h-12 gap-2 text-xs bg-[#FF9F1C] text-white border border-[#F08A00] shadow-lg shadow-[#FF9F1C]/30 hover:bg-[#F08A00] hover:text-white active:bg-[#E67E00]"
             onClick={handleConfirm}
             disabled={isAnalyzing}
           >
