@@ -96,7 +96,7 @@ app.post('/api/anthropic', async (req, res) => {
     const model = 'claude-sonnet-4-6';
 
     if (!process.env.ANTHROPIC_API_KEY) {
-      return res.status(500).json({ error: 'A variável de ambiente ANTHROPIC_API_KEY não está configurada no servidor.' });
+      return res.status(500).json({ error: 'ANTHROPIC_API_KEY não configurada.' });
     }
 
     const response = await anthropic.messages.create({
@@ -106,28 +106,36 @@ app.post('/api/anthropic', async (req, res) => {
       temperature,
     });
 
-    // Sanitiza o texto de resposta no servidor antes de enviar ao frontend
     if (response?.content?.[0]?.type === 'text') {
-      response.content[0].text = response.content[0].text
-        .replace(/[\u2013\u2014\u2015]/g, '-')
-        .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
-        .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
-        .replace(/[\u00A0\u202F\u2009]/g, ' ')
-        .replace(/[\u2026]/g, '...');
+      const raw = response.content[0].text;
+      const cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const start = cleaned.indexOf('{');
+      const end = cleaned.lastIndexOf('}') + 1;
+      if (start !== -1 && end > start) {
+        const jsonText = cleaned.substring(start, end);
+        // Substitui TODOS os caracteres não-ASCII problemáticos
+        const sanitized = jsonText.replace(/[^\x20-\x7E\xC0-\xFF]/g, (c) => {
+          const cp = c.codePointAt(0);
+          if (cp === 0x2013 || cp === 0x2014 || cp === 0x2015) return '-';
+          if (cp >= 0x2018 && cp <= 0x201B) return "'";
+          if (cp >= 0x201C && cp <= 0x201F) return '"';
+          if (cp === 0x2026) return '...';
+          if (cp === 0x00A0 || cp === 0x202F || cp === 0x2009) return ' ';
+          return '';
+        });
+        try {
+          const parsed = JSON.parse(sanitized);
+          response.content[0].text = JSON.stringify(parsed);
+        } catch (e) {
+          console.error('Parse falhou no servidor:', e.message, 'trecho:', sanitized.slice(5880, 5910));
+        }
+      }
     }
 
     res.json(response);
   } catch (error) {
-    console.error('Erro na API da Anthropic:', {
-      status: error?.status ?? error?.statusCode ?? null,
-      message: error?.message ?? 'Erro na API da Anthropic',
-      body: error?.error ?? error?.response?.body ?? error?.response ?? error,
-    });
-
-    return res.status(500).json({
-      error: error?.message || 'Erro na API da Anthropic',
-      details: error?.status || null,
-    });
+    console.error('Erro na API da Anthropic:', error?.message);
+    return res.status(500).json({ error: error?.message || 'Erro na API da Anthropic' });
   }
 });
 
