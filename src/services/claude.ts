@@ -88,6 +88,30 @@ const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<string> =
   return compressDataUrl(canvas.toDataURL("image/jpeg", 0.82), 900, 0.78);
 };
 
+const parseAnthropicJsonResponse = (text: string) => {
+  const cleaned = text
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
+
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}") + 1;
+
+  if (start === -1 || end <= start) {
+    throw new Error("A resposta da Anthropic não contém um JSON válido.");
+  }
+
+  const jsonText = cleaned.substring(start, end).trim();
+
+  try {
+    return JSON.parse(jsonText);
+  } catch (error) {
+    throw new Error(
+      `Não foi possível interpretar o JSON retornado pela Anthropic. Texto recebido: ${jsonText}`,
+    );
+  }
+};
+
 export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisMode = "single") => {
   try {
     const content: AnthropicMessageContent[] = [];
@@ -142,10 +166,8 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
 
     const data = await response.json();
     const text = data?.content?.[0]?.type === "text" ? data.content[0].text : "";
-    const clean = text.replace(/```json|```/g, "").trim();
-    const start = clean.indexOf("{");
-    const end = clean.lastIndexOf("}") + 1;
-    const result = JSON.parse(clean.substring(start, end));
+    const result = parseAnthropicJsonResponse(text);
+
     return {
       ...result,
       isComparativo: mode === "comparison" || images.length > 1,
