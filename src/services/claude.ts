@@ -89,7 +89,6 @@ const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<string> =
 };
 
 const parseAnthropicJsonResponse = (text: string) => {
-  console.log('[parse] texto de entrada (primeiros 100 chars):', JSON.stringify(text?.slice(0, 100)));
   const cleaned = text
     .replace(/```json/gi, "")
     .replace(/```/g, "")
@@ -106,10 +105,19 @@ const parseAnthropicJsonResponse = (text: string) => {
 
   try {
     return JSON.parse(jsonText);
-  } catch (error) {
-    throw new Error(
-      `Não foi possível interpretar o JSON retornado pela Anthropic. Texto recebido: ${jsonText}`
-    );
+  } catch (firstError) {
+    try {
+      const sanitized = jsonText
+        .replace(/[\u2013\u2014]/g, "-")
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/[\u201C\u201D]/g, '"')
+        .replace(/[\u00A0]/g, " ");
+      return JSON.parse(sanitized);
+    } catch (error) {
+      throw new Error(
+        `Não foi possível interpretar o JSON: ${String(firstError)}`
+      );
+    }
   }
 };
 
