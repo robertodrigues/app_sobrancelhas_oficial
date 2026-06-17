@@ -113,19 +113,34 @@ app.post('/api/anthropic', async (req, res) => {
       const end = cleaned.lastIndexOf('}') + 1;
       if (start !== -1 && end > start) {
         const jsonText = cleaned.substring(start, end);
-        // Substitui TODOS os caracteres não-ASCII problemáticos
         const sanitized = jsonText
           .replace(/[\u2013\u2014\u2015]/g, '-')
           .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
           .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
           .replace(/\u2026/g, '...')
-          .replace(/[\u00A0\u202F\u2009]/g, ' ')
-          .replace(/[\u0000-\u001F]/g, ' ');
+          .replace(/[\u00A0\u202F\u2009]/g, ' ');
+
+        // Corrige quebras de linha dentro de strings JSON
+        const fixedJson = sanitized.replace(/"([^"]*)"/g, (match) => {
+          return match
+            .replace(/\n/g, ' ')
+            .replace(/\r/g, ' ')
+            .replace(/\t/g, ' ');
+        });
+
         try {
-          const parsed = JSON.parse(sanitized);
+          const parsed = JSON.parse(fixedJson);
           response.content[0].text = JSON.stringify(parsed);
         } catch (e) {
-          console.error('Parse falhou no servidor:', e.message, 'trecho:', sanitized.slice(6370, 6400));
+          console.error('Parse falhou:', e.message);
+          // Tenta forçar remoção de todos os controles
+          const brutal = fixedJson.replace(/[\u0000-\u001F]/g, ' ');
+          try {
+            const parsed = JSON.parse(brutal);
+            response.content[0].text = JSON.stringify(parsed);
+          } catch (e2) {
+            console.error('Parse brutal falhou:', e2.message, 'trecho:', brutal.slice(5980, 6010));
+          }
         }
       }
     }
