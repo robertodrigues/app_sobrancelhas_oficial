@@ -107,8 +107,16 @@ app.post('/api/anthropic', async (req, res) => {
 
     res.json(response);
   } catch (error) {
-    console.error('Erro na API da Anthropic:', error);
-    res.status(500).json({ error: 'Erro na API da Anthropic' });
+    console.error('Erro na API da Anthropic:', {
+      status: error?.status ?? error?.statusCode ?? null,
+      message: error?.message ?? 'Erro na API da Anthropic',
+      body: error?.error ?? error?.response?.body ?? error?.response ?? error,
+    });
+
+    return res.status(500).json({
+      error: error?.message || 'Erro na API da Anthropic',
+      details: error?.status || null,
+    });
   }
 });
 
