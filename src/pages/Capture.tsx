@@ -276,6 +276,9 @@ const Capture = () => {
 
           <div className="text-center flex-1">
             <h1 className="font-heading text-lg font-normal">Análise Inteligente</h1>
+            <p className="mt-1 text-[10px] text-[#8FAF8A]">
+              Clique na bolinha laranja para abrir o tutorial dessa interface
+            </p>
           </div>
 
           <AnalysisTutorialDialog />
