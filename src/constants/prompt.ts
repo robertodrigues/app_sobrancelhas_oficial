@@ -93,7 +93,7 @@ DIRETRIZ ESPECÍFICA PARA O MODO SEM COMPARAÇÃO:
 
 ---
 
-REGRA CRÍTICA: Responda SOMENTE em JSON válido.
+REGRA CRÍTICA: Responda SOMENTE em JSON válido. Não use travessões (—), aspas tipográficas, reticências (...) ou qualquer caractere especial. Use apenas hífens (-), aspas retas e pontos simples.
 
 {
   "isComparativo": false,
@@ -261,7 +261,7 @@ O relatório será apresentado pela profissional à cliente e poderá embasar de
 
 Lembre-se de que em cada foto enviada deve fazer essa análise respeitando os sinais encontrados em cada forma, respeitando a individualização, sendo que sempre serão imagens diferentes com sinais diferentes, por isso essa análise, por mais que haja um padrão de observação, deve ser personalizada batendo as informações de acordo com cada imagem enviada e selecionada.
 
-IMPORTANTE: Responda APENAS com JSON válido. Não use travessões (—), aspas tipográficas (""), reticências (...) ou qualquer caractere especial dentro dos valores. Use apenas hífens (-), aspas simples retas (') e aspas duplas retas (") e pontos simples.
+IMPORTANTE: Responda APENAS com JSON válido. Não use travessões (—), aspas tipográficas, reticências (...) ou qualquer caractere especial dentro dos valores. Use apenas hífens (-), aspas retas e pontos simples.
 
 Responda SOMENTE em JSON válido com esta estrutura:
 {
