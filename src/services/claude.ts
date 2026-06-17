@@ -141,7 +141,8 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
 
     for (let i = 0; i < images.length; i++) {
       const label = images.length > 1 ? (i === 0 ? "ANTES" : "DEPOIS") : "VISÃO GERAL";
-      const imageDataUrl = await prepareImageDataUrl(images[i].dataUrl ?? images[i].url);
+      console.log('[claude] image dataUrl presente?', !!images[i].dataUrl, 'url:', images[i].url?.slice(0, 50));
+      const imageDataUrl = await prepareImageDataUrl(images[i].dataUrl || images[i].url);
 
       content.push({ type: "text", text: `Imagem ${i + 1}: ${label}` });
       content.push({
