@@ -90,7 +90,7 @@ const AnalysisModeIllustration: React.FC<AnalysisModeIllustrationProps> = ({ mod
 
       <h3 className="font-heading text-base font-normal text-[#E8DECE]">Suba a foto para análise</h3>
       <p className="mt-2 font-body text-xs text-[#8FAF8A]">
-        Use uma imagem da sobrancelha atual.
+        Use a imagem de uma sobrancelha.
       </p>
     </div>
   );
