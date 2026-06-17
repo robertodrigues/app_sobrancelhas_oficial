@@ -114,20 +114,18 @@ app.post('/api/anthropic', async (req, res) => {
       if (start !== -1 && end > start) {
         const jsonText = cleaned.substring(start, end);
         // Substitui TODOS os caracteres não-ASCII problemáticos
-        const sanitized = jsonText.replace(/[^\x20-\x7E\xC0-\xFF]/g, (c) => {
-          const cp = c.codePointAt(0);
-          if (cp === 0x2013 || cp === 0x2014 || cp === 0x2015) return '-';
-          if (cp >= 0x2018 && cp <= 0x201B) return "'";
-          if (cp >= 0x201C && cp <= 0x201F) return '"';
-          if (cp === 0x2026) return '...';
-          if (cp === 0x00A0 || cp === 0x202F || cp === 0x2009) return ' ';
-          return '';
-        });
+        const sanitized = jsonText
+          .replace(/[\u2013\u2014\u2015]/g, '-')
+          .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
+          .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
+          .replace(/\u2026/g, '...')
+          .replace(/[\u00A0\u202F\u2009]/g, ' ')
+          .replace(/[\u0000-\u001F]/g, ' ');
         try {
           const parsed = JSON.parse(sanitized);
           response.content[0].text = JSON.stringify(parsed);
         } catch (e) {
-          console.error('Parse falhou no servidor:', e.message, 'trecho:', sanitized.slice(5880, 5910));
+          console.error('Parse falhou no servidor:', e.message, 'trecho:', sanitized.slice(6370, 6400));
         }
       }
     }
