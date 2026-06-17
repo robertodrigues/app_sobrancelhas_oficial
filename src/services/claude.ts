@@ -153,7 +153,7 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-3-5-sonnet-latest",
+        model: "claude-sonnet-4-6",
         max_tokens: 2000,
         temperature: 0,
         messages: [{ role: "user", content }],
