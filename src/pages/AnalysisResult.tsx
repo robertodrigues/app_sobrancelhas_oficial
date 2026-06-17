@@ -61,6 +61,22 @@ const AnalysisResult = () => {
     if (savedBg) setPdfBgColor(savedBg);
   }, []);
 
+  const resolvedImage = (() => {
+    if (Array.isArray(allImages) && allImages.length > 0) {
+      return allImages[allImages.length - 1]?.dataUrl || allImages[allImages.length - 1]?.url || image;
+    }
+
+    return image;
+  })();
+
+  const comparisonBeforeImage = Array.isArray(allImages) && allImages.length > 0
+    ? allImages[0]?.dataUrl || allImages[0]?.url
+    : null;
+
+  const comparisonAfterImage = Array.isArray(allImages) && allImages.length > 1
+    ? allImages[1]?.dataUrl || allImages[1]?.url
+    : null;
+
   if (!analysis) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F5F0E8] text-[#1C3A2B]">
@@ -124,7 +140,7 @@ const AnalysisResult = () => {
     }
   };
 
-  const hasTwoImages = allImages && Array.isArray(allImages) && allImages.length >= 2;
+  const hasTwoImages = Array.isArray(allImages) && allImages.length >= 2;
 
   const textValue = (value: unknown) => {
     if (typeof value === 'string') return value;
@@ -140,10 +156,10 @@ const AnalysisResult = () => {
     setIsGeneratingPdf(true);
     try {
       const urlsToPreload: string[] = [];
-      if (analysis.isComparativo && hasTwoImages) {
-        urlsToPreload.push(allImages[0].url, allImages[1].url);
-      } else if (image) {
-        urlsToPreload.push(image);
+      if (analysis.isComparativo && hasTwoImages && comparisonBeforeImage && comparisonAfterImage) {
+        urlsToPreload.push(comparisonBeforeImage, comparisonAfterImage);
+      } else if (resolvedImage) {
+        urlsToPreload.push(resolvedImage);
       }
       if (pdfLogo) {
         urlsToPreload.push(pdfLogo);
@@ -236,7 +252,7 @@ const AnalysisResult = () => {
                 <p className="font-label-category text-[10px] text-[#4A7A5C] text-center">Antes</p>
                 <div className="rounded-2xl shadow-md border-2 border-[#E8DECE] p-1 bg-[#1C3A2B]/5">
                   <img
-                    src={allImages[0].url}
+                    src={comparisonBeforeImage || ''}
                     crossOrigin="anonymous"
                     className="w-full aspect-square rounded-[12px] object-cover block"
                     alt="Antes"
@@ -248,7 +264,7 @@ const AnalysisResult = () => {
                 <p className="font-label-category text-[10px] text-[#4A7A5C] text-center">Depois</p>
                 <div className="rounded-2xl shadow-md border-2 border-[#4A7A5C] p-1 bg-[#1C3A2B]/5">
                   <img
-                    src={allImages[1].url}
+                    src={comparisonAfterImage || ''}
                     crossOrigin="anonymous"
                     className="w-full aspect-square rounded-[12px] object-cover block"
                     alt="Depois"
@@ -260,7 +276,7 @@ const AnalysisResult = () => {
           ) : (
             <div className="relative rounded-3xl shadow-lg border-4 border-[#E8DECE] p-2 bg-[#1C3A2B]/5">
               <img
-                src={image}
+                src={resolvedImage || ''}
                 crossOrigin="anonymous"
                 className="w-full aspect-square rounded-[20px] object-cover block"
                 alt="Análise"
