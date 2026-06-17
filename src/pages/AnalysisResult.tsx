@@ -5,12 +5,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  ArrowLeft, 
-  Download, 
-  AlertTriangle, 
-  Target, 
-  ShieldCheck, 
+import {
+  ArrowLeft,
+  Download,
+  AlertTriangle,
+  Target,
+  ShieldCheck,
   TrendingUp,
   CheckCircle2,
   Eye,
@@ -23,10 +23,22 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { showSuccess, showError } from '@/utils/toast';
 
+const getSavedAnalysisState = () => {
+  try {
+    const raw = sessionStorage.getItem('elha:last-analysis');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 const AnalysisResult = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { analysis, image, allImages } = location.state || {};
+  const routeState = (location.state as { analysis?: any; image?: string; allImages?: any[] } | null) || null;
+  const savedState = getSavedAnalysisState();
+  const state = routeState || savedState || {};
+  const { analysis, image, allImages } = state;
   const reportRef = useRef<HTMLDivElement>(null);
 
   const [pdfLogo, setPdfLogo] = useState<string | null>(null);
@@ -51,12 +63,13 @@ const AnalysisResult = () => {
     );
   }
 
+  const regionEntries = Object.entries(analysis.regioes || {});
   const isTricoscopia = analysis.modoAnalise === 'tricoscopia';
 
   const getRegionTheme = (key: string) => {
     switch (key) {
       case 'inicio':
-        return { 
+        return {
           type: 'verde',
           bg: 'bg-[#EAF3DE] border border-[#16A34A]/20',
           labelColor: 'text-[#166534]',
@@ -67,7 +80,7 @@ const AnalysisResult = () => {
           label: 'Ponto Inicial'
         };
       case 'meio':
-        return { 
+        return {
           type: 'amarelo',
           bg: 'bg-[#FEF3C7] border border-[#EAB308]/25',
           labelColor: 'text-[#A16207]',
@@ -78,7 +91,7 @@ const AnalysisResult = () => {
           label: 'Meio da Sobrancelha'
         };
       case 'cauda':
-        return { 
+        return {
           type: 'vermelho',
           bg: 'bg-[#FEE2E2] border border-[#DC2626]/25',
           labelColor: 'text-[#991B1B]',
@@ -89,15 +102,15 @@ const AnalysisResult = () => {
           label: 'Cauda da Sobrancelha'
         };
       default:
-        return { 
+        return {
           type: 'neutro',
-          bg: 'bg-[#E8DECE]', 
-          labelColor: 'text-[#1C3A2B]/60', 
-          valueColor: 'text-[#1C3A2B]', 
-          subColor: 'text-[#1C3A2B]/80', 
-          progressBg: 'bg-[#D4C9B5]', 
+          bg: 'bg-[#E8DECE]',
+          labelColor: 'text-[#1C3A2B]/60',
+          valueColor: 'text-[#1C3A2B]',
+          subColor: 'text-[#1C3A2B]/80',
+          progressBg: 'bg-[#D4C9B5]',
           progressFill: 'bg-[#1C3A2B]',
-          label: key 
+          label: key
         };
     }
   };
@@ -346,7 +359,7 @@ const AnalysisResult = () => {
                   Diagnóstico por Região
                 </h2>
                 
-                {Object.entries(analysis.regioes).map(([key, data]: [string, any]) => {
+                {regionEntries.map(([key, data]: [string, any]) => {
                   const theme = getRegionTheme(key);
                   const percent = data.densidade?.percentual || 50;
                   return (

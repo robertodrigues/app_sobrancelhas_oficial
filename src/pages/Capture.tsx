@@ -217,9 +217,11 @@ const Capture = () => {
         result.isComparativo = true;
       }
 
+      const lastImageUrl = capturedImages[capturedImages.length - 1].url;
+
       const insertData = {
         client_id: selectedClientId,
-        image_url: capturedImages[capturedImages.length - 1].url,
+        image_url: lastImageUrl,
         result,
       };
 
@@ -227,13 +229,22 @@ const Capture = () => {
 
       if (error) throw error;
 
+      sessionStorage.setItem(
+        'elha:last-analysis',
+        JSON.stringify({
+          analysis: result,
+          image: lastImageUrl,
+          allImages: capturedImages,
+        }),
+      );
+
       showSuccess('Análise concluída!');
 
       navigate('/resultado', {
         replace: true,
         state: {
           analysis: result,
-          image: capturedImages[capturedImages.length - 1].url,
+          image: lastImageUrl,
           allImages: capturedImages,
         },
       });

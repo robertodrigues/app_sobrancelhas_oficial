@@ -48,39 +48,48 @@ const Index = () => {
           return;
         }
 
-        const { count: clientCount, error: clientError } = await supabase
+        const { data: clientRows, error: clientError } = await supabase
           .from("clients")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", user.id);
+          .select("id, name")
+          .eq("user_id", user.id)
+          .order("name");
 
         if (clientError) {
           throw clientError;
         }
 
+        const clientList = clientRows || [];
+        const clientIds = clientList.map((client) => client.id);
+
         setStats((prev) => ({
           ...prev,
-          clients: clientCount || 0,
+          clients: clientList.length,
         }));
 
-        const { count: analysisCount, error: analysisError } = await supabase
-          .from("analyses")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", user.id);
-
-        if (analysisError) {
-          throw analysisError;
+        if (clientIds.length === 0) {
+          setStats((prev) => ({
+            ...prev,
+            clients: clientList.length,
+            analyses: 0,
+          }));
+          setRecentActivities([]);
+          setLoading(false);
+          return;
         }
 
-        setStats((prev) => ({
-          ...prev,
-          clients: clientCount || 0,
-          analyses: analysisCount || 0,
-        }));
-
-        const { data: recent, error: recentError } = await supabase
+        const { count: analysisCount, error: analysisCountError } = await supabase
           .from("analyses")
-          .select("*, clients(name)")
-          .eq("user_id", user.id)
+          .select("*", { count: "exact", head: true })
+          .in("client_id", clientIds);
+
+        if (analysisCountError) {
+          throw analysisCountError;
+        }
+
+        const { data: recentAnalyses, error: recentError } = await supabase
+          .from("analyses")
+          .select("id, client_id, image_url, result, created_at")
+          .in("client_id", clientIds)
           .order("created_at", { ascending: false })
           .limit(5);
 
@@ -88,7 +97,22 @@ const Index = () => {
           throw recentError;
         }
 
-        setRecentActivities(recent || []);
+        const clientNameById = new Map(clientList.map((client) => [client.id, client.name]));
+
+        setStats((prev) => ({
+          ...prev,
+          clients: clientList.length,
+          analyses: analysisCount || 0,
+        }));
+
+        setRecentActivities(
+          (recentAnalyses || []).map((analysis) => ({
+            ...analysis,
+            clients: {
+              name: clientNameById.get(analysis.client_id) || "Cliente",
+            },
+          })),
+        );
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
         setStats((prev) => ({
