@@ -254,7 +254,7 @@ const AnalysisResult = () => {
                   <img
                     src={comparisonBeforeImage || ''}
                     crossOrigin="anonymous"
-                    className="w-full aspect-square rounded-[12px] object-cover block"
+                    className="w-full aspect-square rounded-[12px] object-contain bg-[#F5F0E8] block"
                     alt="Antes"
                     style={{ imageRendering: 'auto' }}
                   />
@@ -266,7 +266,7 @@ const AnalysisResult = () => {
                   <img
                     src={comparisonAfterImage || ''}
                     crossOrigin="anonymous"
-                    className="w-full aspect-square rounded-[12px] object-cover block"
+                    className="w-full aspect-square rounded-[12px] object-contain bg-[#F5F0E8] block"
                     alt="Depois"
                     style={{ imageRendering: 'auto' }}
                   />
@@ -278,7 +278,7 @@ const AnalysisResult = () => {
               <img
                 src={resolvedImage || ''}
                 crossOrigin="anonymous"
-                className="w-full aspect-square rounded-[20px] object-cover block"
+                className="w-full aspect-square rounded-[20px] object-contain bg-[#F5F0E8] block"
                 alt="Análise"
                 style={{ imageRendering: 'auto' }}
               />
