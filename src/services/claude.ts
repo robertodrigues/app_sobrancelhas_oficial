@@ -15,19 +15,31 @@ const toDataUrl = async (source: string): Promise<string> => {
     return source;
   }
 
-  const response = await fetch(source, { mode: "cors" });
-  if (!response.ok) {
-    throw new Error("Não foi possível carregar a imagem para análise.");
+  try {
+    const response = await fetch(source, { mode: "cors" });
+    if (!response.ok) throw new Error("Falha ao carregar imagem");
+    const blob = await response.blob();
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error("Erro ao converter imagem"));
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    // Se falhar por CORS ou rede, tenta sem CORS
+    try {
+      const response = await fetch(source, { mode: "no-cors" });
+      const blob = await response.blob();
+      return await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Erro ao converter imagem"));
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      throw new Error("Não foi possível carregar a imagem para análise.");
+    }
   }
-
-  const blob = await response.blob();
-
-  return await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error("Não foi possível converter a imagem para base64."));
-    reader.readAsDataURL(blob);
-  });
 };
 
 const compressDataUrl = (dataUrl: string, maxSize = 1280, quality = 0.82): Promise<string> => {
