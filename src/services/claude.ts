@@ -107,7 +107,7 @@ const parseAnthropicJsonResponse = (text: string) => {
     return JSON.parse(jsonText);
   } catch (error) {
     throw new Error(
-      `Não foi possível interpretar o JSON retornado pela Anthropic. Texto recebido: ${jsonText}`,
+      `Não foi possível interpretar o JSON retornado pela Anthropic. Texto recebido: ${jsonText}`
     );
   }
 };
