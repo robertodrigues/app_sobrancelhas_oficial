@@ -103,21 +103,19 @@ const parseAnthropicJsonResponse = (text: string) => {
 
   const jsonText = cleaned.substring(start, end).trim();
 
+  const sanitize = (s: string) =>
+    s
+      .replace(/[\u2013\u2014]/g, "-")
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/[\u00A0]/g, " ")
+      .replace(/\r\n/g, "\\n")
+      .replace(/\r/g, "\\n");
+
   try {
-    return JSON.parse(jsonText);
-  } catch (firstError) {
-    try {
-      const sanitized = jsonText
-        .replace(/[\u2013\u2014]/g, "-")
-        .replace(/[\u2018\u2019]/g, "'")
-        .replace(/[\u201C\u201D]/g, '"')
-        .replace(/[\u00A0]/g, " ");
-      return JSON.parse(sanitized);
-    } catch (error) {
-      throw new Error(
-        `Não foi possível interpretar o JSON: ${String(firstError)}`
-      );
-    }
+    return JSON.parse(sanitize(jsonText));
+  } catch (error) {
+    throw new Error(`Não foi possível interpretar o JSON: ${String(error)}`);
   }
 };
 
