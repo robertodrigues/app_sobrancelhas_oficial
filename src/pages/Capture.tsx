@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import ImageAnnotator, { RegionBBox } from '@/components/camera/ImageAnnotator';
 import AnalysisModeIllustration from '@/components/camera/AnalysisModeIllustration';
+import AnalysisTutorialDialog from '@/components/camera/AnalysisTutorialDialog';
 import Navbar from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,7 +17,6 @@ import {
   Pencil,
   FileText,
   Columns,
-  Trash2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
@@ -251,12 +251,6 @@ const Capture = () => {
     setIsAnnotating(true);
   };
 
-  const resetFlow = () => {
-    setCapturedImages([]);
-    setCurrentImage(null);
-    setIsAnnotating(false);
-  };
-
   if (isAnnotating && currentImage) {
     return (
       <ImageAnnotator
@@ -284,9 +278,7 @@ const Capture = () => {
             <h1 className="font-heading text-lg font-normal">Análise Inteligente</h1>
           </div>
 
-          <button onClick={resetFlow} className="p-2 rounded-full hover:bg-white/10 transition-colors text-red-300">
-            <Trash2 size={18} />
-          </button>
+          <AnalysisTutorialDialog />
         </header>
 
         <Card className="border border-[#4A7A5C]/40 bg-[#3D6B52]/35 text-[#E8DECE] rounded-2xl shadow-sm">
