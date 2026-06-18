@@ -1,6 +1,7 @@
 import { RegionBBox } from "@/components/camera/ImageAnnotator";
 import { PROMPT_ESPECIALISTA, PROMPT_TRICOSCOPIA } from "../constants/prompt";
 import type { AnalysisImage, AnalysisMode } from "./types";
+import { jsonrepair } from "jsonrepair";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "https://app-sobrancelhas-oficial-5svn.onrender.com";
@@ -94,10 +95,6 @@ const sanitizeJsonText = (text: string) =>
     .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
     .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
     .replace(/[\u00A0\u202F\u2009]/g, " ")
-    .replace(/\r\n/g, " ")
-    .replace(/\r/g, " ")
-    .replace(/\n/g, " ")
-    .replace(/\t/g, " ")
     .trim();
 
 const extractJsonText = (text: string) => {
@@ -114,7 +111,13 @@ const extractJsonText = (text: string) => {
 
 const parseValidatedJson = (text: string) => {
   const candidate = extractJsonText(text);
-  return JSON.parse(candidate);
+
+  try {
+    return JSON.parse(candidate);
+  } catch {
+    const repaired = jsonrepair(candidate);
+    return JSON.parse(repaired);
+  }
 };
 
 const extractValidatedResult = (data: any) => {
