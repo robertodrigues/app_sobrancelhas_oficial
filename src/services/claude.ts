@@ -2,9 +2,7 @@ import { RegionBBox } from "@/components/camera/ImageAnnotator";
 import { PROMPT_ESPECIALISTA, PROMPT_TRICOSCOPIA } from "../constants/prompt";
 import type { AnalysisImage, AnalysisMode } from "./types";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  "https://app-sobrancelhas-oficial-5svn.onrender.com";
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
 type AnthropicMessageContent =
   | { type: "text"; text: string }
@@ -15,31 +13,18 @@ const toDataUrl = async (source: string): Promise<string> => {
     return source;
   }
 
-  try {
-    const response = await fetch(source, { mode: "cors" });
-    if (!response.ok) throw new Error("Falha ao carregar imagem");
-    const blob = await response.blob();
-    return await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = () => reject(new Error("Erro ao converter imagem"));
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    // Se falhar por CORS ou rede, tenta sem CORS
-    try {
-      const response = await fetch(source, { mode: "no-cors" });
-      const blob = await response.blob();
-      return await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error("Erro ao converter imagem"));
-        reader.readAsDataURL(blob);
-      });
-    } catch {
-      throw new Error("Não foi possível carregar a imagem para análise.");
-    }
+  const response = await fetch(source, { mode: "cors" });
+  if (!response.ok) {
+    throw new Error("Falha ao carregar imagem");
   }
+
+  const blob = await response.blob();
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("Erro ao converter imagem"));
+    reader.readAsDataURL(blob);
+  });
 };
 
 const compressDataUrl = (dataUrl: string, maxSize = 1280, quality = 0.82): Promise<string> => {
@@ -90,8 +75,8 @@ const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<string> =
   const padding = 28;
   const x = Math.max(0, bbox.minX - padding);
   const y = Math.max(0, bbox.minY - padding);
-  const width = Math.min(img.width - x, (bbox.maxX - bbox.minX) + padding * 2);
-  const height = Math.min(img.height - y, (bbox.maxY - bbox.minY) + padding * 2);
+  const width = Math.min(img.width - x, bbox.maxX - bbox.minX + padding * 2);
+  const height = Math.min(img.height - y, bbox.maxY - bbox.minY + padding * 2);
 
   canvas.width = Math.max(1, width);
   canvas.height = Math.max(1, height);
@@ -100,38 +85,17 @@ const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<string> =
   return compressDataUrl(canvas.toDataURL("image/jpeg", 0.82), 900, 0.78);
 };
 
-const parseAnthropicJsonResponse = (text: string) => {
-  const cleaned = text
-    .replace(/```json/gi, "")
-    .replace(/```/g, "")
-    .trim();
-
-  const start = cleaned.indexOf("{");
-  const end = cleaned.lastIndexOf("}") + 1;
-
-  if (start === -1 || end <= start) {
-    throw new Error("A resposta da Anthropic não contém um JSON válido.");
+const extractValidatedResult = (data: any) => {
+  if (data?.result && typeof data.result === "object") {
+    return data.result;
   }
 
-  const jsonText = cleaned.substring(start, end).trim();
-
-  const sanitize = (s: string) =>
-    s
-      .replace(/[\u2013\u2014\u2015]/g, "-")
-      .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
-      .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
-      .replace(/[\u00A0\u202F\u2009]/g, " ")
-      .replace(/[\u2026]/g, "...")
-      .replace(/\r\n/g, " ")
-      .replace(/\r/g, " ")
-      .replace(/\n/g, " ")
-      .replace(/\t/g, " ");
-
-  try {
-    return JSON.parse(sanitize(jsonText));
-  } catch (error) {
-    throw new Error(`Não foi possível interpretar o JSON: ${String(error)}`);
+  const text = data?.content?.[0]?.text;
+  if (typeof text === "string") {
+    return JSON.parse(text);
   }
+
+  throw new Error("A resposta da IA veio vazia ou inválida.");
 };
 
 export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisMode = "single") => {
@@ -139,9 +103,8 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
     const content: AnthropicMessageContent[] = [];
     const prompt = mode === "tricoscopia" ? PROMPT_TRICOSCOPIA : PROMPT_ESPECIALISTA;
 
-    for (let i = 0; i < images.length; i++) {
+    for (let i = 0; i < images.length; i += 1) {
       const label = images.length > 1 ? (i === 0 ? "ANTES" : "DEPOIS") : "VISÃO GERAL";
-      console.log('[claude] image dataUrl presente?', !!images[i].dataUrl, 'url:', images[i].url?.slice(0, 50));
       const imageDataUrl = await prepareImageDataUrl(images[i].dataUrl || images[i].url);
 
       content.push({ type: "text", text: `Imagem ${i + 1}: ${label}` });
@@ -170,40 +133,32 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
 
     content.push({ type: "text", text: prompt });
 
-    const response = await fetch(`${API_BASE_URL.replace(/\/$/, "")}/api/anthropic`, {
+    const response = await fetch(`${API_BASE_URL}/api/anthropic`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
+        messages: [{ role: "user", content }],
         max_tokens: 2000,
         temperature: 0,
-        messages: [{ role: "user", content }],
+        analysisMode: mode,
       }),
     });
 
     if (!response.ok) {
-      throw new Error("Erro ao chamar o proxy da Anthropic");
+      throw new Error(await response.text());
     }
 
     const data = await response.json();
-    const text = data?.content?.[0]?.type === "text" ? data.content[0].text : "";
-
-    // Se o servidor já parseou e devolveu JSON puro, usa direto
-    let result: any;
-    try {
-      result = JSON.parse(text);
-    } catch {
-      result = parseAnthropicJsonResponse(text);
-    }
+    const result = extractValidatedResult(data);
 
     return {
       ...result,
       isComparativo: mode === "comparison" || images.length > 1,
       modoAnalise: mode,
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Erro Claude:", error);
     throw error;
   }
