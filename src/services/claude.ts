@@ -86,6 +86,37 @@ const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<string> =
   return compressDataUrl(canvas.toDataURL("image/jpeg", 0.82), 900, 0.78);
 };
 
+const sanitizeJsonText = (text: string) =>
+  text
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .replace(/[\u2013\u2014\u2015]/g, "-")
+    .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
+    .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
+    .replace(/[\u00A0\u202F\u2009]/g, " ")
+    .replace(/\r\n/g, " ")
+    .replace(/\r/g, " ")
+    .replace(/\n/g, " ")
+    .replace(/\t/g, " ")
+    .trim();
+
+const extractJsonText = (text: string) => {
+  const cleaned = sanitizeJsonText(text);
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}") + 1;
+
+  if (start === -1 || end <= start) {
+    return cleaned;
+  }
+
+  return cleaned.slice(start, end).trim();
+};
+
+const parseValidatedJson = (text: string) => {
+  const candidate = extractJsonText(text);
+  return JSON.parse(candidate);
+};
+
 const extractValidatedResult = (data: any) => {
   if (data?.result && typeof data.result === "object") {
     return data.result;
@@ -93,7 +124,11 @@ const extractValidatedResult = (data: any) => {
 
   const text = data?.content?.[0]?.text;
   if (typeof text === "string") {
-    return JSON.parse(text);
+    return parseValidatedJson(text);
+  }
+
+  if (typeof data === "string") {
+    return parseValidatedJson(data);
   }
 
   throw new Error("A resposta da IA veio vazia ou inválida.");
