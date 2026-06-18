@@ -2,7 +2,8 @@ import { RegionBBox } from "@/components/camera/ImageAnnotator";
 import { PROMPT_ESPECIALISTA, PROMPT_TRICOSCOPIA } from "../constants/prompt";
 import type { AnalysisImage, AnalysisMode } from "./types";
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "https://app-sobrancelhas-oficial-5svn.onrender.com";
 
 type AnthropicMessageContent =
   | { type: "text"; text: string }
