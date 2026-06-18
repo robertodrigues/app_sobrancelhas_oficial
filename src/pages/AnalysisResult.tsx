@@ -253,7 +253,6 @@ const AnalysisResult = () => {
                 <div className="rounded-2xl shadow-md border-2 border-[#E8DECE] p-1 bg-[#1C3A2B]/5">
                   <img
                     src={comparisonBeforeImage || ''}
-                    crossOrigin="anonymous"
                     className="w-full aspect-square rounded-[12px] object-contain bg-[#F5F0E8] block"
                     alt="Antes"
                     style={{ imageRendering: 'auto' }}
@@ -265,7 +264,6 @@ const AnalysisResult = () => {
                 <div className="rounded-2xl shadow-md border-2 border-[#4A7A5C] p-1 bg-[#1C3A2B]/5">
                   <img
                     src={comparisonAfterImage || ''}
-                    crossOrigin="anonymous"
                     className="w-full aspect-square rounded-[12px] object-contain bg-[#F5F0E8] block"
                     alt="Depois"
                     style={{ imageRendering: 'auto' }}
@@ -277,7 +275,6 @@ const AnalysisResult = () => {
             <div className="relative rounded-3xl shadow-lg border-4 border-[#E8DECE] p-2 bg-[#1C3A2B]/5">
               <img
                 src={resolvedImage || ''}
-                crossOrigin="anonymous"
                 className="w-full aspect-square rounded-[20px] object-contain bg-[#F5F0E8] block"
                 alt="Análise"
                 style={{ imageRendering: 'auto' }}
@@ -370,7 +367,6 @@ const AnalysisResult = () => {
                       <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.conclusaoTricoscopica?.indicadoresPositivos)}</p>
                       <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.conclusaoTricoscopica?.pontosDeAtencao)}</p>
                       <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.conclusaoTricoscopica?.correlacaoAnaliseVisual)}</p>
-                      <p className="text-[11px] text-[#E8DECE]/80">{textValue(analysis.conclusaoTricoscopica?.principaisAchados)}</p>
                     </div>
                   </div>
                 </CardContent>
