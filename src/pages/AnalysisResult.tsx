@@ -275,6 +275,20 @@ const AnalysisResult = () => {
 
       const clone = element.cloneNode(true) as HTMLDivElement;
       exportContainer.appendChild(clone);
+
+      const originalEls = element.querySelectorAll('*');
+      const cloneEls = clone.querySelectorAll('*');
+
+      originalEls.forEach((origEl, i) => {
+        const cloneEl = cloneEls[i] as HTMLElement;
+        if (!cloneEl) return;
+        const computed = window.getComputedStyle(origEl as HTMLElement);
+        cloneEl.style.backgroundColor = computed.backgroundColor;
+        cloneEl.style.color = computed.color;
+        cloneEl.style.borderColor = computed.borderColor;
+        cloneEl.style.boxShadow = computed.boxShadow;
+      });
+
       document.body.appendChild(exportContainer);
 
       try {
