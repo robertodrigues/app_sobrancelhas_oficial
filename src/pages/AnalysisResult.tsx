@@ -229,7 +229,7 @@ const AnalysisResult = () => {
 
         if (customHeaderLogo) {
           const logoProps = pdf.getImageProperties(customHeaderLogo);
-          const logoWidth = 24;
+          const logoWidth = 31;
           const logoHeight = (logoProps.height / logoProps.width) * logoWidth;
           const logoX = (pageWidth - logoWidth) / 2;
           const logoY = 5;
@@ -247,7 +247,7 @@ const AnalysisResult = () => {
         }
 
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(13);
+        pdf.setFontSize(9);
         pdf.setTextColor(...hexToRgb(headerTextColor));
         pdf.text(title, pageWidth - margin, 12, { align: "right" });
 
