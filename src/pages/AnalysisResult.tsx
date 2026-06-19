@@ -30,6 +30,49 @@ type AnalysisPayload = {
   allImages?: Array<{ url?: string; dataUrl?: string; bboxes?: Record<string, unknown> }>;
 };
 
+const POPPINS_REGULAR_URL =
+  "https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-Regular.ttf";
+const POPPINS_BOLD_URL =
+  "https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-Bold.ttf";
+
+let poppinsFontDataPromise: Promise<{ regular: string; bold: string }> | null = null;
+
+const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunkSize = 0x8000;
+
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+
+  return btoa(binary);
+};
+
+const loadPoppinsFontData = async () => {
+  if (!poppinsFontDataPromise) {
+    poppinsFontDataPromise = Promise.all([
+      fetch(POPPINS_REGULAR_URL).then((response) => {
+        if (!response.ok) {
+          throw new Error("Não foi possível carregar a fonte Poppins regular.");
+        }
+        return response.arrayBuffer();
+      }),
+      fetch(POPPINS_BOLD_URL).then((response) => {
+        if (!response.ok) {
+          throw new Error("Não foi possível carregar a fonte Poppins bold.");
+        }
+        return response.arrayBuffer();
+      }),
+    ]).then(([regularBuffer, boldBuffer]) => ({
+      regular: arrayBufferToBase64(regularBuffer),
+      bold: arrayBufferToBase64(boldBuffer),
+    }));
+  }
+
+  return poppinsFontDataPromise;
+};
+
 const getSavedAnalysisState = (): AnalysisPayload | null => {
   try {
     const raw = sessionStorage.getItem("elha:last-analysis");
@@ -209,6 +252,13 @@ const AnalysisResult = () => {
         return luminance > 0.65 ? "#1C3A2B" : "#F5F0E8";
       };
 
+      const { regular: poppinsRegular, bold: poppinsBold } = await loadPoppinsFontData();
+
+      pdf.addFileToVFS("Poppins-Regular.ttf", poppinsRegular);
+      pdf.addFileToVFS("Poppins-Bold.ttf", poppinsBold);
+      pdf.addFont("Poppins-Regular.ttf", "Poppins", "normal");
+      pdf.addFont("Poppins-Bold.ttf", "Poppins", "bold");
+
       const customHeaderBg = pdfBgColor || "";
       const customHeaderLogo = pdfLogo ? await loadImageData(pdfLogo) : "";
       const hasCustomHeader = Boolean(customHeaderBg || customHeaderLogo);
@@ -246,28 +296,37 @@ const AnalysisResult = () => {
               "FAST",
             );
 
-            pdf.setFont("helvetica", "bold");
+            pdf.setFont("Poppins", "bold");
             pdf.setFontSize(15);
             pdf.setTextColor(...hexToRgb(headerTextColor));
             pdf.text(title, pageWidth / 2, 24, { align: "center" });
 
-            pdf.setFont("helvetica", "normal");
+            pdf.setFont("Poppins", "normal");
             pdf.setFontSize(9);
             pdf.text("Análise Inteligente", pageWidth / 2, 31, { align: "center" });
           } else {
-            pdf.setFont("helvetica", "bold");
+            pdf.setFont("Poppins", "bold");
             pdf.setFontSize(16);
             pdf.setTextColor(...hexToRgb(headerTextColor));
-            pdf.text(title, pageWidth / 2, 11, { align: "center" });
+            pdf.text(
+              analysis.isComparativo
+                ? "Relatório de Evolução"
+                : isTricoscopia
+                  ? "Relatório Tricoscópico"
+                  : "Relatório Técnico",
+              pageWidth / 2,
+              11,
+              { align: "center" },
+            );
 
-            pdf.setFont("helvetica", "normal");
+            pdf.setFont("Poppins", "normal");
             pdf.setFontSize(9);
             pdf.text("Análise Inteligente", pageWidth / 2, 17, { align: "center" });
           }
 
           cursorY = headerHeight + 6;
         } else {
-          pdf.setFont("helvetica", "bold");
+          pdf.setFont("Poppins", "bold");
           pdf.setFontSize(18);
           pdf.setTextColor(28, 58, 43);
           pdf.text(
@@ -282,7 +341,7 @@ const AnalysisResult = () => {
           );
           cursorY += 7;
 
-          pdf.setFont("helvetica", "normal");
+          pdf.setFont("Poppins", "normal");
           pdf.setFontSize(10);
           pdf.setTextColor(74, 122, 92);
           pdf.text("Análise Inteligente", pageWidth / 2, cursorY, { align: "center" });
@@ -304,7 +363,7 @@ const AnalysisResult = () => {
 
       const addSectionTitle = (title: string) => {
         ensureSpace(10);
-        pdf.setFont("helvetica", "bold");
+        pdf.setFont("Poppins", "bold");
         pdf.setFontSize(12);
         pdf.setTextColor(28, 58, 43);
         pdf.text(title, margin, cursorY);
@@ -313,7 +372,7 @@ const AnalysisResult = () => {
 
       const addParagraph = (text: string, fontSize = 9.5, color = "#1C3A2B") => {
         if (!text) return;
-        pdf.setFont("helvetica", "normal");
+        pdf.setFont("Poppins", "normal");
         pdf.setFontSize(fontSize);
         const [r, g, b] = hexToRgb(color);
         pdf.setTextColor(r, g, b);
@@ -329,13 +388,13 @@ const AnalysisResult = () => {
         if (!text) return;
 
         ensureSpace(10);
-        pdf.setFont("helvetica", "bold");
+        pdf.setFont("Poppins", "bold");
         pdf.setFontSize(9.5);
         pdf.setTextColor(28, 58, 43);
         pdf.text(`${label}:`, margin, cursorY);
         cursorY += 4;
 
-        pdf.setFont("helvetica", "normal");
+        pdf.setFont("Poppins", "normal");
         pdf.setFontSize(9.2);
         const [r, g, b] = hexToRgb(color);
         pdf.setTextColor(r, g, b);
@@ -362,7 +421,7 @@ const AnalysisResult = () => {
         height: number,
       ) => {
         const data = await loadImageData(src);
-        pdf.setFont("helvetica", "bold");
+        pdf.setFont("Poppins", "bold");
         pdf.setFontSize(9);
         pdf.setTextColor(74, 122, 92);
         pdf.text(label, x, y - 2);
@@ -413,7 +472,7 @@ const AnalysisResult = () => {
         const afterData = await loadImageData(displayAfterImage);
         const imageY = cursorY + 4;
 
-        pdf.setFont("helvetica", "bold");
+        pdf.setFont("Poppins", "bold");
         pdf.setFontSize(9);
         pdf.setTextColor(74, 122, 92);
         pdf.text("Antes", margin, cursorY);
@@ -471,14 +530,12 @@ const AnalysisResult = () => {
         addSectionTitle("Análise de evolução");
         addParagraph(analysis.comparativo.evolucaoGeral, 10, "#1C3A2B");
 
-        ensureSpace(18);
-        pdf.setFillColor(28, 58, 43);
-        pdf.roundedRect(margin, cursorY, contentWidth, 14, 4, 4, "F");
-        pdf.setTextColor(232, 222, 206);
-        pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(9);
-        pdf.text(`+${analysis.comparativo.melhoriaPercentualEstimada}% Melhoria`, margin + 4, cursorY + 9);
-        cursorY += 17;
+        ensureSpace(10);
+        pdf.setFont("Poppins", "bold");
+        pdf.setFontSize(10);
+        pdf.setTextColor(28, 58, 43);
+        pdf.text(`+${analysis.comparativo.melhoriaPercentualEstimada}% Melhoria`, margin, cursorY);
+        cursorY += 6;
 
         addKeyValue("Destaque positivo", analysis.comparativo.destaquePositivo, "#1C3A2B");
       }
