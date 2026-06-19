@@ -375,12 +375,7 @@ const Edition = () => {
                 />
               </div>
 
-              {separationType === 'straight' ? (
-                <div className={cn(
-                  "bg-[#E8DECE] z-10 shadow-md",
-                  splitDirection === 'horizontal' ? "w-0.5 h-full" : "h-0.5 w-full"
-                )} />
-              ) : (
+              {separationType === 'straight' ? null : (
                 <div className={cn(
                   "absolute z-10 pointer-events-none bg-gradient-to-r from-transparent via-black/40 to-transparent",
                   splitDirection === 'horizontal' 
