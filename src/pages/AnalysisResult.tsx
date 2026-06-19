@@ -318,7 +318,7 @@ const AnalysisResult = () => {
 
         const canvas = await html2canvas(exportContainer, {
           useCORS: true,
-          allowTaint: true,
+          allowTaint: false,
           scale: 3,
           backgroundColor: pdfBgColor,
           logging: false,
@@ -327,7 +327,17 @@ const AnalysisResult = () => {
           foreignObjectRendering: false,
         });
 
-        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+        const safeCanvas = document.createElement('canvas');
+        safeCanvas.width = canvas.width;
+        safeCanvas.height = canvas.height;
+        const safeCtx = safeCanvas.getContext('2d');
+        if (safeCtx) {
+          safeCtx.fillStyle = pdfBgColor;
+          safeCtx.fillRect(0, 0, safeCanvas.width, safeCanvas.height);
+          safeCtx.drawImage(canvas, 0, 0);
+        }
+
+        const imgData = safeCanvas.toDataURL('image/jpeg', 1.0);
         const pdf = new jsPDF('p', 'mm', 'a4');
         const imgWidth = 210;
         const pageHeight = 295;
