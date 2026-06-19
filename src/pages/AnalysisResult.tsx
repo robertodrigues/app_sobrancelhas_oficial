@@ -253,6 +253,67 @@ const AnalysisResult = () => {
     return '';
   };
 
+  const buildPdfImageSection = async () => {
+    const section = document.createElement('div');
+    section.style.width = '100%';
+    section.style.marginBottom = '20px';
+    section.style.display = 'block';
+
+    const createImageBlock = async (src: string, label?: string) => {
+      const wrapper = document.createElement('div');
+      wrapper.style.marginBottom = '12px';
+
+      if (label) {
+        const caption = document.createElement('div');
+        caption.textContent = label;
+        caption.style.fontFamily = 'Poppins, sans-serif';
+        caption.style.fontSize = '10px';
+        caption.style.letterSpacing = '1px';
+        caption.style.textTransform = 'uppercase';
+        caption.style.color = '#4A7A5C';
+        caption.style.textAlign = 'center';
+        caption.style.marginBottom = '8px';
+        wrapper.appendChild(caption);
+      }
+
+      const img = document.createElement('img');
+      img.crossOrigin = 'anonymous';
+      img.src = src;
+      img.style.display = 'block';
+      img.style.width = '100%';
+      img.style.maxHeight = '420px';
+      img.style.objectFit = 'contain';
+      img.style.borderRadius = '20px';
+      img.style.backgroundColor = '#F5F0E8';
+      wrapper.appendChild(img);
+
+      return wrapper;
+    };
+
+    if (analysis.isComparativo && hasTwoImages && displayBeforeImage && displayAfterImage) {
+      const row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.gap = '12px';
+      row.style.width = '100%';
+
+      const left = document.createElement('div');
+      left.style.flex = '1';
+      left.appendChild(await createImageBlock(await fetchImageAsDataUrl(getPdfSafeImageSrc(displayBeforeImage)), 'Antes'));
+
+      const right = document.createElement('div');
+      right.style.flex = '1';
+      right.appendChild(await createImageBlock(await fetchImageAsDataUrl(getPdfSafeImageSrc(displayAfterImage)), 'Depois'));
+
+      row.appendChild(left);
+      row.appendChild(right);
+      section.appendChild(row);
+    } else if (displayImage) {
+      section.appendChild(await createImageBlock(await fetchImageAsDataUrl(getPdfSafeImageSrc(displayImage))));
+    }
+
+    return section;
+  };
+
   const handleGeneratePdf = async () => {
     const element = reportRef.current;
     if (!element) return;
@@ -267,6 +328,10 @@ const AnalysisResult = () => {
       exportContainer.style.pointerEvents = 'none';
       exportContainer.style.backgroundColor = pdfBgColor;
       exportContainer.style.zIndex = '-1';
+      exportContainer.style.padding = '16px';
+
+      const imageSection = await buildPdfImageSection();
+      exportContainer.appendChild(imageSection);
 
       const clone = element.cloneNode(true) as HTMLDivElement;
       exportContainer.appendChild(clone);
@@ -303,11 +368,11 @@ const AnalysisResult = () => {
           }),
         );
 
-        await waitForImageLoads(clone);
+        await waitForImageLoads(exportContainer);
         await new Promise((resolve) => requestAnimationFrame(() => resolve(true)));
         await new Promise((resolve) => requestAnimationFrame(() => resolve(true)));
 
-        const canvas = await html2canvas(clone, {
+        const canvas = await html2canvas(exportContainer, {
           useCORS: true,
           allowTaint: true,
           scale: 4,
