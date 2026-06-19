@@ -211,6 +211,27 @@ const AnalysisResult = () => {
         return luminance > 0.65 ? "#1C3A2B" : "#F5F0E8";
       };
 
+      const drawPill = (text: string, fillColor: string, textColor: string, height = 9) => {
+        const [r, g, b] = hexToRgb(fillColor);
+        const textWidth = pdf.getTextWidth(text);
+        const pillWidth = Math.min(contentWidth, textWidth + 10);
+        const pillX = margin;
+        const pillY = cursorY;
+
+        ensureSpace(height + 4);
+
+        pdf.setFillColor(r, g, b);
+        pdf.setDrawColor(r, g, b);
+        pdf.roundedRect(pillX, pillY, pillWidth, height, 3, 3, "F");
+
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(8.8);
+        pdf.setTextColor(...hexToRgb(textColor));
+        pdf.text(text, pillX + 5, pillY + 6.2);
+
+        cursorY += height + 4;
+      };
+
       const customHeaderBg = pdfBgColor || "";
       const customHeaderLogo = pdfLogo ? await loadImageData(pdfLogo) : "";
       const hasCustomHeader = Boolean(customHeaderBg || customHeaderLogo);
@@ -457,11 +478,12 @@ const AnalysisResult = () => {
         addSectionTitle("Análise de evolução");
         addParagraph(analysis.comparativo.evolucaoGeral, 10);
 
-        pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(10);
-        pdf.setTextColor(...PDF_TEXT_COLOR);
-        pdf.text(`+${analysis.comparativo.melhoriaPercentualEstimada}% Melhoria`, margin, cursorY);
-        cursorY += 6;
+        drawPill(
+          `+${analysis.comparativo.melhoriaPercentualEstimada}% Melhoria`,
+          "#EAF3DE",
+          "#3B6D11",
+          9,
+        );
 
         addKeyValue("Destaque positivo", analysis.comparativo.destaquePositivo);
       }
@@ -511,7 +533,14 @@ const AnalysisResult = () => {
           const theme = getRegionTheme(key);
 
           addRegionTitleCard(labelMap[key] || key, theme.bg);
-          addKeyValue("Densidade", `${data.densidade?.classificacao || "Não informada"} (${data.densidade?.percentual ?? 0}%)`);
+
+          drawPill(
+            `Densidade: ${data.densidade?.classificacao || "Não informada"} (${data.densidade?.percentual ?? 0}%)`,
+            theme.bg,
+            theme.valueColor,
+            9,
+          );
+
           addParagraph(data.descricao, 9.5);
           addKeyValue("Espessura", data.espessura);
           addKeyValue("Pele exposta", data.peleExposta ? "Sim" : "Não");
