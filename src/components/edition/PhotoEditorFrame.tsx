@@ -42,7 +42,13 @@ const loadImage = (src: string) =>
     img.src = src;
   });
 
-const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: PhotoEditorFrameProps) => {
+const PhotoEditorFrame = ({
+  src,
+  label,
+  value,
+  onChange,
+  showGuides = true,
+}: PhotoEditorFrameProps) => {
   const dragStartRef = useRef({ x: 0, y: 0 });
   const imgRef = useRef<HTMLImageElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -74,6 +80,12 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
     img.style.transform = getTransformString(transform);
   };
 
+  const syncTransform = (transform: PhotoTransform) => {
+    pendingValueRef.current = transform;
+    applyTransform(transform);
+    onChange(transform);
+  };
+
   const commitTransform = () => {
     onChange(pendingValueRef.current);
   };
@@ -99,7 +111,8 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
         if (cancelled) return;
 
         const needsResize =
-          img.naturalWidth > MAX_DISPLAY_DIMENSION || img.naturalHeight > MAX_DISPLAY_DIMENSION;
+          img.naturalWidth > MAX_DISPLAY_DIMENSION ||
+          img.naturalHeight > MAX_DISPLAY_DIMENSION;
 
         if (!needsResize) {
           setDisplaySrc(src);
@@ -192,7 +205,10 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
       const [first, second] = Array.from(pointersRef.current.values());
       const currentDistance = distanceBetween(first, second);
       const currentCenter = centerBetween(first, second);
-      const scaleRatio = gestureRef.current.startDistance > 0 ? currentDistance / gestureRef.current.startDistance : 1;
+      const scaleRatio =
+        gestureRef.current.startDistance > 0
+          ? currentDistance / gestureRef.current.startDistance
+          : 1;
 
       const nextScale = clamp(gestureRef.current.startScale * scaleRatio, MIN_SCALE, MAX_SCALE);
       const centerDelta = gestureRef.current.startCenter
@@ -208,8 +224,7 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
         y: gestureRef.current.startY + centerDelta.y,
       };
 
-      pendingValueRef.current = nextValue;
-      applyTransform(nextValue);
+      syncTransform(nextValue);
       return;
     }
 
@@ -226,8 +241,7 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
       y: pendingValueRef.current.y + deltaY,
     };
 
-    pendingValueRef.current = nextValue;
-    applyTransform(nextValue);
+    syncTransform(nextValue);
   };
 
   const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -283,12 +297,10 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
     if (!src) return;
     event.preventDefault();
 
-    const nextScale = clamp(value.scale - event.deltaY * 0.0015, MIN_SCALE, MAX_SCALE);
-    const nextValue = { ...value, scale: nextScale };
+    const nextScale = clamp(pendingValueRef.current.scale - event.deltaY * 0.0015, MIN_SCALE, MAX_SCALE);
+    const nextValue = { ...pendingValueRef.current, scale: nextScale };
 
-    pendingValueRef.current = nextValue;
-    applyTransform(nextValue);
-    onChange(nextValue);
+    syncTransform(nextValue);
   };
 
   if (!src) {
@@ -299,7 +311,9 @@ const PhotoEditorFrame = ({ src, label, value, onChange, showGuides = true }: Ph
             <ImageIcon size={22} />
           </div>
           <p className="font-label-category text-[9px] text-[#E8DECE]">{label}</p>
-          {showGuides && <p className="font-body text-[10px] text-[#8FAF8A]">Envie uma foto para começar</p>}
+          {showGuides && (
+            <p className="font-body text-[10px] text-[#8FAF8A]">Envie uma foto para começar</p>
+          )}
         </div>
       </div>
     );
