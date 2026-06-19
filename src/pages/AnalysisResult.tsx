@@ -186,6 +186,8 @@ const AnalysisResult = () => {
       const contentWidth = pageWidth - margin * 2;
       let cursorY = margin;
 
+      const PDF_TEXT_COLOR = [0, 0, 0] as const;
+
       const hexToRgb = (hex: string) => {
         const normalized = hex.replace("#", "").trim();
         const value =
@@ -203,18 +205,11 @@ const AnalysisResult = () => {
         ] as const;
       };
 
-      const getContrastingTextColor = (hex: string) => {
-        const [r, g, b] = hexToRgb(hex);
-        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-        return luminance > 0.65 ? "#1C3A2B" : "#F5F0E8";
-      };
-
       const customHeaderBg = pdfBgColor || "";
       const customHeaderLogo = pdfLogo ? await loadImageData(pdfLogo) : "";
       const hasCustomHeader = Boolean(customHeaderBg || customHeaderLogo);
       const headerHeight = hasCustomHeader ? 27 : 24;
       const headerBgColor = customHeaderBg || "#F5F0E8";
-      const headerTextColor = getContrastingTextColor(headerBgColor);
 
       const renderHeader = () => {
         const [r, g, b] = hexToRgb(headerBgColor);
@@ -248,11 +243,12 @@ const AnalysisResult = () => {
 
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(9);
-        pdf.setTextColor(...hexToRgb(headerTextColor));
+        pdf.setTextColor(...PDF_TEXT_COLOR);
         pdf.text(title, pageWidth - margin, 12, { align: "right" });
 
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(9);
+        pdf.setTextColor(...PDF_TEXT_COLOR);
         pdf.text("Análise Inteligente", pageWidth - margin, 18, { align: "right" });
 
         cursorY = headerHeight + 6;
@@ -274,17 +270,16 @@ const AnalysisResult = () => {
         ensureSpace(10);
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(12);
-        pdf.setTextColor(28, 58, 43);
+        pdf.setTextColor(...PDF_TEXT_COLOR);
         pdf.text(title, margin, cursorY);
         cursorY += 8;
       };
 
-      const addParagraph = (text: string, fontSize = 9.5, color = "#1C3A2B") => {
+      const addParagraph = (text: string, fontSize = 9.5) => {
         if (!text) return;
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(fontSize);
-        const [r, g, b] = hexToRgb(color);
-        pdf.setTextColor(r, g, b);
+        pdf.setTextColor(...PDF_TEXT_COLOR);
         const lines = pdf.splitTextToSize(text, contentWidth);
         const height = lines.length * 4.3;
         ensureSpace(height);
@@ -292,21 +287,20 @@ const AnalysisResult = () => {
         cursorY += height + 2;
       };
 
-      const addKeyValue = (label: string, value: unknown, color = "#1C3A2B") => {
+      const addKeyValue = (label: string, value: unknown) => {
         const text = textValue(value);
         if (!text) return;
 
         ensureSpace(10);
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(9.5);
-        pdf.setTextColor(28, 58, 43);
+        pdf.setTextColor(...PDF_TEXT_COLOR);
         pdf.text(`${label}:`, margin, cursorY);
         cursorY += 5;
 
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(9.2);
-        const [r, g, b] = hexToRgb(color);
-        pdf.setTextColor(r, g, b);
+        pdf.setTextColor(...PDF_TEXT_COLOR);
         const lines = pdf.splitTextToSize(text, contentWidth);
         const height = lines.length * 4.2;
         ensureSpace(height);
@@ -332,7 +326,7 @@ const AnalysisResult = () => {
         const data = await loadImageData(src);
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(9);
-        pdf.setTextColor(74, 122, 92);
+        pdf.setTextColor(...PDF_TEXT_COLOR);
         pdf.text(label, x, y - 2);
 
         pdf.setFillColor(245, 240, 232);
@@ -375,7 +369,7 @@ const AnalysisResult = () => {
 
         const boxWidth = (contentWidth - 6) / 2;
         const boxHeight = 68;
-        ensureSpace(boxHeight + 14);
+        ensureSpace(boxHeight + 20);
 
         const beforeData = await loadImageData(displayBeforeImage);
         const afterData = await loadImageData(displayAfterImage);
@@ -383,7 +377,7 @@ const AnalysisResult = () => {
 
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(9);
-        pdf.setTextColor(74, 122, 92);
+        pdf.setTextColor(...PDF_TEXT_COLOR);
         pdf.text("Antes", margin, cursorY);
         pdf.text("Depois", margin + boxWidth + 6, cursorY);
 
@@ -396,7 +390,7 @@ const AnalysisResult = () => {
           boxWidth,
           boxHeight,
         );
-        cursorY = imageY + boxHeight + 6;
+        cursorY = imageY + boxHeight + 10;
       } else {
         addSectionTitle("Imagem principal");
 
@@ -436,21 +430,22 @@ const AnalysisResult = () => {
       }
 
       if (analysis.isComparativo && analysis.comparativo) {
+        cursorY += 8;
         addSectionTitle("Análise de evolução");
-        addParagraph(analysis.comparativo.evolucaoGeral, 10, "#1C3A2B");
+        addParagraph(analysis.comparativo.evolucaoGeral, 10);
 
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(10);
-        pdf.setTextColor(28, 58, 43);
+        pdf.setTextColor(...PDF_TEXT_COLOR);
         pdf.text(`+${analysis.comparativo.melhoriaPercentualEstimada}% Melhoria`, margin, cursorY);
         cursorY += 6;
 
-        addKeyValue("Destaque positivo", analysis.comparativo.destaquePositivo, "#1C3A2B");
+        addKeyValue("Destaque positivo", analysis.comparativo.destaquePositivo);
       }
 
       if (analysis.alertaInterno?.presente) {
         addSectionTitle("Alerta de fator interno");
-        addParagraph(analysis.alertaInterno.descricao, 10, "#3B6D11");
+        addParagraph(analysis.alertaInterno.descricao, 10);
       }
 
       if (isTricoscopia) {
@@ -502,10 +497,6 @@ const AnalysisResult = () => {
           addKeyValue("Status de melhoria", data.statusMelhoria?.descricao);
           addDivider();
         }
-
-        addSectionTitle("Visão geral e objetivo");
-        addParagraph(analysis.visaoGeral?.descricao, 10);
-        addKeyValue("Objetivo", analysis.visaoGeral?.objetivo);
       }
 
       pdf.save(`relatorio-diagnostico-${analysis.isComparativo ? "evolucao" : "tecnico"}.pdf`);
