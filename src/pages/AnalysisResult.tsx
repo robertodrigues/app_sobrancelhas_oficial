@@ -55,6 +55,41 @@ const getPdfSafeImageSrc = (src: string) => {
   return `/api/image-proxy?url=${encodeURIComponent(src)}`;
 };
 
+const fetchImageAsDataUrl = async (src: string) => {
+  const response = await fetch(src);
+  if (!response.ok) {
+    throw new Error('Não foi possível carregar a imagem para o PDF.');
+  }
+
+  const blob = await response.blob();
+
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Não foi possível converter a imagem.'));
+    reader.readAsDataURL(blob);
+  });
+};
+
+const waitForImageLoads = async (container: HTMLElement) => {
+  const images = Array.from(container.querySelectorAll('img'));
+
+  await Promise.all(
+    images.map(
+      (img) =>
+        new Promise<void>((resolve) => {
+          if (img.complete && img.naturalWidth > 0) {
+            resolve();
+            return;
+          }
+
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+        }),
+    ),
+  );
+};
+
 const AnalysisResult = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -203,61 +238,76 @@ const AnalysisResult = () => {
 
     setIsGeneratingPdf(true);
     try {
-      const urlsToPreload: string[] = [];
-      if (analysis.isComparativo && hasTwoImages && displayBeforeImage && displayAfterImage) {
-        urlsToPreload.push(getPdfSafeImageSrc(displayBeforeImage), getPdfSafeImageSrc(displayAfterImage));
-      } else if (displayImage) {
-        urlsToPreload.push(getPdfSafeImageSrc(displayImage));
-      }
-      if (pdfLogo) {
-        urlsToPreload.push(getPdfSafeImageSrc(pdfLogo));
-      }
+      const exportContainer = document.createElement('div');
+      exportContainer.style.position = 'fixed';
+      exportContainer.style.left = '-10000px';
+      exportContainer.style.top = '0';
+      exportContainer.style.width = `${element.getBoundingClientRect().width}px`;
+      exportContainer.style.pointerEvents = 'none';
+      exportContainer.style.backgroundColor = pdfBgColor;
+      exportContainer.style.zIndex = '-1';
 
-      await Promise.all(urlsToPreload.map(preloadImage));
-      await new Promise(resolve => setTimeout(resolve, 300));
+      const clone = element.cloneNode(true) as HTMLDivElement;
+      exportContainer.appendChild(clone);
+      document.body.appendChild(exportContainer);
 
-      const canvas = await html2canvas(element, {
-        useCORS: true,
-        allowTaint: true,
-        scale: 4,
-        backgroundColor: pdfBgColor,
-        logging: false,
-        imageTimeout: 0,
-        removeContainer: true,
-        foreignObjectRendering: false,
-        onclone: (doc) => {
-          doc.querySelectorAll('img').forEach((img) => {
+      try {
+        const images = Array.from(clone.querySelectorAll('img'));
+
+        await Promise.all(
+          images.map(async (img) => {
             const originalSrc = img.getAttribute('src') || '';
-            if (originalSrc) {
-              img.setAttribute('src', getPdfSafeImageSrc(originalSrc));
+            if (!originalSrc) return;
+
+            const safeSrc = getPdfSafeImageSrc(originalSrc);
+
+            try {
+              const dataUrl = await fetchImageAsDataUrl(safeSrc);
+              img.setAttribute('src', dataUrl);
+            } catch {
+              img.setAttribute('src', safeSrc);
             }
-            img.style.display = 'block';
-            img.style.imageRendering = 'auto';
-            img.setAttribute('crossorigin', 'anonymous');
-          });
-        }
-      });
+          }),
+        );
 
-      const imgData = canvas.toDataURL('image/jpeg', 1.0);
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const pageHeight = 295;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
+        await waitForImageLoads(clone);
+        await new Promise((resolve) => requestAnimationFrame(() => resolve(true)));
+        await new Promise((resolve) => requestAnimationFrame(() => resolve(true)));
 
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-      heightLeft -= pageHeight;
+        const canvas = await html2canvas(clone, {
+          useCORS: true,
+          allowTaint: true,
+          scale: 4,
+          backgroundColor: pdfBgColor,
+          logging: false,
+          imageTimeout: 0,
+          removeContainer: true,
+          foreignObjectRendering: false,
+        });
 
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
+        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgWidth = 210;
+        const pageHeight = 295;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 0;
+
         pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
         heightLeft -= pageHeight;
-      }
 
-      pdf.save(`relatorio-diagnostico-${analysis.isComparativo ? 'evolucao' : 'tecnico'}.pdf`);
-      showSuccess('Relatório PDF gerado com sucesso!');
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+          heightLeft -= pageHeight;
+        }
+
+        pdf.save(`relatorio-diagnostico-${analysis.isComparativo ? 'evolucao' : 'tecnico'}.pdf`);
+        showSuccess('Relatório PDF gerado com sucesso!');
+      } finally {
+        document.body.removeChild(exportContainer);
+      }
     } catch (error) {
       console.error(error);
       showError('Erro ao gerar o PDF.');
