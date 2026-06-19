@@ -205,11 +205,18 @@ const AnalysisResult = () => {
         ] as const;
       };
 
+      const getContrastingTextColor = (hex: string) => {
+        const [r, g, b] = hexToRgb(hex);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.65 ? "#1C3A2B" : "#F5F0E8";
+      };
+
       const customHeaderBg = pdfBgColor || "";
       const customHeaderLogo = pdfLogo ? await loadImageData(pdfLogo) : "";
       const hasCustomHeader = Boolean(customHeaderBg || customHeaderLogo);
       const headerHeight = hasCustomHeader ? 27 : 24;
       const headerBgColor = customHeaderBg || "#F5F0E8";
+      const headerTextColor = getContrastingTextColor(headerBgColor);
 
       const renderHeader = () => {
         const [r, g, b] = hexToRgb(headerBgColor);
@@ -243,7 +250,7 @@ const AnalysisResult = () => {
 
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(9);
-        pdf.setTextColor(...PDF_TEXT_COLOR);
+        pdf.setTextColor(...hexToRgb(headerTextColor));
         pdf.text(title, pageWidth - margin, 12, { align: "right" });
 
         pdf.setFont("helvetica", "normal");
@@ -273,6 +280,23 @@ const AnalysisResult = () => {
         pdf.setTextColor(...PDF_TEXT_COLOR);
         pdf.text(title, margin, cursorY);
         cursorY += 8;
+      };
+
+      const addRegionTitleCard = (title: string, bgColor: string) => {
+        ensureSpace(16);
+        const cardHeight = 11;
+        const [r, g, b] = hexToRgb(bgColor);
+
+        pdf.setFillColor(r, g, b);
+        pdf.setDrawColor(r, g, b);
+        pdf.roundedRect(margin, cursorY, contentWidth, cardHeight, 4, 4, "FD");
+
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(11);
+        pdf.setTextColor(...PDF_TEXT_COLOR);
+        pdf.text(title, margin + contentWidth / 2, cursorY + 7.3, { align: "center" });
+
+        cursorY += cardHeight + 4;
       };
 
       const addParagraph = (text: string, fontSize = 9.5) => {
@@ -430,7 +454,7 @@ const AnalysisResult = () => {
       }
 
       if (analysis.isComparativo && analysis.comparativo) {
-        cursorY += 8;
+        cursorY += 12;
         addSectionTitle("Análise de evolução");
         addParagraph(analysis.comparativo.evolucaoGeral, 10);
 
@@ -485,7 +509,9 @@ const AnalysisResult = () => {
             cauda: "Cauda da Sobrancelha",
           };
 
-          addSectionTitle(labelMap[key] || key);
+          const theme = getRegionTheme(key);
+
+          addRegionTitleCard(labelMap[key] || key, theme.bg);
           addKeyValue("Densidade", `${data.densidade?.classificacao || "Não informada"} (${data.densidade?.percentual ?? 0}%)`);
           addParagraph(data.descricao, 9.5);
           addKeyValue("Espessura", data.espessura);
