@@ -212,7 +212,7 @@ const AnalysisResult = () => {
       const customHeaderBg = pdfBgColor || "";
       const customHeaderLogo = pdfLogo ? await loadImageData(pdfLogo) : "";
       const hasCustomHeader = Boolean(customHeaderBg || customHeaderLogo);
-      const headerHeight = hasCustomHeader ? 30 : 24;
+      const headerHeight = hasCustomHeader ? 27 : 24;
       const headerBgColor = customHeaderBg || "#F5F0E8";
       const headerTextColor = getContrastingTextColor(headerBgColor);
 
