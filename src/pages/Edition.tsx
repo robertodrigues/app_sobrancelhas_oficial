@@ -12,15 +12,12 @@ import {
   Upload, 
   Download, 
   Type, 
-  Image as ImageIcon, 
   Paintbrush, 
   Layers, 
   RotateCcw,
   Sparkles,
   Trash2,
-  Sliders,
   Maximize2,
-  Palette,
   FileText
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
@@ -43,8 +40,6 @@ const createDefaultTransform = (): PhotoTransform => ({
   y: 0,
   scale: 1,
 });
-
-const clampScale = (scale: number) => Math.min(3, Math.max(1, scale));
 
 const dataUrlToFile = (dataUrl: string, filename: string) => {
   const [header, base64Data] = dataUrl.split(',');
@@ -254,7 +249,8 @@ const Edition = () => {
     if (!ctx) return;
 
     const rect = canvas.getBoundingClientRect();
-    let clientX, clientY;
+    let clientX: number;
+    let clientY: number;
     if ('touches' in e) {
       clientX = e.touches[0].clientX;
       clientY = e.touches[0].clientY;
@@ -281,7 +277,8 @@ const Edition = () => {
     if (!ctx) return;
 
     const rect = canvas.getBoundingClientRect();
-    let clientX, clientY;
+    let clientX: number;
+    let clientY: number;
     if ('touches' in e) {
       clientX = e.touches[0].clientX;
       clientY = e.touches[0].clientY;
@@ -319,51 +316,24 @@ const Edition = () => {
     const element = collageRef.current;
     if (!element) return;
 
-    const rect = element.getBoundingClientRect();
-    const exportWidth = Math.max(1, Math.round(rect.width));
-    const exportHeight = Math.max(1, Math.round(rect.height));
-
     try {
       setIsExporting(true);
 
-      const cloneContainer = document.createElement('div');
-      cloneContainer.style.position = 'fixed';
-      cloneContainer.style.left = '-10000px';
-      cloneContainer.style.top = '0';
-      cloneContainer.style.width = `${exportWidth}px`;
-      cloneContainer.style.height = `${exportHeight}px`;
-      cloneContainer.style.overflow = 'hidden';
-      cloneContainer.style.background = '#1C3A2B';
-      cloneContainer.style.pointerEvents = 'none';
-
-      const clone = element.cloneNode(true) as HTMLElement;
-      clone.style.width = `${exportWidth}px`;
-      clone.style.height = `${exportHeight}px`;
-      clone.style.maxWidth = 'none';
-      clone.style.maxHeight = 'none';
-      clone.style.transform = 'none';
-      clone.style.position = 'relative';
-      clone.style.left = '0';
-      clone.style.top = '0';
-
-      cloneContainer.appendChild(clone);
-      document.body.appendChild(cloneContainer);
-
       await new Promise((resolve) => requestAnimationFrame(() => resolve(true)));
       await new Promise((resolve) => requestAnimationFrame(() => resolve(true)));
 
-      const canvas = await html2canvas(clone, {
+      const rect = element.getBoundingClientRect();
+
+      const canvas = await html2canvas(element, {
         useCORS: true,
         allowTaint: true,
         scale: 3,
-        width: exportWidth,
-        height: exportHeight,
         backgroundColor: '#1C3A2B',
         scrollX: 0,
         scrollY: 0,
+        windowWidth: Math.ceil(rect.width),
+        windowHeight: Math.ceil(rect.height),
       });
-
-      document.body.removeChild(cloneContainer);
 
       const link = document.createElement('a');
       link.download = `antes-e-depois-${layoutSize}.jpeg`;
@@ -371,10 +341,6 @@ const Edition = () => {
       link.click();
       showSuccess('Montagem exportada com sucesso!');
     } catch (error) {
-      const cloneContainer = document.querySelector('div[style*="-10000px"]');
-      if (cloneContainer?.parentNode) {
-        cloneContainer.parentNode.removeChild(cloneContainer);
-      }
       showError('Erro ao exportar imagem.');
       console.error(error);
     } finally {
