@@ -40,7 +40,6 @@ const preloadImage = (src: string) =>
     }
 
     const tempImg = new Image();
-    tempImg.crossOrigin = 'anonymous';
     tempImg.onload = () => resolve(true);
     tempImg.onerror = () => resolve(false);
     tempImg.src = src;
@@ -220,7 +219,6 @@ const AnalysisResult = () => {
           doc.querySelectorAll('img').forEach(img => {
             img.style.display = 'block';
             img.style.imageRendering = 'auto';
-            img.setAttribute('crossorigin', 'anonymous');
           });
         }
       });
@@ -273,7 +271,7 @@ const AnalysisResult = () => {
           
           {pdfLogo && (
             <div className="flex justify-center py-4 border-b border-[#D4C9B5]/50">
-              <img src={pdfLogo} className="h-16 object-contain" alt="Logo Designer" crossOrigin="anonymous" />
+              <img src={pdfLogo} className="h-16 object-contain" alt="Logo Designer" />
             </div>
           )}
 
@@ -287,7 +285,6 @@ const AnalysisResult = () => {
                     className="w-full aspect-square rounded-[12px] object-contain bg-[#F5F0E8] block"
                     alt="Antes"
                     style={{ imageRendering: 'auto' }}
-                    crossOrigin="anonymous"
                     loading="eager"
                   />
                 </div>
@@ -300,7 +297,6 @@ const AnalysisResult = () => {
                     className="w-full aspect-square rounded-[12px] object-contain bg-[#F5F0E8] block"
                     alt="Depois"
                     style={{ imageRendering: 'auto' }}
-                    crossOrigin="anonymous"
                     loading="eager"
                   />
                 </div>
@@ -316,7 +312,6 @@ const AnalysisResult = () => {
                     className="w-full aspect-square rounded-[20px] object-contain bg-[#F5F0E8] block"
                     alt="Análise"
                     style={{ imageRendering: 'auto' }}
-                    crossOrigin="anonymous"
                     loading="eager"
                     onLoad={handleImageLoad}
                     onError={handleImageError}
