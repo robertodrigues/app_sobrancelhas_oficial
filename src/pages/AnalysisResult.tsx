@@ -32,19 +32,6 @@ const getSavedAnalysisState = () => {
   }
 };
 
-const preloadImage = (src: string) =>
-  new Promise<boolean>((resolve) => {
-    if (!src) {
-      resolve(false);
-      return;
-    }
-
-    const tempImg = new Image();
-    tempImg.onload = () => resolve(true);
-    tempImg.onerror = () => resolve(false);
-    tempImg.src = src;
-  });
-
 const isRemoteImage = (src: string) => /^https?:\/\//i.test(src);
 
 const getPdfSafeImageSrc = (src: string) => {
@@ -83,8 +70,17 @@ const waitForImageLoads = async (container: HTMLElement) => {
             return;
           }
 
-          img.onload = () => resolve();
-          img.onerror = () => resolve();
+          const timeout = window.setTimeout(() => resolve(), 6000);
+
+          img.onload = () => {
+            window.clearTimeout(timeout);
+            resolve();
+          };
+
+          img.onerror = () => {
+            window.clearTimeout(timeout);
+            resolve();
+          };
         }),
     ),
   );
@@ -110,6 +106,14 @@ const waitForDecodedImage = async (img: HTMLImageElement) => {
     img.onerror = () => resolve();
   });
 };
+
+const withTimeout = <T,>(promise: Promise<T>, ms: number, fallback: T) =>
+  Promise.race([
+    promise,
+    new Promise<T>((resolve) => {
+      window.setTimeout(() => resolve(fallback), ms);
+    }),
+  ]);
 
 const AnalysisResult = () => {
   const location = useLocation();
@@ -253,72 +257,6 @@ const AnalysisResult = () => {
     return '';
   };
 
-  const buildPdfImageSection = async () => {
-    const section = document.createElement('div');
-    section.style.width = '100%';
-    section.style.marginBottom = '20px';
-    section.style.display = 'block';
-
-    const buildSingleImageCard = async (src: string, label?: string) => {
-      const wrapper = document.createElement('div');
-      wrapper.style.width = '100%';
-      wrapper.style.marginBottom = '12px';
-
-      if (label) {
-        const caption = document.createElement('div');
-        caption.textContent = label;
-        caption.style.fontFamily = 'Poppins, sans-serif';
-        caption.style.fontSize = '10px';
-        caption.style.letterSpacing = '1px';
-        caption.style.textTransform = 'uppercase';
-        caption.style.color = '#4A7A5C';
-        caption.style.textAlign = 'center';
-        caption.style.marginBottom = '8px';
-        wrapper.appendChild(caption);
-      }
-
-      const img = document.createElement('img');
-      img.crossOrigin = 'anonymous';
-      img.src = await fetchImageAsDataUrl(getPdfSafeImageSrc(src));
-      img.style.display = 'block';
-      img.style.width = '100%';
-      img.style.maxHeight = '420px';
-      img.style.objectFit = 'contain';
-      img.style.borderRadius = '20px';
-      img.style.backgroundColor = '#F5F0E8';
-      wrapper.appendChild(img);
-
-      await waitForDecodedImage(img);
-      return wrapper;
-    };
-
-    if (analysis.isComparativo && hasTwoImages && displayBeforeImage && displayAfterImage) {
-      const row = document.createElement('div');
-      row.style.display = 'flex';
-      row.style.gap = '12px';
-      row.style.width = '100%';
-
-      const left = document.createElement('div');
-      left.style.flex = '1';
-      left.appendChild(await buildSingleImageCard(displayBeforeImage, 'Antes'));
-
-      const right = document.createElement('div');
-      right.style.flex = '1';
-      right.appendChild(await buildSingleImageCard(displayAfterImage, 'Depois'));
-
-      row.appendChild(left);
-      row.appendChild(right);
-      section.appendChild(row);
-      return section;
-    }
-
-    if (displayImage) {
-      section.appendChild(await buildSingleImageCard(displayImage));
-    }
-
-    return section;
-  };
-
   const handleGeneratePdf = async () => {
     const element = reportRef.current;
     if (!element) return;
@@ -335,9 +273,6 @@ const AnalysisResult = () => {
       exportContainer.style.zIndex = '-1';
       exportContainer.style.padding = '16px';
 
-      const imageSection = await buildPdfImageSection();
-      exportContainer.appendChild(imageSection);
-
       const clone = element.cloneNode(true) as HTMLDivElement;
       exportContainer.appendChild(clone);
       document.body.appendChild(exportContainer);
@@ -353,23 +288,18 @@ const AnalysisResult = () => {
             const safeSrc = getPdfSafeImageSrc(originalSrc);
 
             try {
-              const dataUrl = await fetchImageAsDataUrl(safeSrc);
-              img.setAttribute('src', dataUrl);
-              img.removeAttribute('srcset');
-              img.removeAttribute('sizes');
-              img.setAttribute('crossorigin', 'anonymous');
-              img.style.display = 'block';
-              img.style.imageRendering = 'auto';
-              await waitForDecodedImage(img);
+              const dataUrl = await withTimeout(fetchImageAsDataUrl(safeSrc), 7000, '');
+              img.setAttribute('src', dataUrl || safeSrc);
             } catch {
               img.setAttribute('src', safeSrc);
-              img.removeAttribute('srcset');
-              img.removeAttribute('sizes');
-              img.setAttribute('crossorigin', 'anonymous');
-              img.style.display = 'block';
-              img.style.imageRendering = 'auto';
-              await waitForDecodedImage(img);
             }
+
+            img.removeAttribute('srcset');
+            img.removeAttribute('sizes');
+            img.setAttribute('crossorigin', 'anonymous');
+            img.style.display = 'block';
+            img.style.imageRendering = 'auto';
+            await waitForDecodedImage(img);
           }),
         );
 
@@ -380,7 +310,7 @@ const AnalysisResult = () => {
         const canvas = await html2canvas(exportContainer, {
           useCORS: true,
           allowTaint: true,
-          scale: 4,
+          scale: 3,
           backgroundColor: pdfBgColor,
           logging: false,
           imageTimeout: 10000,
