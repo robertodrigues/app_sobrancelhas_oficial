@@ -2,8 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HybridAuthProvider, SignedIn, SignedOut, RedirectToSignIn } from "@/lib/auth";
+import { useEffect } from "react";
 import Index from "./pages/Index";
 import Capture from "./pages/Capture";
 import Clients from "./pages/Clients";
@@ -14,8 +15,56 @@ import Credits from "./pages/Credits";
 import Edition from "./pages/Edition";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Landing from "./pages/Landing";
 
 const queryClient = new QueryClient();
+
+// Componente para gerenciar o redirecionamento de subdomínio e renderização da Home
+const HomeRouter = () => {
+  const hostname = window.location.hostname;
+  
+  // Se for o domínio principal institucional, renderiza a Landing Page
+  const isLandingDomain = hostname === "elha.com.br" || hostname === "www.elha.com.br";
+
+  if (isLandingDomain) {
+    return <Landing />;
+  }
+
+  // Caso contrário (app.elha.com.br, localhost ou preview do Dyad), renderiza o App Dashboard
+  return (
+    <>
+      <SignedIn><Index /></SignedIn>
+      <SignedOut><RedirectToSignIn /></SignedOut>
+    </>
+  );
+};
+
+// Componente de proteção para garantir que rotas do App no domínio principal sejam redirecionadas para o subdomínio app
+const AppRouteGuard = ({ children }: { children: React.ReactNode }) => {
+  const hostname = window.location.hostname;
+  const isLandingDomain = hostname === "elha.com.br" || hostname === "www.elha.com.br";
+
+  useEffect(() => {
+    if (isLandingDomain) {
+      // Redireciona de www.elha.com.br/rota para app.elha.com.br/rota
+      const currentPath = window.location.pathname + window.location.search;
+      window.location.href = `https://app.elha.com.br${currentPath}`;
+    }
+  }, [isLandingDomain]);
+
+  if (isLandingDomain) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F0E8]">
+        <div className="text-center space-y-3">
+          <Loader2 className="animate-spin h-8 w-8 mx-auto text-[#1C3A2B]" />
+          <p className="text-xs text-[#4A7A5C]">Redirecionando para a plataforma segura...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+};
 
 const App = () => {
   return (
@@ -29,46 +78,43 @@ const App = () => {
               <BrowserRouter>
                 <Routes>
                   {/* Rotas Públicas */}
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
+                  <Route path="/login" element={<AppRouteGuard><Login /></AppRouteGuard>} />
+                  <Route path="/register" element={<AppRouteGuard><Register /></AppRouteGuard>} />
+
+                  {/* Rota Principal (Decide entre Landing Page ou App Dashboard) */}
+                  <Route path="/" element={<HomeRouter />} />
 
                   {/* Rotas Protegidas por Autenticação */}
-                  <Route path="/" element={
-                    <>
-                      <SignedIn><Index /></SignedIn>
-                      <SignedOut><RedirectToSignIn /></SignedOut>
-                    </>
-                  } />
                   <Route path="/captura" element={
-                    <>
+                    <AppRouteGuard>
                       <SignedIn><Capture /></SignedIn>
                       <SignedOut><RedirectToSignIn /></SignedOut>
-                    </>
+                    </AppRouteGuard>
                   } />
                   <Route path="/clientes" element={
-                    <>
+                    <AppRouteGuard>
                       <SignedIn><Clients /></SignedIn>
                       <SignedOut><RedirectToSignIn /></SignedOut>
-                    </>
+                    </AppRouteGuard>
                   } />
                   <Route path="/novo-cliente" element={
-                    <>
+                    <AppRouteGuard>
                       <SignedIn><NewClient /></SignedIn>
                       <SignedOut><RedirectToSignIn /></SignedOut>
-                    </>
+                    </AppRouteGuard>
                   } />
-                  <Route path="/resultado" element={<AnalysisResult />} />
+                  <Route path="/resultado" element={<AppRouteGuard><AnalysisResult /></AppRouteGuard>} />
                   <Route path="/creditos" element={
-                    <>
+                    <AppRouteGuard>
                       <SignedIn><Credits /></SignedIn>
                       <SignedOut><RedirectToSignIn /></SignedOut>
-                    </>
+                    </AppRouteGuard>
                   } />
                   <Route path="/edicao" element={
-                    <>
+                    <AppRouteGuard>
                       <SignedIn><Edition /></SignedIn>
                       <SignedOut><RedirectToSignIn /></SignedOut>
-                    </>
+                    </AppRouteGuard>
                   } />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
@@ -80,5 +126,7 @@ const App = () => {
     </HybridAuthProvider>
   );
 };
+
+import { Loader2 } from "lucide-react";
 
 export default App;
