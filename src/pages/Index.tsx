@@ -178,6 +178,17 @@ const Index = () => {
     }
   };
 
+  const openAnalysisResult = (activity: any) => {
+    const payload = {
+      analysis: activity.result,
+      image: activity.image_url,
+      allImages: [],
+    };
+
+    sessionStorage.setItem("elha:last-analysis", JSON.stringify(payload));
+    navigate("/resultado", { state: payload });
+  };
+
   return (
     <>
       <AnimatePresence>
@@ -350,7 +361,7 @@ const Index = () => {
                   <div
                     key={activity.id}
                     className="flex items-center justify-between p-4 bg-[#E8DECE] text-[#1C3A2B] rounded-2xl shadow-sm border border-[#D4C9B5] cursor-pointer hover:bg-[#E8DECE]/90 transition-colors"
-                    onClick={() => navigate("/resultado", { state: { analysis: activity.result, image: activity.image_url } })}
+                    onClick={() => openAnalysisResult(activity)}
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#D4C9B5]">

@@ -34,6 +34,11 @@ const getSavedAnalysisState = () => {
 
 const preloadImage = (src: string) =>
   new Promise<boolean>((resolve) => {
+    if (!src) {
+      resolve(false);
+      return;
+    }
+
     const tempImg = new Image();
     tempImg.crossOrigin = 'anonymous';
     tempImg.onload = () => resolve(true);
@@ -54,6 +59,12 @@ const AnalysisResult = () => {
     savedState = null;
   }
 
+  useEffect(() => {
+    if (routeState?.analysis || routeState?.image) {
+      sessionStorage.setItem('elha:last-analysis', JSON.stringify(routeState));
+    }
+  }, [routeState]);
+
   const analysis = routeState?.analysis ?? savedState?.analysis ?? null;
   const image = routeState?.image ?? savedState?.image ?? null;
   const allImages = routeState?.allImages ?? savedState?.allImages ?? null;
@@ -62,6 +73,7 @@ const AnalysisResult = () => {
   const [pdfLogo, setPdfLogo] = useState<string | null>(null);
   const [pdfBgColor, setPdfBgColor] = useState('#F5F0E8');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [reportImage, setReportImage] = useState<string | null>(null);
 
   useEffect(() => {
     const savedLogo = localStorage.getItem('pdf_custom_logo');
@@ -85,6 +97,15 @@ const AnalysisResult = () => {
   const comparisonAfterImage = Array.isArray(allImages) && allImages.length > 1
     ? allImages[1]?.dataUrl || allImages[1]?.url
     : null;
+
+  useEffect(() => {
+    setReportImage(resolvedImage || null);
+  }, [resolvedImage]);
+
+  const hasTwoImages = Array.isArray(allImages) && allImages.length >= 2;
+  const displayImage = reportImage || resolvedImage;
+  const displayBeforeImage = comparisonBeforeImage;
+  const displayAfterImage = comparisonAfterImage;
 
   if (!analysis) {
     return (
@@ -149,8 +170,6 @@ const AnalysisResult = () => {
     }
   };
 
-  const hasTwoImages = Array.isArray(allImages) && allImages.length >= 2;
-
   const textValue = (value: unknown) => {
     if (typeof value === 'string') return value;
     if (typeof value === 'number') return String(value);
@@ -165,10 +184,10 @@ const AnalysisResult = () => {
     setIsGeneratingPdf(true);
     try {
       const urlsToPreload: string[] = [];
-      if (analysis.isComparativo && hasTwoImages && comparisonBeforeImage && comparisonAfterImage) {
-        urlsToPreload.push(comparisonBeforeImage, comparisonAfterImage);
-      } else if (resolvedImage) {
-        urlsToPreload.push(resolvedImage);
+      if (analysis.isComparativo && hasTwoImages && displayBeforeImage && displayAfterImage) {
+        urlsToPreload.push(displayBeforeImage, displayAfterImage);
+      } else if (displayImage) {
+        urlsToPreload.push(displayImage);
       }
       if (pdfLogo) {
         urlsToPreload.push(pdfLogo);
@@ -253,11 +272,12 @@ const AnalysisResult = () => {
                 <p className="font-label-category text-[10px] text-[#4A7A5C] text-center">Antes</p>
                 <div className="rounded-2xl shadow-md border-2 border-[#E8DECE] p-1 bg-[#1C3A2B]/5">
                   <img
-                    src={comparisonBeforeImage || ''}
+                    src={displayBeforeImage || ''}
                     className="w-full aspect-square rounded-[12px] object-contain bg-[#F5F0E8] block"
                     alt="Antes"
                     style={{ imageRendering: 'auto' }}
                     crossOrigin="anonymous"
+                    loading="eager"
                   />
                 </div>
               </div>
@@ -265,11 +285,12 @@ const AnalysisResult = () => {
                 <p className="font-label-category text-[10px] text-[#4A7A5C] text-center">Depois</p>
                 <div className="rounded-2xl shadow-md border-2 border-[#4A7A5C] p-1 bg-[#1C3A2B]/5">
                   <img
-                    src={comparisonAfterImage || ''}
+                    src={displayAfterImage || ''}
                     className="w-full aspect-square rounded-[12px] object-contain bg-[#F5F0E8] block"
                     alt="Depois"
                     style={{ imageRendering: 'auto' }}
                     crossOrigin="anonymous"
+                    loading="eager"
                   />
                 </div>
               </div>
@@ -277,11 +298,13 @@ const AnalysisResult = () => {
           ) : (
             <div className="relative rounded-3xl shadow-lg border-4 border-[#E8DECE] p-2 bg-[#1C3A2B]/5">
               <img
-                src={resolvedImage || ''}
+                key={displayImage || 'analysis-image'}
+                src={displayImage || ''}
                 className="w-full aspect-square rounded-[20px] object-contain bg-[#F5F0E8] block"
                 alt="Análise"
                 style={{ imageRendering: 'auto' }}
                 crossOrigin="anonymous"
+                loading="eager"
               />
             </div>
           )}
