@@ -583,12 +583,6 @@ const AnalysisResult = () => {
         </header>
 
         <div ref={reportRef} className="space-y-6 p-4 rounded-3xl">
-          {pdfLogo && (
-            <div className="flex justify-center py-4 border-b border-[#D4C9B5]/50">
-              <img src={pdfLogo} className="h-16 object-contain" alt="Logo" />
-            </div>
-          )}
-
           {analysis.isComparativo && hasTwoImages ? (
             <div className="flex flex-row justify-between gap-4 w-full">
               <div className="w-[48%] space-y-2">
