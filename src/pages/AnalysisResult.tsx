@@ -212,7 +212,7 @@ const AnalysisResult = () => {
       const customHeaderBg = pdfBgColor || "";
       const customHeaderLogo = pdfLogo ? await loadImageData(pdfLogo) : "";
       const hasCustomHeader = Boolean(customHeaderBg || customHeaderLogo);
-      const headerHeight = hasCustomHeader ? (customHeaderLogo ? 28 : 22) : 0;
+      const headerHeight = hasCustomHeader ? (customHeaderLogo ? 36 : 22) : 0;
       const headerBgColor = customHeaderBg || "#F5F0E8";
       const headerTextColor = getContrastingTextColor(headerBgColor);
 
@@ -222,11 +222,17 @@ const AnalysisResult = () => {
           pdf.setFillColor(r, g, b);
           pdf.rect(0, 0, pageWidth, headerHeight, "F");
 
+          const title = analysis.isComparativo
+            ? "Relatório de Evolução"
+            : isTricoscopia
+              ? "Relatório Tricoscópico"
+              : "Relatório Técnico";
+
           if (customHeaderLogo) {
             const logoProps = pdf.getImageProperties(customHeaderLogo);
-            const logoWidth = 22;
+            const logoWidth = 24;
             const logoHeight = (logoProps.height / logoProps.width) * logoWidth;
-            const logoX = margin;
+            const logoX = (pageWidth - logoWidth) / 2;
             const logoY = 4;
 
             pdf.addImage(
@@ -241,39 +247,22 @@ const AnalysisResult = () => {
             );
 
             pdf.setFont("helvetica", "bold");
-            pdf.setFontSize(16);
+            pdf.setFontSize(15);
             pdf.setTextColor(...hexToRgb(headerTextColor));
-            pdf.text(
-              analysis.isComparativo
-                ? "Relatório de Evolução"
-                : isTricoscopia
-                  ? "Relatório Tricoscópico"
-                  : "Relatório Técnico",
-              margin + 28,
-              11,
-            );
+            pdf.text(title, pageWidth / 2, 24, { align: "center" });
 
             pdf.setFont("helvetica", "normal");
             pdf.setFontSize(9);
-            pdf.text("Tricologia de Sobrancelhas", margin + 28, 17);
+            pdf.text("Análise Inteligente", pageWidth / 2, 31, { align: "center" });
           } else {
             pdf.setFont("helvetica", "bold");
             pdf.setFontSize(16);
             pdf.setTextColor(...hexToRgb(headerTextColor));
-            pdf.text(
-              analysis.isComparativo
-                ? "Relatório de Evolução"
-                : isTricoscopia
-                  ? "Relatório Tricoscópico"
-                  : "Relatório Técnico",
-              pageWidth / 2,
-              11,
-              { align: "center" },
-            );
+            pdf.text(title, pageWidth / 2, 11, { align: "center" });
 
             pdf.setFont("helvetica", "normal");
             pdf.setFontSize(9);
-            pdf.text("Tricologia de Sobrancelhas", pageWidth / 2, 17, { align: "center" });
+            pdf.text("Análise Inteligente", pageWidth / 2, 17, { align: "center" });
           }
 
           cursorY = headerHeight + 6;
@@ -296,7 +285,7 @@ const AnalysisResult = () => {
           pdf.setFont("helvetica", "normal");
           pdf.setFontSize(10);
           pdf.setTextColor(74, 122, 92);
-          pdf.text("Tricologia de Sobrancelhas", pageWidth / 2, cursorY, { align: "center" });
+          pdf.text("Análise Inteligente", pageWidth / 2, cursorY, { align: "center" });
           cursorY += 8;
         }
       };
@@ -592,7 +581,7 @@ const AnalysisResult = () => {
             <h1 className="font-heading text-2xl font-normal text-[#1C3A2B]">
               {analysis.isComparativo ? "Relatório de Evolução" : isTricoscopia ? "Relatório Tricoscópico" : "Relatório Técnico"}
             </h1>
-            <p className="font-label-category text-[10px] text-[#4A7A5C] mt-0.5">Tricologia de Sobrancelhas</p>
+            <p className="font-label-category text-[10px] text-[#4A7A5C] mt-0.5">Análise Inteligente</p>
           </div>
         </header>
 
