@@ -66,7 +66,7 @@ const AnalysisResult = () => {
   }, [routeState]);
 
   const analysis = routeState?.analysis ?? savedState?.analysis ?? null;
-  const image = routeState?.image ?? savedState?.image ?? null;
+  const image = routeState?.image ?? savedState?.image ?? analysis?.image_url ?? null;
   const allImages = routeState?.allImages ?? savedState?.allImages ?? null;
   const reportRef = useRef<HTMLDivElement>(null);
 
@@ -74,6 +74,7 @@ const AnalysisResult = () => {
   const [pdfBgColor, setPdfBgColor] = useState('#F5F0E8');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [reportImage, setReportImage] = useState<string | null>(null);
+  const [imageFailed, setImageFailed] = useState(false);
 
   useEffect(() => {
     const savedLogo = localStorage.getItem('pdf_custom_logo');
@@ -83,11 +84,12 @@ const AnalysisResult = () => {
   }, []);
 
   const resolvedImage = (() => {
-    if (Array.isArray(allImages) && allImages.length > 0) {
-      return allImages[allImages.length - 1]?.dataUrl || allImages[allImages.length - 1]?.url || image;
-    }
+    const fromAllImages =
+      Array.isArray(allImages) && allImages.length > 0
+        ? allImages[allImages.length - 1]?.dataUrl || allImages[allImages.length - 1]?.url || null
+        : null;
 
-    return image;
+    return fromAllImages || image || analysis?.image_url || null;
   })();
 
   const comparisonBeforeImage = Array.isArray(allImages) && allImages.length > 0
@@ -100,12 +102,21 @@ const AnalysisResult = () => {
 
   useEffect(() => {
     setReportImage(resolvedImage || null);
+    setImageFailed(false);
   }, [resolvedImage]);
 
   const hasTwoImages = Array.isArray(allImages) && allImages.length >= 2;
   const displayImage = reportImage || resolvedImage;
   const displayBeforeImage = comparisonBeforeImage;
   const displayAfterImage = comparisonAfterImage;
+
+  const handleImageError = () => {
+    setImageFailed(true);
+  };
+
+  const handleImageLoad = () => {
+    setImageFailed(false);
+  };
 
   if (!analysis) {
     return (
@@ -296,16 +307,29 @@ const AnalysisResult = () => {
               </div>
             </div>
           ) : (
-            <div className="relative rounded-3xl shadow-lg border-4 border-[#E8DECE] p-2 bg-[#1C3A2B]/5">
-              <img
-                key={displayImage || 'analysis-image'}
-                src={displayImage || ''}
-                className="w-full aspect-square rounded-[20px] object-contain bg-[#F5F0E8] block"
-                alt="Análise"
-                style={{ imageRendering: 'auto' }}
-                crossOrigin="anonymous"
-                loading="eager"
-              />
+            <div className="space-y-3">
+              <div className="relative rounded-3xl shadow-lg border-4 border-[#E8DECE] p-2 bg-[#1C3A2B]/5 min-h-[280px] flex items-center justify-center overflow-hidden">
+                {displayImage && !imageFailed ? (
+                  <img
+                    key={displayImage}
+                    src={displayImage}
+                    className="w-full aspect-square rounded-[20px] object-contain bg-[#F5F0E8] block"
+                    alt="Análise"
+                    style={{ imageRendering: 'auto' }}
+                    crossOrigin="anonymous"
+                    loading="eager"
+                    onLoad={handleImageLoad}
+                    onError={handleImageError}
+                  />
+                ) : (
+                  <div className="w-full aspect-square rounded-[20px] bg-[#F5F0E8] border border-dashed border-[#D4C9B5] flex flex-col items-center justify-center text-center px-6">
+                    <p className="font-heading text-lg text-[#1C3A2B]">Foto indisponível</p>
+                    <p className="mt-2 text-xs text-[#4A7A5C]">
+                      A imagem não carregou no relatório, mas o diagnóstico continua disponível abaixo.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

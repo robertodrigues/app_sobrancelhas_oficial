@@ -180,8 +180,15 @@ const Index = () => {
 
   const openAnalysisResult = (activity: any) => {
     const imageUrl = activity.image_url || activity.dataUrl || activity.url || "";
+    const analysis = activity.result
+      ? {
+          ...activity.result,
+          image_url: imageUrl,
+        }
+      : { image_url: imageUrl };
+
     const payload = {
-      analysis: activity.result,
+      analysis,
       image: imageUrl,
       allImages: imageUrl
         ? [
