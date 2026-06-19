@@ -19,6 +19,8 @@ import {
   Trash2,
   Maximize2,
   FileText,
+  Save,
+  Loader2,
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import html2canvas from 'html2canvas';
@@ -122,6 +124,8 @@ const Edition = () => {
   const [pdfLogo, setPdfLogo] = useState<string | null>(null);
   const [pdfBgColor, setPdfBgColor] = useState('#F5F0E8');
   const [isExporting, setIsExporting] = useState(false);
+  const [isSavingToR2, setIsSavingToR2] = useState(false);
+  const [savedR2Url, setSavedR2Url] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.id) {
@@ -156,6 +160,7 @@ const Edition = () => {
     setPenColor('#8FAF8A');
     setPenWidth(4);
     setIsDrawingMode(false);
+    setSavedR2Url(null);
 
     const canvas = canvasRef.current;
     if (canvas) {
@@ -237,6 +242,7 @@ const Edition = () => {
         setAfterTransform(createDefaultTransform());
       }
       if (type === 'logo') setLogoImg(result);
+      setSavedR2Url(null); // Reseta o R2 salvo ao mudar as imagens
     };
     reader.readAsDataURL(file);
   };
@@ -304,26 +310,33 @@ const Edition = () => {
       const ctx = canvas.getContext('2d');
       ctx?.clearRect(0, 0, canvas.width, canvas.height);
       showSuccess('Desenhos limpos!');
+      setSavedR2Url(null);
     }
   };
 
-  const exportCollage = async () => {
+  const handleSaveToR2 = async () => {
     if (!beforeImg || !afterImg) {
       showError('Adicione as fotos de Antes e Depois primeiro.');
+      return;
+    }
+
+    if (!user?.id) {
+      showError('Sessão inválida. Faça login novamente.');
       return;
     }
 
     const element = collageRef.current;
     if (!element) return;
 
+    setIsSavingToR2(true);
     setIsExporting(true);
 
     try {
+      // Aguarda renderização limpa sem guias
       await new Promise((resolve) => requestAnimationFrame(() => resolve(true)));
       await new Promise((resolve) => requestAnimationFrame(() => resolve(true)));
 
       const rect = element.getBoundingClientRect();
-
       const canvas = await html2canvas(element, {
         useCORS: true,
         allowTaint: true,
@@ -335,14 +348,75 @@ const Edition = () => {
         height: Math.ceil(rect.height),
       });
 
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      const file = dataUrlToFile(dataUrl, `montagem-${Date.now()}.jpg`);
+
+      const uploadRes = await uploadPhotoToR2(file, {
+        userId: user.id,
+        folder: 'montagens',
+      });
+
+      if (uploadRes?.url) {
+        setSavedR2Url(uploadRes.url);
+        showSuccess('Edição compilada e salva com sucesso no R2!');
+      } else {
+        throw new Error('Não foi possível obter a URL de retorno.');
+      }
+    } catch (error: any) {
+      console.error(error);
+      showError('Erro ao salvar montagem no R2: ' + (error.message || error));
+    } finally {
+      setIsSavingToR2(false);
+      setIsExporting(false);
+    }
+  };
+
+  const exportCollage = async () => {
+    if (!beforeImg || !afterImg) {
+      showError('Adicione as fotos de Antes e Depois primeiro.');
+      return;
+    }
+
+    if (!savedR2Url) {
+      showError('Por favor, clique em "Salvar Edição" primeiro para compilar a imagem oficial.');
+      return;
+    }
+
+    setIsExporting(true);
+
+    try {
+      // Baixa diretamente a imagem oficial que foi salva no R2
+      const response = await fetch(savedR2Url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
       const link = document.createElement('a');
       link.download = `antes-e-depois-${layoutSize}.jpeg`;
-      link.href = canvas.toDataURL('image/jpeg', 0.95);
+      link.href = blobUrl;
       link.click();
-      showSuccess('Montagem exportada com sucesso!');
+
+      URL.revokeObjectURL(blobUrl);
+      showSuccess('Montagem oficial baixada com sucesso!');
     } catch (error) {
-      showError('Erro ao exportar imagem.');
-      console.error(error);
+      showError('Erro ao baixar imagem do R2. Tentando exportação local...');
+      
+      // Fallback local caso o fetch do R2 falhe por CORS no navegador
+      const element = collageRef.current;
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        const canvas = await html2canvas(element, {
+          useCORS: true,
+          allowTaint: true,
+          scale: 3,
+          backgroundColor: '#1C3A2B',
+          width: Math.ceil(rect.width),
+          height: Math.ceil(rect.height),
+        });
+        const link = document.createElement('a');
+        link.download = `antes-e-depois-${layoutSize}.jpeg`;
+        link.href = canvas.toDataURL('image/jpeg', 0.95);
+        link.click();
+      }
     } finally {
       setIsExporting(false);
     }
@@ -351,6 +425,20 @@ const Edition = () => {
   return (
     <div className="min-h-screen bg-[#F5F0E8] text-[#1C3A2B] pb-28">
       <Navbar />
+      
+      {/* Overlay Escuro de Compilação */}
+      {isSavingToR2 && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/85 backdrop-blur-md">
+          <div className="text-center space-y-4 p-6 max-w-xs bg-[#10261C] border border-[#4A7A5C]/40 rounded-3xl shadow-2xl">
+            <Loader2 className="animate-spin h-12 w-12 mx-auto text-[#8FAF8A]" />
+            <h3 className="font-heading text-lg font-normal text-[#E8DECE]">Compilando Edição...</h3>
+            <p className="text-xs text-[#8FAF8A] leading-relaxed">
+              Estamos processando seus ajustes de zoom, textos e desenhos para salvar a versão oficial no Cloud R2.
+            </p>
+          </div>
+        </div>
+      )}
+
       <main className="max-w-md mx-auto px-4 py-4 space-y-4">
         <header className="text-center pt-2">
           <div className="w-10 h-10 rounded-xl bg-[#4A7A5C]/10 flex items-center justify-center text-[#4A7A5C] mb-1.5 mx-auto">
@@ -375,7 +463,10 @@ const Edition = () => {
                   src={beforeImg}
                   label="Antes"
                   value={beforeTransform}
-                  onChange={setBeforeTransform}
+                  onChange={(val) => {
+                    setBeforeTransform(val);
+                    setSavedR2Url(null);
+                  }}
                   showGuides={true}
                   exportMode={isExporting}
                 />
@@ -397,7 +488,10 @@ const Edition = () => {
                   src={afterImg}
                   label="Depois"
                   value={afterTransform}
-                  onChange={setAfterTransform}
+                  onChange={(val) => {
+                    setAfterTransform(val);
+                    setSavedR2Url(null);
+                  }}
                   showGuides={true}
                   exportMode={isExporting}
                 />
@@ -465,11 +559,34 @@ const Edition = () => {
             </Button>
           </div>
 
-          <div className="w-full max-w-[340px] mt-3">
-            <Button onClick={exportCollage} className="btn-elha-primary w-full h-12 text-xs">
-              <Download size={14} className="mr-1.5" /> Exportar Montagem Final
+          <div className="grid grid-cols-2 gap-2 w-full max-w-[340px] mt-3">
+            <Button 
+              onClick={handleSaveToR2} 
+              disabled={isSavingToR2 || !beforeImg || !afterImg}
+              className="btn-elha-outline w-full h-12 text-xs gap-1.5"
+            >
+              <Save size={14} /> Salvar Edição
+            </Button>
+
+            <Button 
+              onClick={exportCollage} 
+              disabled={!savedR2Url}
+              className={cn(
+                "w-full h-12 text-xs gap-1.5",
+                savedR2Url 
+                  ? "btn-elha-primary" 
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-300"
+              )}
+            >
+              <Download size={14} /> Exportar Final
             </Button>
           </div>
+
+          {!savedR2Url && beforeImg && afterImg && (
+            <p className="text-[10px] text-[#4A7A5C] mt-2 text-center">
+              * Clique em <strong>Salvar Edição</strong> primeiro para liberar o download oficial.
+            </p>
+          )}
 
           <input type="file" ref={beforeInputRef} onChange={(e) => handleImageUpload(e, 'before')} accept="image/*" className="hidden" />
           <input type="file" ref={afterInputRef} onChange={(e) => handleImageUpload(e, 'after')} accept="image/*" className="hidden" />
@@ -499,14 +616,20 @@ const Edition = () => {
                   <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant={layoutSize === 'feed' ? 'default' : 'outline'}
-                      onClick={() => setLayoutSize('feed')}
+                      onClick={() => {
+                        setLayoutSize('feed');
+                        setSavedR2Url(null);
+                      }}
                       className={cn('h-9 rounded-xl text-[10px] font-bold', layoutSize === 'feed' ? 'btn-elha-primary' : 'btn-elha-outline')}
                     >
                       Feed (1:1)
                     </Button>
                     <Button
                       variant={layoutSize === 'story' ? 'default' : 'outline'}
-                      onClick={() => setLayoutSize('story')}
+                      onClick={() => {
+                        setLayoutSize('story');
+                        setSavedR2Url(null);
+                      }}
                       className={cn('h-9 rounded-xl text-[10px] font-bold', layoutSize === 'story' ? 'btn-elha-primary' : 'btn-elha-outline')}
                     >
                       Story (9:16)
@@ -519,14 +642,20 @@ const Edition = () => {
                   <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant={splitDirection === 'horizontal' ? 'default' : 'outline'}
-                      onClick={() => setSplitDirection('horizontal')}
+                      onClick={() => {
+                        setSplitDirection('horizontal');
+                        setSavedR2Url(null);
+                      }}
                       className={cn('h-9 rounded-xl text-[10px] font-bold', splitDirection === 'horizontal' ? 'btn-elha-primary' : 'btn-elha-outline')}
                     >
                       Lado a Lado
                     </Button>
                     <Button
                       variant={splitDirection === 'vertical' ? 'default' : 'outline'}
-                      onClick={() => setSplitDirection('vertical')}
+                      onClick={() => {
+                        setSplitDirection('vertical');
+                        setSavedR2Url(null);
+                      }}
                       className={cn('h-9 rounded-xl text-[10px] font-bold', splitDirection === 'vertical' ? 'btn-elha-primary' : 'btn-elha-outline')}
                     >
                       Cima e Baixo
@@ -539,14 +668,20 @@ const Edition = () => {
                   <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant={separationType === 'straight' ? 'default' : 'outline'}
-                      onClick={() => setSeparationType('straight')}
+                      onClick={() => {
+                        setSeparationType('straight');
+                        setSavedR2Url(null);
+                      }}
                       className={cn('h-9 rounded-xl text-[10px] font-bold', separationType === 'straight' ? 'btn-elha-primary' : 'btn-elha-outline')}
                     >
                       Linha Reta
                     </Button>
                     <Button
                       variant={separationType === 'faded' ? 'default' : 'outline'}
-                      onClick={() => setSeparationType('faded')}
+                      onClick={() => {
+                        setSeparationType('faded');
+                        setSavedR2Url(null);
+                      }}
                       className={cn('h-9 rounded-xl text-[10px] font-bold', separationType === 'faded' ? 'btn-elha-primary' : 'btn-elha-outline')}
                     >
                       Esfumaçada
@@ -562,7 +697,10 @@ const Edition = () => {
                     id="watermark"
                     placeholder="Ex: @suasobrancelha"
                     value={text}
-                    onChange={(e) => setText(e.target.value)}
+                    onChange={(e) => {
+                      setText(e.target.value);
+                      setSavedR2Url(null);
+                    }}
                     className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] placeholder-[#4A7A5C]/70 h-10 rounded-xl text-xs focus-visible:ring-[#1C3A2B]"
                   />
                 </div>
@@ -576,12 +714,18 @@ const Edition = () => {
                           <input
                             type="color"
                             value={textColor}
-                            onChange={(e) => setTextColor(e.target.value)}
+                            onChange={(e) => {
+                              setTextColor(e.target.value);
+                              setSavedR2Url(null);
+                            }}
                             className="w-8 h-8 rounded-lg border border-[#D4C9B5] cursor-pointer shrink-0"
                           />
                           <Input
                             value={textColor}
-                            onChange={(e) => setTextColor(e.target.value)}
+                            onChange={(e) => {
+                              setTextColor(e.target.value);
+                              setSavedR2Url(null);
+                            }}
                             className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] h-8 rounded-lg text-[10px] font-mono px-1.5"
                           />
                         </div>
@@ -590,7 +734,10 @@ const Edition = () => {
                         <Label className="font-label-category text-[8px] text-[#4A7A5C]">Tamanho ({textSize}px)</Label>
                         <Slider
                           value={[textSize]}
-                          onValueChange={(val) => setTextSize(val[0])}
+                          onValueChange={(val) => {
+                            setTextSize(val[0]);
+                            setSavedR2Url(null);
+                          }}
                           min={10}
                           max={32}
                           step={1}
@@ -601,12 +748,28 @@ const Edition = () => {
 
                     <div className="space-y-1">
                       <Label className="font-label-category text-[8px] text-[#4A7A5C]">Posição Horizontal (X: {textX}%)</Label>
-                      <Slider value={[textX]} onValueChange={(val) => setTextX(val[0])} min={5} max={95} />
+                      <Slider 
+                        value={[textX]} 
+                        onValueChange={(val) => {
+                          setTextX(val[0]);
+                          setSavedR2Url(null);
+                        }} 
+                        min={5} 
+                        max={95} 
+                      />
                     </div>
 
                     <div className="space-y-1">
                       <Label className="font-label-category text-[8px] text-[#4A7A5C]">Posição Vertical (Y: {textY}%)</Label>
-                      <Slider value={[textY]} onValueChange={(val) => setTextY(val[0])} min={5} max={95} />
+                      <Slider 
+                        value={[textY]} 
+                        onValueChange={(val) => {
+                          setTextY(val[0]);
+                          setSavedR2Url(null);
+                        }} 
+                        min={5} 
+                        max={95} 
+                      />
                     </div>
                   </div>
                 )}
@@ -623,7 +786,10 @@ const Edition = () => {
                   </Button>
                   {logoImg && (
                     <Button
-                      onClick={() => setLogoImg(null)}
+                      onClick={() => {
+                        setLogoImg(null);
+                        setSavedR2Url(null);
+                      }}
                       variant="ghost"
                       className="h-10 w-10 rounded-xl text-red-500 hover:bg-red-50 p-0 shrink-0"
                     >
@@ -639,7 +805,10 @@ const Edition = () => {
                       <Label className="font-label-category text-[8px] text-[#4A7A5C]">Tamanho da Logo ({logoSize}px)</Label>
                       <Slider
                         value={[logoSize]}
-                        onValueChange={(val) => setLogoSize(val[0])}
+                        onValueChange={(val) => {
+                          setLogoSize(val[0]);
+                          setSavedR2Url(null);
+                        }}
                         min={30}
                         max={200}
                         step={5}
@@ -648,12 +817,28 @@ const Edition = () => {
 
                     <div className="space-y-1">
                       <Label className="font-label-category text-[8px] text-[#4A7A5C]">Posição Horizontal (X: {logoX}%)</Label>
-                      <Slider value={[logoX]} onValueChange={(val) => setLogoX(val[0])} min={5} max={95} />
+                      <Slider 
+                        value={[logoX]} 
+                        onValueChange={(val) => {
+                          setLogoX(val[0]);
+                          setSavedR2Url(null);
+                        }} 
+                        min={5} 
+                        max={95} 
+                      />
                     </div>
 
                     <div className="space-y-1">
                       <Label className="font-label-category text-[8px] text-[#4A7A5C]">Posição Vertical (Y: {logoY}%)</Label>
-                      <Slider value={[logoY]} onValueChange={(val) => setLogoY(val[0])} min={5} max={95} />
+                      <Slider 
+                        value={[logoY]} 
+                        onValueChange={(val) => {
+                          setLogoY(val[0]);
+                          setSavedR2Url(null);
+                        }} 
+                        min={5} 
+                        max={95} 
+                      />
                     </div>
                   </div>
                 )}
@@ -680,12 +865,18 @@ const Edition = () => {
                           <input
                             type="color"
                             value={penColor}
-                            onChange={(e) => setPenColor(e.target.value)}
+                            onChange={(e) => {
+                              setPenColor(e.target.value);
+                              setSavedR2Url(null);
+                            }}
                             className="w-8 h-8 rounded-lg border border-[#D4C9B5] cursor-pointer shrink-0"
                           />
                           <Input
                             value={penColor}
-                            onChange={(e) => setPenColor(e.target.value)}
+                            onChange={(e) => {
+                              setPenColor(e.target.value);
+                              setSavedR2Url(null);
+                            }}
                             className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] h-8 rounded-lg text-[10px] font-mono px-1.5"
                           />
                         </div>
@@ -694,7 +885,10 @@ const Edition = () => {
                         <Label className="font-label-category text-[8px] text-[#4A7A5C]">Espessura ({penWidth}px)</Label>
                         <Slider
                           value={[penWidth]}
-                          onValueChange={(val) => setPenWidth(val[0])}
+                          onValueChange={(val) => {
+                            setPenWidth(val[0]);
+                            setSavedR2Url(null);
+                          }}
                           min={2}
                           max={12}
                           step={1}
