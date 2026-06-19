@@ -296,7 +296,7 @@ const AnalysisResult = () => {
         pdf.setTextColor(...PDF_TEXT_COLOR);
         pdf.text(title, margin + contentWidth / 2, cursorY + 7.3, { align: "center" });
 
-        cursorY += cardHeight + 4;
+        cursorY += cardHeight + 8;
       };
 
       const addParagraph = (text: string, fontSize = 9.5) => {
