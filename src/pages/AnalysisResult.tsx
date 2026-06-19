@@ -2,13 +2,27 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, AlertTriangle, Target, ShieldCheck, TrendingUp, CheckCircle2, Eye, MoveUpRight, Info, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  AlertTriangle,
+  Target,
+  ShieldCheck,
+  TrendingUp,
+  CheckCircle2,
+  Eye,
+  MoveUpRight,
+  Info,
+  Loader2,
+} from "lucide-react";
 import jsPDF from "jspdf";
 import Navbar from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { showError, showSuccess } from "@/utils/toast";
+import { createUserStorageKey } from "@/lib/userStorage";
+import { useUser } from "@/lib/auth";
 
 type AnalysisPayload = {
   analysis?: any;
@@ -58,6 +72,7 @@ const textValue = (value: unknown) => {
 };
 
 const AnalysisResult = () => {
+  const { user } = useUser();
   const location = useLocation();
   const navigate = useNavigate();
   const routeState = (location.state as AnalysisPayload | null) || null;
@@ -69,7 +84,7 @@ const AnalysisResult = () => {
   const reportRef = useRef<HTMLDivElement>(null);
 
   const [pdfLogo, setPdfLogo] = useState<string | null>(null);
-  const [pdfBgColor, setPdfBgColor] = useState("#F5F0E8");
+  const [pdfBgColor, setPdfBgColor] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   useEffect(() => {
@@ -79,11 +94,21 @@ const AnalysisResult = () => {
   }, [routeState]);
 
   useEffect(() => {
-    const savedLogo = localStorage.getItem("pdf_custom_logo");
-    const savedBg = localStorage.getItem("pdf_custom_bg_color");
-    if (savedLogo) setPdfLogo(savedLogo);
-    if (savedBg) setPdfBgColor(savedBg);
-  }, []);
+    if (!user?.id) {
+      setPdfLogo(null);
+      setPdfBgColor(null);
+      return;
+    }
+
+    const logoKey = createUserStorageKey(user.id, "pdf_custom_logo");
+    const bgKey = createUserStorageKey(user.id, "pdf_custom_bg_color");
+
+    const savedLogo = localStorage.getItem(logoKey) || localStorage.getItem("pdf_custom_logo");
+    const savedBg = localStorage.getItem(bgKey) || localStorage.getItem("pdf_custom_bg_color");
+
+    setPdfLogo(savedLogo);
+    setPdfBgColor(savedBg);
+  }, [user?.id]);
 
   const hasTwoImages = Array.isArray(allImages) && allImages.length >= 2;
 
@@ -178,21 +203,108 @@ const AnalysisResult = () => {
         ] as const;
       };
 
-      const applyBackground = () => {
-        const [r, g, b] = hexToRgb(pdfBgColor);
-        pdf.setFillColor(r, g, b);
-        pdf.rect(0, 0, pageWidth, pageHeight, "F");
+      const getContrastingTextColor = (hex: string) => {
+        const [r, g, b] = hexToRgb(hex);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.65 ? "#1C3A2B" : "#F5F0E8";
       };
 
-      const setPdfColor = (hex: string) => {
-        const [r, g, b] = hexToRgb(hex);
-        pdf.setTextColor(r, g, b);
+      const customHeaderBg = pdfBgColor || "";
+      const customHeaderLogo = pdfLogo ? await loadImageData(pdfLogo) : "";
+      const hasCustomHeader = Boolean(customHeaderBg || customHeaderLogo);
+      const headerHeight = hasCustomHeader ? (customHeaderLogo ? 28 : 22) : 0;
+      const headerBgColor = customHeaderBg || "#F5F0E8";
+      const headerTextColor = getContrastingTextColor(headerBgColor);
+
+      const renderHeader = () => {
+        if (hasCustomHeader) {
+          const [r, g, b] = hexToRgb(headerBgColor);
+          pdf.setFillColor(r, g, b);
+          pdf.rect(0, 0, pageWidth, headerHeight, "F");
+
+          if (customHeaderLogo) {
+            const logoProps = pdf.getImageProperties(customHeaderLogo);
+            const logoWidth = 22;
+            const logoHeight = (logoProps.height / logoProps.width) * logoWidth;
+            const logoX = margin;
+            const logoY = 4;
+
+            pdf.addImage(
+              customHeaderLogo,
+              (logoProps.fileType || "PNG").toUpperCase(),
+              logoX,
+              logoY,
+              logoWidth,
+              logoHeight,
+              undefined,
+              "FAST",
+            );
+
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(16);
+            pdf.setTextColor(...hexToRgb(headerTextColor));
+            pdf.text(
+              analysis.isComparativo
+                ? "Relatório de Evolução"
+                : isTricoscopia
+                  ? "Relatório Tricoscópico"
+                  : "Relatório Técnico",
+              margin + 28,
+              11,
+            );
+
+            pdf.setFont("helvetica", "normal");
+            pdf.setFontSize(9);
+            pdf.text("Tricologia de Sobrancelhas", margin + 28, 17);
+          } else {
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(16);
+            pdf.setTextColor(...hexToRgb(headerTextColor));
+            pdf.text(
+              analysis.isComparativo
+                ? "Relatório de Evolução"
+                : isTricoscopia
+                  ? "Relatório Tricoscópico"
+                  : "Relatório Técnico",
+              pageWidth / 2,
+              11,
+              { align: "center" },
+            );
+
+            pdf.setFont("helvetica", "normal");
+            pdf.setFontSize(9);
+            pdf.text("Tricologia de Sobrancelhas", pageWidth / 2, 17, { align: "center" });
+          }
+
+          cursorY = headerHeight + 6;
+        } else {
+          pdf.setFont("helvetica", "bold");
+          pdf.setFontSize(18);
+          pdf.setTextColor(28, 58, 43);
+          pdf.text(
+            analysis.isComparativo
+              ? "Relatório de Evolução"
+              : isTricoscopia
+                ? "Relatório Tricoscópico"
+                : "Relatório Técnico",
+            pageWidth / 2,
+            cursorY,
+            { align: "center" },
+          );
+          cursorY += 7;
+
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(10);
+          pdf.setTextColor(74, 122, 92);
+          pdf.text("Tricologia de Sobrancelhas", pageWidth / 2, cursorY, { align: "center" });
+          cursorY += 8;
+        }
       };
 
       const newPage = () => {
         pdf.addPage();
-        applyBackground();
-        cursorY = margin;
+        renderHeader();
+        addDivider();
       };
 
       const ensureSpace = (neededHeight: number) => {
@@ -205,7 +317,7 @@ const AnalysisResult = () => {
         ensureSpace(10);
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(12);
-        setPdfColor("#1C3A2B");
+        pdf.setTextColor(28, 58, 43);
         pdf.text(title, margin, cursorY);
         cursorY += 6;
       };
@@ -214,7 +326,8 @@ const AnalysisResult = () => {
         if (!text) return;
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(fontSize);
-        setPdfColor(color);
+        const [r, g, b] = hexToRgb(color);
+        pdf.setTextColor(r, g, b);
         const lines = pdf.splitTextToSize(text, contentWidth);
         const height = lines.length * 4.3;
         ensureSpace(height);
@@ -229,13 +342,14 @@ const AnalysisResult = () => {
         ensureSpace(10);
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(9.5);
-        setPdfColor("#1C3A2B");
+        pdf.setTextColor(28, 58, 43);
         pdf.text(`${label}:`, margin, cursorY);
         cursorY += 4;
 
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(9.2);
-        setPdfColor(color);
+        const [r, g, b] = hexToRgb(color);
+        pdf.setTextColor(r, g, b);
         const lines = pdf.splitTextToSize(text, contentWidth);
         const height = lines.length * 4.2;
         ensureSpace(height);
@@ -250,11 +364,18 @@ const AnalysisResult = () => {
         cursorY += 4;
       };
 
-      const addImageCard = async (label: string, src: string | null, x: number, y: number, width: number, height: number) => {
+      const addImageCard = async (
+        label: string,
+        src: string | null,
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+      ) => {
         const data = await loadImageData(src);
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(9);
-        setPdfColor("#4A7A5C");
+        pdf.setTextColor(74, 122, 92);
         pdf.text(label, x, y - 2);
 
         pdf.setFillColor(245, 240, 232);
@@ -289,51 +410,12 @@ const AnalysisResult = () => {
         }
       };
 
-      applyBackground();
-
-      if (pdfLogo) {
-        const logoData = await loadImageData(pdfLogo);
-        if (logoData) {
-          const props = pdf.getImageProperties(logoData);
-          const logoWidth = 36;
-          const logoHeight = (props.height / props.width) * logoWidth;
-
-          ensureSpace(logoHeight + 8);
-          pdf.addImage(
-            logoData,
-            (props.fileType || "PNG").toUpperCase(),
-            (pageWidth - logoWidth) / 2,
-            cursorY,
-            logoWidth,
-            logoHeight,
-            undefined,
-            "FAST",
-          );
-          cursorY += logoHeight + 6;
-        }
-      }
-
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(18);
-      setPdfColor("#1C3A2B");
-      pdf.text(
-        analysis.isComparativo ? "Relatório de Evolução" : isTricoscopia ? "Relatório Tricoscópico" : "Relatório Técnico",
-        pageWidth / 2,
-        cursorY,
-        { align: "center" },
-      );
-      cursorY += 7;
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(10);
-      setPdfColor("#4A7A5C");
-      pdf.text("Tricologia de Sobrancelhas", pageWidth / 2, cursorY, { align: "center" });
-      cursorY += 8;
-
+      renderHeader();
       addDivider();
 
       if (analysis.isComparativo && hasTwoImages) {
         addSectionTitle("Imagens da análise");
+
         const boxWidth = (contentWidth - 6) / 2;
         const boxHeight = 68;
         ensureSpace(boxHeight + 14);
@@ -344,15 +426,23 @@ const AnalysisResult = () => {
 
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(9);
-        setPdfColor("#4A7A5C");
+        pdf.setTextColor(74, 122, 92);
         pdf.text("Antes", margin, cursorY);
         pdf.text("Depois", margin + boxWidth + 6, cursorY);
 
         await addImageCard("Antes", beforeData || displayBeforeImage || "", margin, imageY, boxWidth, boxHeight);
-        await addImageCard("Depois", afterData || displayAfterImage || "", margin + boxWidth + 6, imageY, boxWidth, boxHeight);
+        await addImageCard(
+          "Depois",
+          afterData || displayAfterImage || "",
+          margin + boxWidth + 6,
+          imageY,
+          boxWidth,
+          boxHeight,
+        );
         cursorY = imageY + boxHeight + 6;
       } else {
         addSectionTitle("Imagem principal");
+
         const boxHeight = 120;
         ensureSpace(boxHeight + 10);
 
@@ -395,7 +485,7 @@ const AnalysisResult = () => {
         ensureSpace(18);
         pdf.setFillColor(28, 58, 43);
         pdf.roundedRect(margin, cursorY, contentWidth, 14, 4, 4, "F");
-        setPdfColor("#E8DECE");
+        pdf.setTextColor(232, 222, 206);
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(9);
         pdf.text(`+${analysis.comparativo.melhoriaPercentualEstimada}% Melhoria`, margin + 4, cursorY + 9);
@@ -488,7 +578,10 @@ const AnalysisResult = () => {
   }
 
   return (
-    <div style={{ backgroundColor: pdfBgColor }} className="min-h-screen pb-24 md:pt-20 transition-colors duration-300 text-[#1C3A2B]">
+    <div
+      style={{ backgroundColor: pdfBgColor || "#F5F0E8" }}
+      className="min-h-screen pb-24 md:pt-20 transition-colors duration-300 text-[#1C3A2B]"
+    >
       <Navbar />
       <main className="max-w-2xl mx-auto p-6">
         <header className="relative flex flex-col items-center justify-center mb-8 text-center pt-4">
@@ -518,13 +611,21 @@ const AnalysisResult = () => {
               <div className="w-[48%] space-y-2">
                 <p className="font-label-category text-[10px] text-[#4A7A5C] text-center">Antes</p>
                 <div className="rounded-2xl shadow-md border-2 border-[#E8DECE] p-1 bg-[#1C3A2B]/5">
-                  <img src={displayBeforeImage} className="w-full aspect-square rounded-[12px] object-contain bg-[#F5F0E8] block" alt="Antes" />
+                  <img
+                    src={displayBeforeImage}
+                    className="w-full aspect-square rounded-[12px] object-contain bg-[#F5F0E8] block"
+                    alt="Antes"
+                  />
                 </div>
               </div>
               <div className="w-[48%] space-y-2">
                 <p className="font-label-category text-[10px] text-[#4A7A5C] text-center">Depois</p>
                 <div className="rounded-2xl shadow-md border-2 border-[#4A7A5C] p-1 bg-[#1C3A2B]/5">
-                  <img src={displayAfterImage} className="w-full aspect-square rounded-[12px] object-contain bg-[#F5F0E8] block" alt="Depois" />
+                  <img
+                    src={displayAfterImage}
+                    className="w-full aspect-square rounded-[12px] object-contain bg-[#F5F0E8] block"
+                    alt="Depois"
+                  />
                 </div>
               </div>
             </div>
@@ -532,7 +633,11 @@ const AnalysisResult = () => {
             <div className="space-y-3">
               <div className="relative rounded-3xl shadow-lg border-4 border-[#E8DECE] p-2 bg-[#1C3A2B]/5 min-h-[280px] flex items-center justify-center overflow-hidden">
                 {displayImage ? (
-                  <img src={displayImage} className="w-full aspect-square rounded-[20px] object-contain bg-[#F5F0E8] block" alt="Análise" />
+                  <img
+                    src={displayImage}
+                    className="w-full aspect-square rounded-[20px] object-contain bg-[#F5F0E8] block"
+                    alt="Análise"
+                  />
                 ) : (
                   <div className="w-full aspect-square rounded-[20px] bg-[#F5F0E8] border border-dashed border-[#D4C9B5] flex flex-col items-center justify-center text-center px-6">
                     <p className="font-heading text-lg text-[#1C3A2B]">Foto indisponível</p>
@@ -650,7 +755,11 @@ const AnalysisResult = () => {
                   const percent = data.densidade?.percentual || 50;
 
                   return (
-                    <Card key={key} className={cn("border-none shadow-sm rounded-2xl overflow-hidden p-6")} style={{ backgroundColor: theme.bg }}>
+                    <Card
+                      key={key}
+                      className={cn("border-none shadow-sm rounded-2xl overflow-hidden p-6")}
+                      style={{ backgroundColor: theme.bg }}
+                    >
                       <div className="space-y-4">
                         <p className="text-[10px] font-normal uppercase tracking-[3px]" style={{ color: theme.labelColor }}>
                           {theme.label}
