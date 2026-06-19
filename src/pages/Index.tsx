@@ -179,10 +179,19 @@ const Index = () => {
   };
 
   const openAnalysisResult = (activity: any) => {
+    const imageUrl = activity.image_url || activity.dataUrl || activity.url || "";
     const payload = {
       analysis: activity.result,
-      image: activity.image_url,
-      allImages: [],
+      image: imageUrl,
+      allImages: imageUrl
+        ? [
+            {
+              url: imageUrl,
+              dataUrl: imageUrl,
+              bboxes: {},
+            },
+          ]
+        : [],
     };
 
     sessionStorage.setItem("elha:last-analysis", JSON.stringify(payload));
