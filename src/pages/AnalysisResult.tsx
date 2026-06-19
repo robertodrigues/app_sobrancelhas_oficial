@@ -32,6 +32,15 @@ const getSavedAnalysisState = () => {
   }
 };
 
+const preloadImage = (src: string) =>
+  new Promise<boolean>((resolve) => {
+    const tempImg = new Image();
+    tempImg.crossOrigin = 'anonymous';
+    tempImg.onload = () => resolve(true);
+    tempImg.onerror = () => resolve(false);
+    tempImg.src = src;
+  });
+
 const AnalysisResult = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -165,16 +174,7 @@ const AnalysisResult = () => {
         urlsToPreload.push(pdfLogo);
       }
 
-      await Promise.all(urlsToPreload.map(url => {
-        return new Promise((resolve) => {
-          const tempImg = new Image();
-          tempImg.crossOrigin = 'anonymous';
-          tempImg.onload = () => resolve(true);
-          tempImg.onerror = () => resolve(false);
-          tempImg.src = url;
-        });
-      }));
-
+      await Promise.all(urlsToPreload.map(preloadImage));
       await new Promise(resolve => setTimeout(resolve, 300));
 
       const canvas = await html2canvas(element, {
@@ -190,6 +190,7 @@ const AnalysisResult = () => {
           doc.querySelectorAll('img').forEach(img => {
             img.style.display = 'block';
             img.style.imageRendering = 'auto';
+            img.setAttribute('crossorigin', 'anonymous');
           });
         }
       });
@@ -242,7 +243,7 @@ const AnalysisResult = () => {
           
           {pdfLogo && (
             <div className="flex justify-center py-4 border-b border-[#D4C9B5]/50">
-              <img src={pdfLogo} className="h-16 object-contain" alt="Logo Designer" />
+              <img src={pdfLogo} className="h-16 object-contain" alt="Logo Designer" crossOrigin="anonymous" />
             </div>
           )}
 
@@ -256,6 +257,7 @@ const AnalysisResult = () => {
                     className="w-full aspect-square rounded-[12px] object-contain bg-[#F5F0E8] block"
                     alt="Antes"
                     style={{ imageRendering: 'auto' }}
+                    crossOrigin="anonymous"
                   />
                 </div>
               </div>
@@ -267,6 +269,7 @@ const AnalysisResult = () => {
                     className="w-full aspect-square rounded-[12px] object-contain bg-[#F5F0E8] block"
                     alt="Depois"
                     style={{ imageRendering: 'auto' }}
+                    crossOrigin="anonymous"
                   />
                 </div>
               </div>
@@ -278,6 +281,7 @@ const AnalysisResult = () => {
                 className="w-full aspect-square rounded-[20px] object-contain bg-[#F5F0E8] block"
                 alt="Análise"
                 style={{ imageRendering: 'auto' }}
+                crossOrigin="anonymous"
               />
             </div>
           )}
