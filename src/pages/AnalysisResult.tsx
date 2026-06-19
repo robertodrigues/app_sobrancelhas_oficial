@@ -45,6 +45,16 @@ const preloadImage = (src: string) =>
     tempImg.src = src;
   });
 
+const isRemoteImage = (src: string) => /^https?:\/\//i.test(src);
+
+const getPdfSafeImageSrc = (src: string) => {
+  if (!src) return src;
+  if (src.startsWith('data:') || src.startsWith('blob:') || src.startsWith('/')) return src;
+  if (!isRemoteImage(src)) return src;
+
+  return `/api/image-proxy?url=${encodeURIComponent(src)}`;
+};
+
 const AnalysisResult = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -195,12 +205,12 @@ const AnalysisResult = () => {
     try {
       const urlsToPreload: string[] = [];
       if (analysis.isComparativo && hasTwoImages && displayBeforeImage && displayAfterImage) {
-        urlsToPreload.push(displayBeforeImage, displayAfterImage);
+        urlsToPreload.push(getPdfSafeImageSrc(displayBeforeImage), getPdfSafeImageSrc(displayAfterImage));
       } else if (displayImage) {
-        urlsToPreload.push(displayImage);
+        urlsToPreload.push(getPdfSafeImageSrc(displayImage));
       }
       if (pdfLogo) {
-        urlsToPreload.push(pdfLogo);
+        urlsToPreload.push(getPdfSafeImageSrc(pdfLogo));
       }
 
       await Promise.all(urlsToPreload.map(preloadImage));
@@ -216,9 +226,14 @@ const AnalysisResult = () => {
         removeContainer: true,
         foreignObjectRendering: false,
         onclone: (doc) => {
-          doc.querySelectorAll('img').forEach(img => {
+          doc.querySelectorAll('img').forEach((img) => {
+            const originalSrc = img.getAttribute('src') || '';
+            if (originalSrc) {
+              img.setAttribute('src', getPdfSafeImageSrc(originalSrc));
+            }
             img.style.display = 'block';
             img.style.imageRendering = 'auto';
+            img.setAttribute('crossorigin', 'anonymous');
           });
         }
       });
