@@ -212,76 +212,50 @@ const AnalysisResult = () => {
       const customHeaderBg = pdfBgColor || "";
       const customHeaderLogo = pdfLogo ? await loadImageData(pdfLogo) : "";
       const hasCustomHeader = Boolean(customHeaderBg || customHeaderLogo);
-      const headerHeight = hasCustomHeader ? 38 : 24;
+      const headerHeight = hasCustomHeader ? 30 : 24;
       const headerBgColor = customHeaderBg || "#F5F0E8";
       const headerTextColor = getContrastingTextColor(headerBgColor);
 
       const renderHeader = () => {
-        if (hasCustomHeader) {
-          const headerWidth = pageWidth * 0.8;
-          const headerX = (pageWidth - headerWidth) / 2;
+        const [r, g, b] = hexToRgb(headerBgColor);
+        pdf.setFillColor(r, g, b);
+        pdf.rect(0, 0, pageWidth, headerHeight, "F");
 
-          const [r, g, b] = hexToRgb(headerBgColor);
-          pdf.setFillColor(r, g, b);
-          pdf.rect(headerX, 0, headerWidth, headerHeight, "F");
+        const title = analysis.isComparativo
+          ? "Relatório de Evolução"
+          : isTricoscopia
+            ? "Relatório Tricoscópico"
+            : "Relatório Técnico";
 
-          const title = analysis.isComparativo
-            ? "Relatório de Evolução"
-            : isTricoscopia
-              ? "Relatório Tricoscópico"
-              : "Relatório Técnico";
+        if (customHeaderLogo) {
+          const logoProps = pdf.getImageProperties(customHeaderLogo);
+          const logoWidth = 31;
+          const logoHeight = (logoProps.height / logoProps.width) * logoWidth;
+          const logoX = (pageWidth - logoWidth) / 2;
+          const logoY = 5;
 
-          if (customHeaderLogo) {
-            const logoProps = pdf.getImageProperties(customHeaderLogo);
-            const logoWidth = 31;
-            const logoHeight = (logoProps.height / logoProps.width) * logoWidth;
-            const logoX = headerX + (headerWidth - logoWidth) / 2;
-            const logoY = 5;
-
-            pdf.addImage(
-              customHeaderLogo,
-              (logoProps.fileType || "PNG").toUpperCase(),
-              logoX,
-              logoY,
-              logoWidth,
-              logoHeight,
-              undefined,
-              "FAST",
-            );
-          }
-
-          pdf.setFont("helvetica", "bold");
-          pdf.setFontSize(9);
-          pdf.setTextColor(...hexToRgb(headerTextColor));
-          pdf.text(title, headerX + headerWidth - 6, 12, { align: "right" });
-
-          pdf.setFont("helvetica", "normal");
-          pdf.setFontSize(9);
-          pdf.text("Análise Inteligente", headerX + headerWidth - 6, 18, { align: "right" });
-
-          cursorY = headerHeight + 6;
-        } else {
-          pdf.setFont("helvetica", "bold");
-          pdf.setFontSize(18);
-          pdf.setTextColor(28, 58, 43);
-          pdf.text(
-            analysis.isComparativo
-              ? "Relatório de Evolução"
-              : isTricoscopia
-                ? "Relatório Tricoscópico"
-                : "Relatório Técnico",
-            pageWidth / 2,
-            cursorY,
-            { align: "center" },
+          pdf.addImage(
+            customHeaderLogo,
+            (logoProps.fileType || "PNG").toUpperCase(),
+            logoX,
+            logoY,
+            logoWidth,
+            logoHeight,
+            undefined,
+            "FAST",
           );
-          cursorY += 7;
-
-          pdf.setFont("helvetica", "normal");
-          pdf.setFontSize(10);
-          pdf.setTextColor(74, 122, 92);
-          pdf.text("Análise Inteligente", pageWidth / 2, cursorY, { align: "center" });
-          cursorY += 8;
         }
+
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(9);
+        pdf.setTextColor(...hexToRgb(headerTextColor));
+        pdf.text(title, pageWidth - margin, 12, { align: "right" });
+
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(9);
+        pdf.text("Análise Inteligente", pageWidth - margin, 18, { align: "right" });
+
+        cursorY = headerHeight + 6;
       };
 
       const newPage = () => {
