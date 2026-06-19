@@ -214,7 +214,7 @@ const AnalysisResult = () => {
       const customHeaderBg = pdfBgColor || "";
       const customHeaderLogo = pdfLogo ? await loadImageData(pdfLogo) : "";
       const hasCustomHeader = Boolean(customHeaderBg || customHeaderLogo);
-      const headerHeight = hasCustomHeader ? 27 : 24;
+      const headerHeight = hasCustomHeader ? 24.3 : 21.6;
       const headerBgColor = customHeaderBg || "#F5F0E8";
       const headerTextColor = getContrastingTextColor(headerBgColor);
 
@@ -234,7 +234,7 @@ const AnalysisResult = () => {
           const logoWidth = 31;
           const logoHeight = (logoProps.height / logoProps.width) * logoWidth;
           const logoX = (pageWidth - logoWidth) / 2;
-          const logoY = 5;
+          const logoY = 4.5;
 
           pdf.addImage(
             customHeaderLogo,
@@ -251,12 +251,11 @@ const AnalysisResult = () => {
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(9);
         pdf.setTextColor(...hexToRgb(headerTextColor));
-        pdf.text(title, pageWidth - margin, 12, { align: "right" });
+        pdf.text(title, pageWidth - margin, 10.5, { align: "right" });
 
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(9);
         pdf.setTextColor(...PDF_TEXT_COLOR);
-        pdf.text("Análise Inteligente", pageWidth - margin, 18, { align: "right" });
 
         cursorY = headerHeight + 6;
       };
