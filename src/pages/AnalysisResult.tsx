@@ -253,76 +253,70 @@ const AnalysisResult = () => {
     return '';
   };
 
-  const loadImageDimensions = async (src: string) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = src;
-    await waitForDecodedImage(img);
+  const buildPdfImageSection = async () => {
+    const section = document.createElement('div');
+    section.style.width = '100%';
+    section.style.marginBottom = '20px';
+    section.style.display = 'block';
 
-    return {
-      width: img.naturalWidth || img.width || 1,
-      height: img.naturalHeight || img.height || 1,
-    };
-  };
+    const buildSingleImageCard = async (src: string, label?: string) => {
+      const wrapper = document.createElement('div');
+      wrapper.style.width = '100%';
+      wrapper.style.marginBottom = '12px';
 
-  const addSingleImagePage = async (pdf: jsPDF, source: string) => {
-    const safeSrc = getPdfSafeImageSrc(source);
-    const dataUrl = await fetchImageAsDataUrl(safeSrc);
-    const { width, height } = await loadImageDimensions(dataUrl);
+      if (label) {
+        const caption = document.createElement('div');
+        caption.textContent = label;
+        caption.style.fontFamily = 'Poppins, sans-serif';
+        caption.style.fontSize = '10px';
+        caption.style.letterSpacing = '1px';
+        caption.style.textTransform = 'uppercase';
+        caption.style.color = '#4A7A5C';
+        caption.style.textAlign = 'center';
+        caption.style.marginBottom = '8px';
+        wrapper.appendChild(caption);
+      }
 
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const marginX = 14;
-    const marginTop = 18;
-    const marginBottom = 14;
-    const maxWidth = pageWidth - marginX * 2;
-    const maxHeight = pageHeight - marginTop - marginBottom;
+      const img = document.createElement('img');
+      img.crossOrigin = 'anonymous';
+      img.src = await fetchImageAsDataUrl(getPdfSafeImageSrc(src));
+      img.style.display = 'block';
+      img.style.width = '100%';
+      img.style.maxHeight = '420px';
+      img.style.objectFit = 'contain';
+      img.style.borderRadius = '20px';
+      img.style.backgroundColor = '#F5F0E8';
+      wrapper.appendChild(img);
 
-    const ratio = Math.min(maxWidth / width, maxHeight / height);
-    const drawWidth = width * ratio;
-    const drawHeight = height * ratio;
-    const x = (pageWidth - drawWidth) / 2;
-    const y = marginTop + (maxHeight - drawHeight) / 2;
-
-    pdf.setFillColor(245, 240, 232);
-    pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-    pdf.addImage(dataUrl, 'JPEG', x, y, drawWidth, drawHeight, undefined, 'FAST');
-  };
-
-  const addComparisonImagePage = async (pdf: jsPDF, beforeSource: string, afterSource: string) => {
-    const beforeDataUrl = await fetchImageAsDataUrl(getPdfSafeImageSrc(beforeSource));
-    const afterDataUrl = await fetchImageAsDataUrl(getPdfSafeImageSrc(afterSource));
-    const beforeSize = await loadImageDimensions(beforeDataUrl);
-    const afterSize = await loadImageDimensions(afterDataUrl);
-
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const marginX = 12;
-    const top = 18;
-    const bottom = 14;
-    const gap = 8;
-    const cardWidth = (pageWidth - marginX * 2 - gap) / 2;
-    const cardHeight = pageHeight - top - bottom - 16;
-    const imageAreaHeight = cardHeight - 14;
-
-    const drawCard = (title: string, dataUrl: string, size: { width: number; height: number }, x: number) => {
-      pdf.setFillColor(245, 240, 232);
-      pdf.roundedRect(x, top, cardWidth, cardHeight, 4, 4, 'F');
-      pdf.setTextColor(74, 122, 92);
-      pdf.setFontSize(10);
-      pdf.text(title, x + cardWidth / 2, top + 8, { align: 'center' });
-
-      const ratio = Math.min(cardWidth / size.width, imageAreaHeight / size.height);
-      const drawWidth = size.width * ratio;
-      const drawHeight = size.height * ratio;
-      const imgX = x + (cardWidth - drawWidth) / 2;
-      const imgY = top + 14 + (imageAreaHeight - drawHeight) / 2;
-
-      pdf.addImage(dataUrl, 'JPEG', imgX, imgY, drawWidth, drawHeight, undefined, 'FAST');
+      await waitForDecodedImage(img);
+      return wrapper;
     };
 
-    drawCard('Antes', beforeDataUrl, beforeSize, marginX);
-    drawCard('Depois', afterDataUrl, afterSize, marginX + cardWidth + gap);
+    if (analysis.isComparativo && hasTwoImages && displayBeforeImage && displayAfterImage) {
+      const row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.gap = '12px';
+      row.style.width = '100%';
+
+      const left = document.createElement('div');
+      left.style.flex = '1';
+      left.appendChild(await buildSingleImageCard(displayBeforeImage, 'Antes'));
+
+      const right = document.createElement('div');
+      right.style.flex = '1';
+      right.appendChild(await buildSingleImageCard(displayAfterImage, 'Depois'));
+
+      row.appendChild(left);
+      row.appendChild(right);
+      section.appendChild(row);
+      return section;
+    }
+
+    if (displayImage) {
+      section.appendChild(await buildSingleImageCard(displayImage));
+    }
+
+    return section;
   };
 
   const handleGeneratePdf = async () => {
@@ -331,17 +325,6 @@ const AnalysisResult = () => {
 
     setIsGeneratingPdf(true);
     try {
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      let hasInsertedImagePage = false;
-
-      if (analysis.isComparativo && hasTwoImages && displayBeforeImage && displayAfterImage) {
-        await addComparisonImagePage(pdf, displayBeforeImage, displayAfterImage);
-        hasInsertedImagePage = true;
-      } else if (displayImage) {
-        await addSingleImagePage(pdf, displayImage);
-        hasInsertedImagePage = true;
-      }
-
       const exportContainer = document.createElement('div');
       exportContainer.style.position = 'fixed';
       exportContainer.style.left = '-10000px';
@@ -351,6 +334,9 @@ const AnalysisResult = () => {
       exportContainer.style.backgroundColor = pdfBgColor;
       exportContainer.style.zIndex = '-1';
       exportContainer.style.padding = '16px';
+
+      const imageSection = await buildPdfImageSection();
+      exportContainer.appendChild(imageSection);
 
       const clone = element.cloneNode(true) as HTMLDivElement;
       exportContainer.appendChild(clone);
@@ -402,11 +388,8 @@ const AnalysisResult = () => {
           foreignObjectRendering: false,
         });
 
-        if (hasInsertedImagePage) {
-          pdf.addPage();
-        }
-
         const imgData = canvas.toDataURL('image/jpeg', 1.0);
+        const pdf = new jsPDF('p', 'mm', 'a4');
         const imgWidth = 210;
         const pageHeight = 295;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
