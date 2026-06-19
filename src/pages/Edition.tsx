@@ -316,9 +316,9 @@ const Edition = () => {
     const element = collageRef.current;
     if (!element) return;
 
-    try {
-      setIsExporting(true);
+    setIsExporting(true);
 
+    try {
       await new Promise((resolve) => requestAnimationFrame(() => resolve(true)));
       await new Promise((resolve) => requestAnimationFrame(() => resolve(true)));
 
@@ -377,6 +377,7 @@ const Edition = () => {
                   value={beforeTransform}
                   onChange={setBeforeTransform}
                   showGuides={true}
+                  exportMode={isExporting}
                 />
               </div>
 
@@ -398,6 +399,7 @@ const Edition = () => {
                   value={afterTransform}
                   onChange={setAfterTransform}
                   showGuides={true}
+                  exportMode={isExporting}
                 />
               </div>
 

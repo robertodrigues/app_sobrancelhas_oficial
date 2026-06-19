@@ -14,6 +14,7 @@ interface PhotoEditorFrameProps {
   value: PhotoTransform;
   onChange: (value: PhotoTransform) => void;
   showGuides?: boolean;
+  exportMode?: boolean;
 }
 
 const MIN_SCALE = 1;
@@ -48,6 +49,7 @@ const PhotoEditorFrame = ({
   value,
   onChange,
   showGuides = true,
+  exportMode = false,
 }: PhotoEditorFrameProps) => {
   const dragStartRef = useRef({ x: 0, y: 0 });
   const imgRef = useRef<HTMLImageElement>(null);
@@ -311,13 +313,15 @@ const PhotoEditorFrame = ({
             <ImageIcon size={22} />
           </div>
           <p className="font-label-category text-[9px] text-[#E8DECE]">{label}</p>
-          {showGuides && (
+          {showGuides && !exportMode && (
             <p className="font-body text-[10px] text-[#8FAF8A]">Envie uma foto para começar</p>
           )}
         </div>
       </div>
     );
   }
+
+  const shouldShowGuides = showGuides && !exportMode;
 
   return (
     <div
@@ -351,7 +355,7 @@ const PhotoEditorFrame = ({
         }}
       />
 
-      {showGuides && (
+      {shouldShowGuides && (
         <>
           <div className="absolute left-3 top-3 rounded-full bg-black/55 px-3 py-1 text-[9px] font-semibold uppercase tracking-[2px] text-white backdrop-blur-sm">
             {label}
