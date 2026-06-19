@@ -38,8 +38,8 @@ const getPdfSafeImageSrc = (src: string) => {
   if (!src) return src;
   if (src.startsWith('data:') || src.startsWith('blob:') || src.startsWith('/')) return src;
   if (!isRemoteImage(src)) return src;
-
-  return `/api/image-proxy?url=${encodeURIComponent(src)}`;
+  const cleanUrl = src.replace(/^https?:\/\//, '');
+  return `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl)}`;
 };
 
 const fetchImageAsDataUrl = async (src: string) => {
@@ -285,15 +285,24 @@ const AnalysisResult = () => {
             const originalSrc = img.getAttribute('src') || '';
             if (!originalSrc) return;
 
-            const safeSrc = getPdfSafeImageSrc(originalSrc);
+            let dataUrl = '';
 
             try {
-              const dataUrl = await withTimeout(fetchImageAsDataUrl(safeSrc), 7000, '');
-              img.setAttribute('src', dataUrl || safeSrc);
+              dataUrl = await withTimeout(fetchImageAsDataUrl(originalSrc), 6000, '');
             } catch {
-              img.setAttribute('src', safeSrc);
+              dataUrl = '';
             }
 
+            if (!dataUrl && isRemoteImage(originalSrc)) {
+              try {
+                const proxied = getPdfSafeImageSrc(originalSrc);
+                dataUrl = await withTimeout(fetchImageAsDataUrl(proxied), 6000, '');
+              } catch {
+                dataUrl = '';
+              }
+            }
+
+            img.setAttribute('src', dataUrl || originalSrc);
             img.removeAttribute('srcset');
             img.removeAttribute('sizes');
             img.setAttribute('crossorigin', 'anonymous');
