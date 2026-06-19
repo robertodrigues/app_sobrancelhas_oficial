@@ -90,6 +90,27 @@ const waitForImageLoads = async (container: HTMLElement) => {
   );
 };
 
+const waitForDecodedImage = async (img: HTMLImageElement) => {
+  if (typeof img.decode === 'function') {
+    try {
+      await img.decode();
+      return;
+    } catch {
+      return;
+    }
+  }
+
+  await new Promise<void>((resolve) => {
+    if (img.complete && img.naturalWidth > 0) {
+      resolve();
+      return;
+    }
+
+    img.onload = () => resolve();
+    img.onerror = () => resolve();
+  });
+};
+
 const AnalysisResult = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -252,7 +273,7 @@ const AnalysisResult = () => {
       document.body.appendChild(exportContainer);
 
       try {
-        const images = Array.from(clone.querySelectorAll('img'));
+        const images = Array.from(clone.querySelectorAll('img')) as HTMLImageElement[];
 
         await Promise.all(
           images.map(async (img) => {
@@ -264,8 +285,20 @@ const AnalysisResult = () => {
             try {
               const dataUrl = await fetchImageAsDataUrl(safeSrc);
               img.setAttribute('src', dataUrl);
+              img.removeAttribute('srcset');
+              img.removeAttribute('sizes');
+              img.setAttribute('crossorigin', 'anonymous');
+              img.style.display = 'block';
+              img.style.imageRendering = 'auto';
+              await waitForDecodedImage(img);
             } catch {
               img.setAttribute('src', safeSrc);
+              img.removeAttribute('srcset');
+              img.removeAttribute('sizes');
+              img.setAttribute('crossorigin', 'anonymous');
+              img.style.display = 'block';
+              img.style.imageRendering = 'auto';
+              await waitForDecodedImage(img);
             }
           }),
         );
