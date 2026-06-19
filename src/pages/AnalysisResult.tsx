@@ -276,7 +276,7 @@ const AnalysisResult = () => {
         pdf.setFontSize(12);
         pdf.setTextColor(28, 58, 43);
         pdf.text(title, margin, cursorY);
-        cursorY += 6;
+        cursorY += 8;
       };
 
       const addParagraph = (text: string, fontSize = 9.5, color = "#1C3A2B") => {
@@ -301,7 +301,7 @@ const AnalysisResult = () => {
         pdf.setFontSize(9.5);
         pdf.setTextColor(28, 58, 43);
         pdf.text(`${label}:`, margin, cursorY);
-        cursorY += 4;
+        cursorY += 5;
 
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(9.2);
@@ -311,7 +311,7 @@ const AnalysisResult = () => {
         const height = lines.length * 4.2;
         ensureSpace(height);
         pdf.text(lines, margin, cursorY);
-        cursorY += height + 2;
+        cursorY += height + 3;
       };
 
       const addDivider = () => {
