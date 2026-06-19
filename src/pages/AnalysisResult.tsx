@@ -211,14 +211,14 @@ const AnalysisResult = () => {
         return luminance > 0.65 ? "#1C3A2B" : "#F5F0E8";
       };
 
-      const drawPill = (text: string, fillColor: string, textColor: string, height = 9) => {
+      const drawPill = (text: string, fillColor: string, textColor: string, height = 9, bottomSpacing = 4) => {
         const [r, g, b] = hexToRgb(fillColor);
         const textWidth = pdf.getTextWidth(text);
         const pillWidth = Math.min(contentWidth, textWidth + 10);
         const pillX = margin;
         const pillY = cursorY;
 
-        ensureSpace(height + 4);
+        ensureSpace(height + bottomSpacing);
 
         pdf.setFillColor(r, g, b);
         pdf.setDrawColor(r, g, b);
@@ -229,7 +229,7 @@ const AnalysisResult = () => {
         pdf.setTextColor(...hexToRgb(textColor));
         pdf.text(text, pillX + 5, pillY + 6.2);
 
-        cursorY += height + 4;
+        cursorY += height + bottomSpacing;
       };
 
       const customHeaderBg = pdfBgColor || "";
@@ -483,6 +483,7 @@ const AnalysisResult = () => {
           "#EAF3DE",
           "#3B6D11",
           9,
+          8,
         );
 
         addKeyValue("Destaque positivo", analysis.comparativo.destaquePositivo);
@@ -539,6 +540,7 @@ const AnalysisResult = () => {
             theme.bg,
             theme.valueColor,
             9,
+            8,
           );
 
           addParagraph(data.descricao, 9.5);
