@@ -8,17 +8,17 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  Upload, 
-  Download, 
-  Type, 
-  Paintbrush, 
-  Layers, 
+import {
+  Upload,
+  Download,
+  Type,
+  Paintbrush,
+  Layers,
   RotateCcw,
   Sparkles,
   Trash2,
   Maximize2,
-  FileText
+  FileText,
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import html2canvas from 'html2canvas';
@@ -99,7 +99,7 @@ const Edition = () => {
   const [afterImg, setAfterImg] = useState<string | null>(null);
   const [beforeTransform, setBeforeTransform] = useState<PhotoTransform>(createDefaultTransform());
   const [afterTransform, setAfterTransform] = useState<PhotoTransform>(createDefaultTransform());
-  
+
   const [layoutSize, setLayoutSize] = useState<'feed' | 'story'>('feed');
   const [splitDirection, setSplitDirection] = useState<'horizontal' | 'vertical'>('horizontal');
   const [separationType, setSeparationType] = useState<'straight' | 'faded'>('straight');
@@ -331,8 +331,8 @@ const Edition = () => {
         backgroundColor: '#1C3A2B',
         scrollX: 0,
         scrollY: 0,
-        windowWidth: Math.ceil(rect.width),
-        windowHeight: Math.ceil(rect.height),
+        width: Math.ceil(rect.width),
+        height: Math.ceil(rect.height),
       });
 
       const link = document.createElement('a');
@@ -362,12 +362,12 @@ const Edition = () => {
 
         <div className="flex flex-col items-center justify-center w-full">
           <div className="relative overflow-hidden rounded-2xl border-2 border-[#E8DECE] bg-[#1C3A2B] shadow-xl w-full max-w-[340px]">
-            <div 
+            <div
               ref={collageRef}
               className={cn(
-                "relative overflow-hidden rounded-none bg-[#1C3A2B] flex w-full",
-                layoutSize === 'feed' ? "aspect-square" : "aspect-[9/16]",
-                splitDirection === 'vertical' ? "flex-col" : "flex-row"
+                'relative overflow-hidden rounded-none bg-[#1C3A2B] flex w-full',
+                layoutSize === 'feed' ? 'aspect-square' : 'aspect-[9/16]',
+                splitDirection === 'vertical' ? 'flex-col' : 'flex-row'
               )}
             >
               <div className="relative flex-1 overflow-hidden h-full w-full">
@@ -376,17 +376,19 @@ const Edition = () => {
                   label="Antes"
                   value={beforeTransform}
                   onChange={setBeforeTransform}
-                  showGuides={!isExporting}
+                  showGuides={true}
                 />
               </div>
 
               {separationType === 'straight' ? null : (
-                <div className={cn(
-                  "absolute z-10 pointer-events-none bg-gradient-to-r from-transparent via-black/40 to-transparent",
-                  splitDirection === 'horizontal' 
-                    ? "top-0 bottom-0 left-1/2 -translate-x-1/2 w-8 bg-gradient-to-r" 
-                    : "left-0 right-0 top-1/2 -translate-y-1/2 h-8 bg-gradient-to-b"
-                )} />
+                <div
+                  className={cn(
+                    'absolute z-10 pointer-events-none bg-gradient-to-r from-transparent via-black/40 to-transparent',
+                    splitDirection === 'horizontal'
+                      ? 'top-0 bottom-0 left-1/2 -translate-x-1/2 w-8 bg-gradient-to-r'
+                      : 'left-0 right-0 top-1/2 -translate-y-1/2 h-8 bg-gradient-to-b'
+                  )}
+                />
               )}
 
               <div className="relative flex-1 overflow-hidden h-full w-full">
@@ -395,7 +397,7 @@ const Edition = () => {
                   label="Depois"
                   value={afterTransform}
                   onChange={setAfterTransform}
-                  showGuides={!isExporting}
+                  showGuides={true}
                 />
               </div>
 
@@ -409,18 +411,18 @@ const Edition = () => {
                 onTouchMove={draw}
                 onTouchEnd={stopDrawing}
                 className={cn(
-                  "absolute inset-0 z-20 touch-none",
-                  isDrawingMode ? "cursor-crosshair pointer-events-auto" : "pointer-events-none"
+                  'absolute inset-0 z-20 touch-none',
+                  isDrawingMode ? 'cursor-crosshair pointer-events-auto' : 'pointer-events-none'
                 )}
               />
 
               {text && (
-                <div 
-                  style={{ 
-                    left: `${textX}%`, 
-                    top: `${textY}%`, 
-                    color: textColor, 
-                    fontSize: `${textSize}px` 
+                <div
+                  style={{
+                    left: `${textX}%`,
+                    top: `${textY}%`,
+                    color: textColor,
+                    fontSize: `${textSize}px`,
                   }}
                   className="absolute z-30 -translate-x-1/2 -translate-y-1/2 font-bold drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.8)] pointer-events-none whitespace-nowrap tracking-wide"
                 >
@@ -429,13 +431,13 @@ const Edition = () => {
               )}
 
               {logoImg && (
-                <img 
-                  src={logoImg} 
-                  style={{ 
-                    left: `${logoX}%`, 
-                    top: `${logoY}%`, 
+                <img
+                  src={logoImg}
+                  style={{
+                    left: `${logoX}%`,
+                    top: `${logoY}%`,
                     width: `${logoSize}px`,
-                    height: 'auto'
+                    height: 'auto',
                   }}
                   className="absolute z-30 -translate-x-1/2 -translate-y-1/2 pointer-events-none drop-shadow-md"
                   alt="Logo"
@@ -445,16 +447,16 @@ const Edition = () => {
           </div>
 
           <div className="flex gap-2 mt-3 w-full max-w-[340px]">
-            <Button 
-              onClick={() => beforeInputRef.current?.click()} 
-              variant="outline" 
+            <Button
+              onClick={() => beforeInputRef.current?.click()}
+              variant="outline"
               className="btn-elha-outline flex-1 h-10 text-[10px]"
             >
               <Upload size={12} className="mr-1" /> Add Antes
             </Button>
-            <Button 
-              onClick={() => afterInputRef.current?.click()} 
-              variant="outline" 
+            <Button
+              onClick={() => afterInputRef.current?.click()}
+              variant="outline"
               className="btn-elha-outline flex-1 h-10 text-[10px]"
             >
               <Upload size={12} className="mr-1" /> Add Depois
@@ -462,10 +464,7 @@ const Edition = () => {
           </div>
 
           <div className="w-full max-w-[340px] mt-3">
-            <Button
-              onClick={exportCollage}
-              className="btn-elha-primary w-full h-12 text-xs"
-            >
+            <Button onClick={exportCollage} className="btn-elha-primary w-full h-12 text-xs">
               <Download size={14} className="mr-1.5" /> Exportar Montagem Final
             </Button>
           </div>
@@ -496,17 +495,17 @@ const Edition = () => {
                 <div className="space-y-2">
                   <Label className="font-label-category text-[9px] text-[#1C3A2B]">Tamanho da Edição</Label>
                   <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      variant={layoutSize === 'feed' ? 'default' : 'outline'} 
+                    <Button
+                      variant={layoutSize === 'feed' ? 'default' : 'outline'}
                       onClick={() => setLayoutSize('feed')}
-                      className={cn("h-9 rounded-xl text-[10px] font-bold", layoutSize === 'feed' ? "btn-elha-primary" : "btn-elha-outline")}
+                      className={cn('h-9 rounded-xl text-[10px] font-bold', layoutSize === 'feed' ? 'btn-elha-primary' : 'btn-elha-outline')}
                     >
                       Feed (1:1)
                     </Button>
-                    <Button 
-                      variant={layoutSize === 'story' ? 'default' : 'outline'} 
+                    <Button
+                      variant={layoutSize === 'story' ? 'default' : 'outline'}
                       onClick={() => setLayoutSize('story')}
-                      className={cn("h-9 rounded-xl text-[10px] font-bold", layoutSize === 'story' ? "btn-elha-primary" : "btn-elha-outline")}
+                      className={cn('h-9 rounded-xl text-[10px] font-bold', layoutSize === 'story' ? 'btn-elha-primary' : 'btn-elha-outline')}
                     >
                       Story (9:16)
                     </Button>
@@ -516,17 +515,17 @@ const Edition = () => {
                 <div className="space-y-2">
                   <Label className="font-label-category text-[9px] text-[#1C3A2B]">Orientação da Divisão</Label>
                   <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      variant={splitDirection === 'horizontal' ? 'default' : 'outline'} 
+                    <Button
+                      variant={splitDirection === 'horizontal' ? 'default' : 'outline'}
                       onClick={() => setSplitDirection('horizontal')}
-                      className={cn("h-9 rounded-xl text-[10px] font-bold", splitDirection === 'horizontal' ? "btn-elha-primary" : "btn-elha-outline")}
+                      className={cn('h-9 rounded-xl text-[10px] font-bold', splitDirection === 'horizontal' ? 'btn-elha-primary' : 'btn-elha-outline')}
                     >
                       Lado a Lado
                     </Button>
-                    <Button 
-                      variant={splitDirection === 'vertical' ? 'default' : 'outline'} 
+                    <Button
+                      variant={splitDirection === 'vertical' ? 'default' : 'outline'}
                       onClick={() => setSplitDirection('vertical')}
-                      className={cn("h-9 rounded-xl text-[10px] font-bold", splitDirection === 'vertical' ? "btn-elha-primary" : "btn-elha-outline")}
+                      className={cn('h-9 rounded-xl text-[10px] font-bold', splitDirection === 'vertical' ? 'btn-elha-primary' : 'btn-elha-outline')}
                     >
                       Cima e Baixo
                     </Button>
@@ -536,17 +535,17 @@ const Edition = () => {
                 <div className="space-y-2">
                   <Label className="font-label-category text-[9px] text-[#1C3A2B]">Linha de Separação</Label>
                   <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      variant={separationType === 'straight' ? 'default' : 'outline'} 
+                    <Button
+                      variant={separationType === 'straight' ? 'default' : 'outline'}
                       onClick={() => setSeparationType('straight')}
-                      className={cn("h-9 rounded-xl text-[10px] font-bold", separationType === 'straight' ? "btn-elha-primary" : "btn-elha-outline")}
+                      className={cn('h-9 rounded-xl text-[10px] font-bold', separationType === 'straight' ? 'btn-elha-primary' : 'btn-elha-outline')}
                     >
                       Linha Reta
                     </Button>
-                    <Button 
-                      variant={separationType === 'faded' ? 'default' : 'outline'} 
+                    <Button
+                      variant={separationType === 'faded' ? 'default' : 'outline'}
                       onClick={() => setSeparationType('faded')}
-                      className={cn("h-9 rounded-xl text-[10px] font-bold", separationType === 'faded' ? "btn-elha-primary" : "btn-elha-outline")}
+                      className={cn('h-9 rounded-xl text-[10px] font-bold', separationType === 'faded' ? 'btn-elha-primary' : 'btn-elha-outline')}
                     >
                       Esfumaçada
                     </Button>
@@ -557,10 +556,10 @@ const Edition = () => {
               <TabsContent value="texto" className="space-y-4 mt-0">
                 <div className="space-y-1.5">
                   <Label htmlFor="watermark" className="font-label-category text-[9px] text-[#1C3A2B]">Seu @ ou Nome</Label>
-                  <Input 
-                    id="watermark" 
-                    placeholder="Ex: @suasobrancelha" 
-                    value={text} 
+                  <Input
+                    id="watermark"
+                    placeholder="Ex: @suasobrancelha"
+                    value={text}
                     onChange={(e) => setText(e.target.value)}
                     className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] placeholder-[#4A7A5C]/70 h-10 rounded-xl text-xs focus-visible:ring-[#1C3A2B]"
                   />
@@ -572,14 +571,14 @@ const Edition = () => {
                       <div className="space-y-1">
                         <Label className="font-label-category text-[8px] text-[#4A7A5C]">Cor do Texto</Label>
                         <div className="flex gap-1.5 items-center">
-                          <input 
-                            type="color" 
-                            value={textColor} 
+                          <input
+                            type="color"
+                            value={textColor}
                             onChange={(e) => setTextColor(e.target.value)}
                             className="w-8 h-8 rounded-lg border border-[#D4C9B5] cursor-pointer shrink-0"
                           />
-                          <Input 
-                            value={textColor} 
+                          <Input
+                            value={textColor}
                             onChange={(e) => setTextColor(e.target.value)}
                             className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] h-8 rounded-lg text-[10px] font-mono px-1.5"
                           />
@@ -587,11 +586,11 @@ const Edition = () => {
                       </div>
                       <div className="space-y-1">
                         <Label className="font-label-category text-[8px] text-[#4A7A5C]">Tamanho ({textSize}px)</Label>
-                        <Slider 
-                          value={[textSize]} 
-                          onValueChange={(val) => setTextSize(val[0])} 
-                          min={10} 
-                          max={32} 
+                        <Slider
+                          value={[textSize]}
+                          onValueChange={(val) => setTextSize(val[0])}
+                          min={10}
+                          max={32}
                           step={1}
                           className="py-2"
                         />
@@ -613,17 +612,17 @@ const Edition = () => {
 
               <TabsContent value="logo" className="space-y-4 mt-0">
                 <div className="flex items-center gap-2">
-                  <Button 
-                    onClick={() => logoInputRef.current?.click()} 
-                    variant="outline" 
+                  <Button
+                    onClick={() => logoInputRef.current?.click()}
+                    variant="outline"
                     className="btn-elha-outline flex-1 h-10 text-[10px]"
                   >
                     <Upload size={12} className="mr-1" /> Subir Logo PNG
                   </Button>
                   {logoImg && (
-                    <Button 
-                      onClick={() => setLogoImg(null)} 
-                      variant="ghost" 
+                    <Button
+                      onClick={() => setLogoImg(null)}
+                      variant="ghost"
                       className="h-10 w-10 rounded-xl text-red-500 hover:bg-red-50 p-0 shrink-0"
                     >
                       <Trash2 size={16} />
@@ -636,11 +635,11 @@ const Edition = () => {
                   <div className="space-y-3 pt-1">
                     <div className="space-y-1">
                       <Label className="font-label-category text-[8px] text-[#4A7A5C]">Tamanho da Logo ({logoSize}px)</Label>
-                      <Slider 
-                        value={[logoSize]} 
-                        onValueChange={(val) => setLogoSize(val[0])} 
-                        min={30} 
-                        max={200} 
+                      <Slider
+                        value={[logoSize]}
+                        onValueChange={(val) => setLogoSize(val[0])}
+                        min={30}
+                        max={200}
                         step={5}
                       />
                     </div>
@@ -661,10 +660,10 @@ const Edition = () => {
               <TabsContent value="desenho" className="space-y-4 mt-0">
                 <div className="flex items-center justify-between bg-[#F5F0E8] p-2.5 rounded-xl border border-[#D4C9B5]">
                   <span className="font-label-category text-[9px] text-[#1C3A2B]">Modo Caneta</span>
-                  <Button 
-                    variant={isDrawingMode ? 'default' : 'outline'} 
+                  <Button
+                    variant={isDrawingMode ? 'default' : 'outline'}
                     onClick={() => setIsDrawingMode(!isDrawingMode)}
-                    className={cn("h-8 rounded-lg text-[9px] font-bold uppercase px-3", isDrawingMode ? "btn-elha-primary" : "btn-elha-outline")}
+                    className={cn('h-8 rounded-lg text-[9px] font-bold uppercase px-3', isDrawingMode ? 'btn-elha-primary' : 'btn-elha-outline')}
                   >
                     {isDrawingMode ? 'Ativa' : 'Ativar'}
                   </Button>
@@ -676,14 +675,14 @@ const Edition = () => {
                       <div className="space-y-1">
                         <Label className="font-label-category text-[8px] text-[#4A7A5C]">Cor da Caneta</Label>
                         <div className="flex gap-1.5 items-center">
-                          <input 
-                            type="color" 
-                            value={penColor} 
+                          <input
+                            type="color"
+                            value={penColor}
                             onChange={(e) => setPenColor(e.target.value)}
                             className="w-8 h-8 rounded-lg border border-[#D4C9B5] cursor-pointer shrink-0"
                           />
-                          <Input 
-                            value={penColor} 
+                          <Input
+                            value={penColor}
                             onChange={(e) => setPenColor(e.target.value)}
                             className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] h-8 rounded-lg text-[10px] font-mono px-1.5"
                           />
@@ -691,20 +690,20 @@ const Edition = () => {
                       </div>
                       <div className="space-y-1">
                         <Label className="font-label-category text-[8px] text-[#4A7A5C]">Espessura ({penWidth}px)</Label>
-                        <Slider 
-                          value={[penWidth]} 
-                          onValueChange={(val) => setPenWidth(val[0])} 
-                          min={2} 
-                          max={12} 
+                        <Slider
+                          value={[penWidth]}
+                          onValueChange={(val) => setPenWidth(val[0])}
+                          min={2}
+                          max={12}
                           step={1}
                           className="py-2"
                         />
                       </div>
                     </div>
 
-                    <Button 
-                      onClick={clearDrawing} 
-                      variant="outline" 
+                    <Button
+                      onClick={clearDrawing}
+                      variant="outline"
                       className="w-full h-9 rounded-xl text-[10px] font-bold text-red-500 border-red-100 hover:bg-red-50"
                     >
                       <RotateCcw size={12} className="mr-1" /> Limpar Desenhos
@@ -721,20 +720,23 @@ const Edition = () => {
             <h3 className="font-label-category text-[9px] text-[#1C3A2B] flex items-center gap-1.5">
               <FileText size={14} className="text-[#4A7A5C]" /> Ajuste do Relatório PDF
             </h3>
-            
+
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Button 
-                  onClick={() => pdfLogoInputRef.current?.click()} 
-                  variant="outline" 
+                <Button
+                  onClick={() => pdfLogoInputRef.current?.click()}
+                  variant="outline"
                   className="btn-elha-outline flex-1 h-10 text-[10px]"
                 >
                   <Upload size={12} className="mr-1" /> Subir Logo PDF
                 </Button>
                 {pdfLogo && (
-                  <Button 
-                    onClick={() => { setPdfLogo(null); savePdfSettings(null, pdfBgColor); }} 
-                    variant="ghost" 
+                  <Button
+                    onClick={() => {
+                      setPdfLogo(null);
+                      savePdfSettings(null, pdfBgColor);
+                    }}
+                    variant="ghost"
                     className="h-10 w-10 rounded-xl text-red-500 hover:bg-red-50 p-0 shrink-0"
                   >
                     <Trash2 size={16} />
@@ -742,7 +744,7 @@ const Edition = () => {
                 )}
               </div>
               <input type="file" ref={pdfLogoInputRef} onChange={(e) => handleImageUpload(e, 'pdfLogo')} accept="image/*" className="hidden" />
-              
+
               {pdfLogo && (
                 <div className="p-1.5 bg-[#F5F0E8] rounded-xl border border-[#D4C9B5] flex justify-center">
                   <img src={pdfLogo} className="h-8 object-contain" alt="Logo PDF Preview" />
@@ -753,15 +755,21 @@ const Edition = () => {
             <div className="space-y-1">
               <Label className="font-label-category text-[8px] text-[#1C3A2B]">Cor de Fundo do PDF</Label>
               <div className="flex gap-1.5 items-center">
-                <input 
-                  type="color" 
-                  value={pdfBgColor} 
-                  onChange={(e) => { setPdfBgColor(e.target.value); savePdfSettings(pdfLogo, e.target.value); }}
+                <input
+                  type="color"
+                  value={pdfBgColor}
+                  onChange={(e) => {
+                    setPdfBgColor(e.target.value);
+                    savePdfSettings(pdfLogo, e.target.value);
+                  }}
                   className="w-8 h-8 rounded-lg border border-[#D4C9B5] cursor-pointer shrink-0"
                 />
-                <Input 
-                  value={pdfBgColor} 
-                  onChange={(e) => { setPdfBgColor(e.target.value); savePdfSettings(pdfLogo, e.target.value); }}
+                <Input
+                  value={pdfBgColor}
+                  onChange={(e) => {
+                    setPdfBgColor(e.target.value);
+                    savePdfSettings(pdfLogo, e.target.value);
+                  }}
                   placeholder="#F5F0E8"
                   className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] h-8 rounded-lg text-[10px] font-mono px-1.5 focus-visible:ring-[#1C3A2B]"
                 />
@@ -769,7 +777,6 @@ const Edition = () => {
             </div>
           </CardContent>
         </Card>
-
       </main>
     </div>
   );
