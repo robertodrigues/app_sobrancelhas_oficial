@@ -578,10 +578,7 @@ const AnalysisResult = () => {
   }
 
   return (
-    <div
-      style={{ backgroundColor: pdfBgColor || "#F5F0E8" }}
-      className="min-h-screen pb-24 md:pt-20 transition-colors duration-300 text-[#1C3A2B]"
-    >
+    <div className="min-h-screen pb-24 md:pt-20 transition-colors duration-300 text-[#1C3A2B] bg-[#F5F0E8]">
       <Navbar />
       <main className="max-w-2xl mx-auto p-6">
         <header className="relative flex flex-col items-center justify-center mb-8 text-center pt-4">
