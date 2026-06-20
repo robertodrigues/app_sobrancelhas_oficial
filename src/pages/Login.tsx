@@ -234,9 +234,9 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-[#F5F0E8] text-[#1C3A2B] px-4 py-10 flex items-center justify-center">
-      <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center -translate-y-[12%]">
-        <div className="mb-6 flex justify-center">
-          <Logo className="w-36 h-36 drop-shadow-md" />
+      <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center -translate-y-[4%]">
+        <div className="mb-6 mt-4 flex justify-center">
+          <Logo className="w-28 h-28 drop-shadow-md" />
         </div>
 
         <div className="text-center mb-6">
