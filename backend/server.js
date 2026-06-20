@@ -481,6 +481,22 @@ app.post('/api/credits/confirm', async (req, res) => {
       return res.status(500).json({ error: 'Configuração do Supabase ausente no servidor.' });
     }
 
+    // Verificação se esse paymentId já existe em credit_transactions com status "approved"
+    const { data: alreadyProcessed, error: checkError } = await supabase
+      .from('credit_transactions')
+      .select('id')
+      .eq('payment_id', paymentId)
+      .eq('status', 'approved')
+      .maybeSingle();
+
+    if (checkError) {
+      throw checkError;
+    }
+
+    if (alreadyProcessed) {
+      return res.json({ success: true, alreadyProcessed: true });
+    }
+
     const { data: wallet, error: walletFetchError } = await supabase
       .from('credit_wallets')
       .select('balance_cents')
