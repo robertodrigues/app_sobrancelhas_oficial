@@ -10,7 +10,7 @@ import { isClerkConfigured, useSignIn } from "@/lib/auth";
 import { Loader2, LogIn, ShieldCheck, Mail } from "lucide-react";
 import Logo from "@/components/ui/Logo";
 
-type LoginStep = "credentials" | "verify-email";
+type LoginStep = "credentials" | "verify-email" | "reset-password";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -18,6 +18,8 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [resetCode, setResetCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [verificationLoading, setVerificationLoading] = useState(false);
   const [step, setStep] = useState<LoginStep>("credentials");
@@ -221,12 +223,42 @@ const Login = () => {
           strategy: "reset_password_email_code",
           identifier: email.trim(),
         });
-        showSuccess("Código de redefinição enviado para seu e‑mail.");
-      } else {
-        showSuccess("Simulação: Código de redefinição enviado para seu e‑mail.");
       }
+      setStep("reset-password");
+      showSuccess("Código de redefinição enviado para seu e‑mail.");
     } catch (err: any) {
       showError(err.errors?.[0]?.message || "Erro ao enviar código de redefinição.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetCode.trim() || !newPassword.trim()) {
+      showError("Por favor, preencha o código e a nova senha.");
+      return;
+    }
+    setLoading(true);
+    try {
+      if (isClerkConfigured) {
+        const result = await signIn.attemptFirstFactor({
+          strategy: "reset_password_email_code",
+          code: resetCode.trim(),
+          password: newPassword.trim(),
+        });
+        if (result.status === "complete") {
+          await setActive({ session: result.createdSessionId });
+          showSuccess("Senha redefinida e login realizado com sucesso!");
+          navigate("/");
+          return;
+        }
+      } else {
+        showSuccess("Simulação: Senha redefinida com sucesso!");
+        setStep("credentials");
+      }
+    } catch (err: any) {
+      showError(err.errors?.[0]?.message || "Erro ao redefinir senha. Verifique o código.");
     } finally {
       setLoading(false);
     }
@@ -320,6 +352,74 @@ const Login = () => {
                 Secured by Clerk
               </span>
             </div>
+          </form>
+        ) : step === "reset-password" ? (
+          <form
+            onSubmit={handleResetPassword}
+            className="w-full space-y-5 bg-[#E8DECE] p-6 rounded-3xl shadow-sm border border-[#D4C9B5]"
+          >
+            <div className="rounded-2xl border border-[#D4C9B5] bg-[#F5F0E8] p-4 text-center">
+              <Mail className="mx-auto mb-2 text-[#4A7A5C]" size={18} />
+              <p className="font-heading text-sm text-[#1C3A2B]">Redefinir Senha</p>
+              <p className="mt-1 text-xs text-[#4A7A5C]">
+                Enviamos um código de redefinição para <span className="font-medium">{email}</span>.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="resetCode" className="font-label-category text-[10px] text-[#1C3A2B]">
+                Código de verificação
+              </Label>
+              <Input
+                id="resetCode"
+                type="text"
+                inputMode="numeric"
+                placeholder="Digite o código de 6 dígitos"
+                required
+                value={resetCode}
+                onChange={(e) => setResetCode(e.target.value)}
+                disabled={loading}
+                className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] placeholder-[#4A7A5C]/70 h-11 rounded-xl text-sm focus-visible:ring-[#1C3A2B]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="newPassword" className="font-label-category text-[10px] text-[#1C3A2B]">
+                Nova Senha
+              </Label>
+              <Input
+                id="newPassword"
+                type="password"
+                placeholder="Digite sua nova senha"
+                required
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                disabled={loading}
+                className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] placeholder-[#4A7A5C]/70 h-11 rounded-xl text-sm focus-visible:ring-[#1C3A2B]"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              className="btn-elha-primary w-full gap-2 h-12"
+              disabled={loading}
+            >
+              {loading ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <>Redefinir e Entrar</>
+              )}
+            </Button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setStep("credentials")}
+              disabled={loading}
+              className="w-full h-11 text-[#4A7A5C] hover:text-[#1C3A2B] hover:bg-[#F5F0E8]"
+            >
+              Voltar para o Login
+            </Button>
           </form>
         ) : (
           <form
