@@ -350,13 +350,9 @@ const Credits = () => {
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" className="btn-elha-outline gap-2" onClick={handleConfirmPayment} disabled={confirming || !paymentId}>
+            <Button variant="outline" className="btn-elha-primary w-full gap-2 h-12" onClick={handleConfirmPayment} disabled={confirming || !paymentId}>
               <RefreshCw size={14} />
               Já paguei
-            </Button>
-            <Button variant="outline" className="btn-elha-outline gap-2" onClick={loadWallet}>
-              <RefreshCw size={14} />
-              Atualizar saldo
             </Button>
           </DialogFooter>
         </DialogContent>
