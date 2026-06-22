@@ -72,12 +72,12 @@ const Landing = () => {
           <Sparkles size={12} /> Análise Inteligente
         </div>
         
-        <h1 className="font-heading text-3xl md:text-6xl font-normal text-[#1C3A2B] leading-tight max-w-4xl mx-auto">
-          Transforme o seu design em um <span className="font-medium">diagnóstico clínico e científico</span>
+        <h1 className="font-heading text-3xl md:text-5xl font-normal text-[#1C3A2B] leading-tight max-w-4xl mx-auto">
+          Transforme cada atendimento de Reconstrução de Sobrancelha em uma <span className="font-medium">análise tricologica inteligente e documentada</span>
         </h1>
         
         <p className="font-body text-sm md:text-base text-[#4A7A5C] max-w-2xl mx-auto font-light leading-relaxed">
-          A primeira plataforma de inteligência e tricologia dedicada exclusivamente a especialistas em sobrancelhas. Eleve o nível do seu atendimento e encante suas clientes com relatórios técnicos personalizados.
+          O primeiro app com inteligência tricológica para sobrancelhas. análise detalhada, relatório personalizado e resultado que a sua cliente consegue ver.
         </p>
         
         <div className="pt-4">
@@ -99,10 +99,10 @@ const Landing = () => {
               O design de sobrancelhas deixou de ser apenas intuitivo
             </h2>
             <p className="font-body text-sm text-[#4A7A5C] leading-relaxed font-light">
-              Por muito tempo, a avaliação das sobrancelhas foi baseada apenas no "olhômetro" e na intuição. Isso dificultava a valorização do serviço e a comprovação real dos resultados de tratamentos de reconstrução e crescimento.
+              Na avaliação, a profissional sabe o que precisa melhorar na sobrancelha da cliente só que tem dificuldade em ser detalhista. Quais fios precisam ganhar espessura? Em qual região a densidade está comprometida? Onde o crescimento precisa ser estimulado? Na evolução, só fica na foto do antes e depois mostrando que mudou, mas não explica o quanto. Sem uma ferramenta de análise, essas informações ficam na cabeça e o atendimento Perde a profundidade. Como o mercado evoluiu, e a profissional que hoje trabalha com tratamento de reconstrução precisa detalhar o que vê, comunicar o que planeja e comprovar o que entregou.
             </p>
             <p className="font-body text-sm text-[#1C3A2B] leading-relaxed font-medium">
-              O ELHA muda essa realidade ao traduzir a saúde dos fios e da pele em dados técnicos e visuais, gerando autoridade imediata e um diferencial competitivo inalcançável para o seu estúdio.
+              A Elha veio para mudar essa realidade, traduzindo o olhar tricológico em dados técnicos e visuais, ela gera autoridade imediata e um diferencial competitivo que nenhuma outra ferramenta do mercado entrega hoje.
             </p>
           </div>
           <div className="relative flex justify-center">
@@ -138,8 +138,8 @@ const Landing = () => {
       {/* 3. Funcionalidades (cards) */}
       <section className="px-6 py-24 max-w-6xl mx-auto space-y-16">
         <div className="text-center space-y-3">
-          <p className="font-label-category text-[10px] text-[#4A7A5C] tracking-[3px] uppercase">Recursos Exclusivos</p>
-          <h2 className="font-heading text-2xl md:text-4xl font-normal text-[#1C3A2B]">Desenvolvido para a sua rotina clínica</h2>
+          <p className="font-label-category text-[10px] text-[#4A7A5C] tracking-[3px] uppercase">tecnologia de análise tricológica</p>
+          <h2 className="font-heading text-2xl md:text-4xl font-normal text-[#1C3A2B]">Desenvolvido para a sua rotina de atendimento</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -176,7 +176,7 @@ const Landing = () => {
               <div className="w-12 h-12 rounded-xl bg-[#1C3A2B] text-[#E8DECE] flex items-center justify-center">
                 <FileText size={20} />
               </div>
-              <h3 className="font-heading text-lg font-medium text-[#1C3A2B]">Relatório Técnico em PDF</h3>
+              <h3 className="font-heading text-lg font-medium text-[#1C3A2B]">relatório técnico</h3>
               <p className="font-body text-xs md:text-sm text-[#4A7A5C] leading-relaxed font-light">
                 Gere um documento clínico elegante com a sua logo e cores para entregar à cliente, detalhando o diagnóstico e o objetivo do tratamento.
               </p>
@@ -191,7 +191,7 @@ const Landing = () => {
               </div>
               <h3 className="font-heading text-lg font-medium text-[#1C3A2B]">Gestão de Clientes</h3>
               <p className="font-body text-xs md:text-sm text-[#4A7A5C] leading-relaxed font-light">
-                Mantenha um histórico completo e organizado de todas as análises, fotos e evoluções de cada cliente cadastrada, acessível a qualquer momento.
+                Mantenha um histórico completo e organized de todas as análises, fotos e evoluções de cada cliente cadastrada, acessível a qualquer momento.
               </p>
             </div>
           </div>
@@ -203,15 +203,17 @@ const Landing = () => {
       <section className="bg-[#1C3A2B] text-[#E8DECE] py-24 px-6">
         <div className="max-w-6xl mx-auto space-y-16">
           <div className="text-center space-y-3">
-            <p className="font-label-category text-[10px] text-[#8FAF8A] tracking-[3px] uppercase">Público-Alvo</p>
-            <h2 className="font-heading text-2xl md:text-4xl font-normal text-[#E8DECE]">Para quem é a plataforma?</h2>
+            <p className="font-label-category text-[10px] text-[#8FAF8A] tracking-[3px] uppercase">Para quem é o Elha</p>
+            <h2 className="font-heading text-2xl md:text-4xl font-normal text-[#E8DECE] max-w-3xl mx-auto leading-tight">
+              Para toda profissional que trabalha com tratamento e reconstrução de sobrancelhas e quer ir além da foto do antes e depois. Designer, micropigmentadora ou tricologista, se o seu foco é tratar e comprovar resultado, a Elha foi desenvolvida para você.
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div className="space-y-4 border-l-2 border-[#4A7A5C] pl-6">
-              <h3 className="font-heading text-xl font-medium text-[#E8DECE]">Designers de Sobrancelhas</h3>
+              <h3 className="font-heading text-xl font-medium text-[#E8DECE]">Designer de Sobrancelhas:</h3>
               <p className="font-body text-xs md:text-sm text-[#8FAF8A] leading-relaxed font-light">
-                Profissionais que desejam sair do básico e oferecer um atendimento personalizado, justificando um preço diferenciado através de relatórios visuais.
+                Para profissionais que trabalham com reconstrução e querem documentar cada etapa do tratamento com precisão tricológica. Chega de depender só da foto do antes e depois. Com o Elha, você entrega um relatório técnico que comprova a evolução da sobrancelha da sua cliente e justifica o valor do seu trabalho.
               </p>
             </div>
 
