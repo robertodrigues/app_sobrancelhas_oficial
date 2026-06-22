@@ -8,7 +8,6 @@ import {
   ShieldCheck, 
   ArrowRight, 
   CheckCircle2, 
-  Paintbrush, 
   Users, 
   Eye
 } from "lucide-react";
@@ -78,7 +77,7 @@ const Landing = () => {
               Por muito tempo, a avaliação das sobrancelhas foi baseada apenas no "olhômetro" e na intuição. Isso dificultava a valorização do serviço e a comprovação real dos resultados de tratamentos de reconstrução e crescimento.
             </p>
             <p className="font-body text-sm text-[#1C3A2B] leading-relaxed font-medium">
-              O ELHA muda essa realidade ao traduzir a saúde dos fios e da pele em dados técnicos e visuais, gerando autoridade imediata e um diferencial competitivo inalcançável para o seu estúdio.
+              O ELHA muda essa reality ao traduzir a saúde dos fios e da pele em dados técnicos e visuais, gerando autoridade imediata e um diferencial competitivo inalcançável para o seu estúdio.
             </p>
           </div>
           <div className="relative flex justify-center">
@@ -118,7 +117,7 @@ const Landing = () => {
           <h2 className="font-heading text-2xl md:text-4xl font-normal text-[#1C3A2B]">Desenvolvido para a sua rotina clínica</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           
           {/* Card 1 */}
           <div className="bg-[#E8DECE]/40 border border-[#D4C9B5]/40 p-8 rounded-2xl space-y-4 hover:shadow-md transition-all flex flex-col justify-between">
@@ -150,19 +149,6 @@ const Landing = () => {
           <div className="bg-[#E8DECE]/40 border border-[#D4C9B5]/40 p-8 rounded-2xl space-y-4 hover:shadow-md transition-all flex flex-col justify-between">
             <div className="space-y-4">
               <div className="w-12 h-12 rounded-xl bg-[#1C3A2B] text-[#E8DECE] flex items-center justify-center">
-                <Paintbrush size={20} />
-              </div>
-              <h3 className="font-heading text-lg font-medium text-[#1C3A2B]">Editor Antes & Depois</h3>
-              <p className="font-body text-xs md:text-sm text-[#4A7A5C] leading-relaxed font-light">
-                Crie montagens profissionais com ferramentas de zoom, alinhamento, caneta de marcação e adicione sua marca d'água personalizada para as redes sociais.
-              </p>
-            </div>
-          </div>
-
-          {/* Card 4 */}
-          <div className="bg-[#E8DECE]/40 border border-[#D4C9B5]/40 p-8 rounded-2xl space-y-4 hover:shadow-md transition-all flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="w-12 h-12 rounded-xl bg-[#1C3A2B] text-[#E8DECE] flex items-center justify-center">
                 <FileText size={20} />
               </div>
               <h3 className="font-heading text-lg font-medium text-[#1C3A2B]">Relatório Técnico em PDF</h3>
@@ -172,8 +158,8 @@ const Landing = () => {
             </div>
           </div>
 
-          {/* Card 5 */}
-          <div className="bg-[#E8DECE]/40 border border-[#D4C9B5]/40 p-8 rounded-2xl space-y-4 hover:shadow-md transition-all flex flex-col justify-between md:col-span-2">
+          {/* Card 4 */}
+          <div className="bg-[#E8DECE]/40 border border-[#D4C9B5]/40 p-8 rounded-2xl space-y-4 hover:shadow-md transition-all flex flex-col justify-between">
             <div className="space-y-4">
               <div className="w-12 h-12 rounded-xl bg-[#1C3A2B] text-[#E8DECE] flex items-center justify-center">
                 <Users size={20} />
