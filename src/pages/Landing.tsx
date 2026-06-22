@@ -290,7 +290,6 @@ const Landing = () => {
                 <p>Termos de uso</p>
                 <p>Política de reembolso</p>
                 <p>Lei LGPD</p>
-                <p>Lei LGPD</p>
               </div>
             </div>
           </div>
