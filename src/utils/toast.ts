@@ -9,6 +9,10 @@ const translateErrorMessage = (message: string) => {
 
   const translations: Array<{ pattern: RegExp; text: string }> = [
     {
+      pattern: /couldn't find your account/i,
+      text: "Não foi possível encontrar sua conta.",
+    },
+    {
       pattern: /email_address_id` is required when `strategy` is `email_code`/i,
       text: "`email_address_id` é obrigatório quando a estratégia é `email_code`.",
     },
