@@ -179,6 +179,18 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* 4. Para quem é o ELHA */}
+      <section className="bg-[#1C3A2B] text-[#E8DECE] py-24 px-6">
+        <div className="max-w-6xl mx-auto space-y-16">
+          <div className="text-center space-y-3">
+            <p className="font-label-category text-[10px] text-[#8FAF8A] tracking-[3px] uppercase">Para quem é o Elha</p>
+            <h2 className="font-heading text-2xl md:text-4xl font-normal text-[#E8DECE] max-w-3xl mx-auto leading-tight">
+              Para toda profissional que trabalha com tratamento e reconstrução de sobrancelhas e quer ir além da foto do antes e depois. Designer, micropigmentadora ou tricologista, se o seu foco é tratar e comprovar resultado, a Elha foi desenvolvida para você.
+            </h2>
+          </div>
+        </div>
+      </section>
+
       {/* 5. CTA Final */}
       <section className="px-6 py-24 max-w-4xl mx-auto text-center space-y-8">
         <h2 className="font-heading text-3xl md:text-5xl font-normal text-[#1C3A2B] leading-tight">
