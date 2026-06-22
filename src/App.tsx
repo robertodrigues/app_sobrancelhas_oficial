@@ -81,6 +81,9 @@ const App = () => {
                   <Route path="/login" element={<AppRouteGuard><Login /></AppRouteGuard>} />
                   <Route path="/register" element={<AppRouteGuard><Register /></AppRouteGuard>} />
 
+                  {/* Rota de Visualização da Landing Page no Preview */}
+                  <Route path="/institucional" element={<Landing />} />
+
                   {/* Rota Principal (Decide entre Landing Page ou App Dashboard) */}
                   <Route path="/" element={<HomeRouter />} />
 
