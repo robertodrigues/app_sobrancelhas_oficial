@@ -92,7 +92,7 @@ const Landing = () => {
                   <ShieldCheck size={20} />
                 </div>
                 <div>
-                  <p className="font-heading text-sm font-medium text-[#1C3A2B]">Método Científico</p>
+                  <p className="font-heading text-sm font-medium text-[#1C3A2B]">Relatório Técnico</p>
                   <p className="text-[10px] text-[#4A7A5C]">Valorização profissional</p>
                 </div>
               </div>
