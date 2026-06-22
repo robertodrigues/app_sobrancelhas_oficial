@@ -32,7 +32,7 @@ const Landing = () => {
             onClick={handleGoToApp}
             className="btn-elha-primary px-6 py-3 text-[10px] shadow-md hover:scale-105 transition-all"
           >
-            Acessar Plataforma
+            Acessar App
           </button>
         </div>
       </header>
@@ -77,7 +77,7 @@ const Landing = () => {
               Por muito tempo, a avaliação das sobrancelhas foi baseada apenas no "olhômetro" e na intuição. Isso dificultava a valorização do serviço e a comprovação real dos resultados de tratamentos de reconstrução e crescimento.
             </p>
             <p className="font-body text-sm text-[#1C3A2B] leading-relaxed font-medium">
-              O ELHA muda essa reality ao traduzir a saúde dos fios e da pele em dados técnicos e visuais, gerando autoridade imediata e um diferencial competitivo inalcançável para o seu estúdio.
+              O ELHA muda essa realidade ao traduzir a saúde dos fios e da pele em dados técnicos e visuais, gerando autoridade imediata e um diferencial competitivo inalcançável para o seu estúdio.
             </p>
           </div>
           <div className="relative flex justify-center">
@@ -166,7 +166,7 @@ const Landing = () => {
               </div>
               <h3 className="font-heading text-lg font-medium text-[#1C3A2B]">Gestão de Clientes</h3>
               <p className="font-body text-xs md:text-sm text-[#4A7A5C] leading-relaxed font-light">
-                Mantenha um histórico completo e organizado de todas as análises, fotos e evoluções de cada cliente cadastrada, acessível a qualquer momento.
+                Mantenha um histórico completo e organized de todas as análises, fotos e evoluções de cada cliente cadastrada, acessível a qualquer momento.
               </p>
             </div>
           </div>
@@ -243,7 +243,7 @@ const Landing = () => {
               onClick={handleGoToApp}
               className="text-xs text-[#1C3A2B] hover:underline font-medium"
             >
-              Acessar Plataforma
+              Acessar App
             </button>
             <span className="text-xs text-[#4A7A5C] font-light">
               &copy; {new Date().getFullYear()} ELHA. Todos os direitos reservados.
