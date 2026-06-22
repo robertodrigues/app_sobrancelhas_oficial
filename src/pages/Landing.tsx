@@ -44,7 +44,7 @@ const Landing = () => {
         </div>
         
         <h1 className="font-heading text-3xl md:text-5xl font-normal text-[#1C3A2B] leading-tight max-w-4xl mx-auto">
-          Transforme cada atendimento de Reconstrução de Sobrancelha em uma <span className="font-medium">análise tricologica inteligente e documentada</span>
+          Transforme cada atendimento de Reconstrução de Sobrancelha em uma <span className="font-medium">análise tricológica inteligente e documentada</span>
         </h1>
         
         <p className="font-body text-sm md:text-base text-[#4A7A5C] max-w-2xl mx-auto font-light leading-relaxed">
