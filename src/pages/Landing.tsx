@@ -197,7 +197,7 @@ const Landing = () => {
           Pronta para elevar o nível do seu atendimento?
         </h2>
         <p className="font-body text-sm md:text-base text-[#4A7A5C] max-w-2xl mx-auto font-light leading-relaxed">
-          Junte-se a centenas de especialistas que já transformaram seus estúdios em verdadeiras clínicas de referência em sobrancelhas.
+          Seu conhecimento vale muito mais do que uma foto de antes e depois. Está na hora de documentar isso. Crie sua conta e faça sua primeira análise hoje.
         </p>
         <div className="pt-4">
           <button
