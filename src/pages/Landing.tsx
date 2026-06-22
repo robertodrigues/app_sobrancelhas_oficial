@@ -69,7 +69,7 @@ const Landing = () => {
         </div>
         
         <div className="inline-flex items-center gap-2 bg-[#EAF3DE] text-[#3B6D11] px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-[2px] font-label-category">
-          <Sparkles size={12} /> Diagnóstico Clínico de Sobrancelhas
+          <Sparkles size={12} /> Análise Inteligente
         </div>
         
         <h1 className="font-heading text-3xl md:text-6xl font-normal text-[#1C3A2B] leading-tight max-w-4xl mx-auto">
