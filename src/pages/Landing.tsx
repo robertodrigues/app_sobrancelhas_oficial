@@ -245,14 +245,8 @@ const Landing = () => {
               <Instagram size={18} />
             </a>
             <div className="space-y-1 text-xs font-medium text-[#1C3A2B] md:text-right">
-              <p>Pagamentos por Mercado Pago</p>
+              <p>Conexão segura SSL</p>
             </div>
-            <button
-              onClick={handleGoToApp}
-              className="text-xs font-medium text-[#1C3A2B] hover:underline"
-            >
-              Acessar App
-            </button>
             <span className="text-xs font-light text-[#4A7A5C]">
               &copy; {new Date().getFullYear()} ELHA. Todos os direitos reservados.
             </span>
