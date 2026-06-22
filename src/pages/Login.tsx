@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,7 @@ type LoginStep = "credentials" | "verify-email" | "reset-password";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { isSignedIn } = useAuth();
   const { signIn, setActive, isLoaded } = useSignIn();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,6 +25,12 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [verificationLoading, setVerificationLoading] = useState(false);
   const [step, setStep] = useState<LoginStep>("credentials");
+
+  useEffect(() => {
+    if (isSignedIn) {
+      window.location.href = "/";
+    }
+  }, [isSignedIn]);
 
   const startEmailVerification = async () => {
     if (!email.trim()) {
