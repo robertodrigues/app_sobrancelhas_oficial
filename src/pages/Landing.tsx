@@ -15,7 +15,7 @@ import Logo from "@/components/ui/Logo";
 
 const Landing = () => {
   const handleGoToApp = () => {
-    window.location.href = "https://app.elha.com.br/login";
+    window.location.href = "https://app.elha.com.br/register";
   };
 
   return (
@@ -223,6 +223,10 @@ const Landing = () => {
           </div>
 
           <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="text-xs text-[#1C3A2B] font-medium space-y-1 md:text-right">
+              <p>Instagram: @elhaapp</p>
+              <p>Pagamentos por Mercado Pago</p>
+            </div>
             <button
               onClick={handleGoToApp}
               className="text-xs text-[#1C3A2B] hover:underline font-medium"
