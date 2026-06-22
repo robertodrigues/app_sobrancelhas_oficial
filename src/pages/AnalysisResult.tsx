@@ -252,7 +252,7 @@ const AnalysisResult = () => {
 
         if (customHeaderLogo) {
           const logoProps = pdf.getImageProperties(customHeaderLogo);
-          const logoWidth = 31;
+          const logoWidth = 37.2; // Aumentado em 20% (31 * 1.2)
           const logoHeight = (logoProps.height / logoProps.width) * logoWidth;
           const logoX = (pageWidth - logoWidth) / 2;
           const logoY = 4.5;
