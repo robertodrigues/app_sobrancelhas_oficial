@@ -143,7 +143,7 @@ const Landing = () => {
               <div className="w-12 h-12 rounded-xl bg-[#1C3A2B] text-[#E8DECE] flex items-center justify-center">
                 <Eye size={20} />
               </div>
-              <h3 className="font-heading text-lg font-medium text-[#1C3A2B]">Tricoscopia Capilar</h3>
+              <h3 className="font-heading text-lg font-medium text-[#1C3A2B]">Tricoscopia de Sobrancelhas</h3>
               <p className="font-body text-xs md:text-sm text-[#4A7A5C] leading-relaxed font-light">
                 Avalie profundamente a saúde da pele, descamação, óstios foliculares e identifique fios em desenvolvimento ou miniaturizados com precisão microscópica.
               </p>
