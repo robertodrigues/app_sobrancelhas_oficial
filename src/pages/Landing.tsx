@@ -69,11 +69,20 @@ const Landing = () => {
             <h2 className="font-heading text-2xl md:text-4xl font-normal text-[#1C3A2B] leading-tight">
               O design de sobrancelhas deixou de ser apenas intuitivo
             </h2>
-            <p className="font-body text-sm text-[#4A7A5C] leading-relaxed font-light">
-              Na avaliação, a profissional sabe o que precisa melhorar na sobrancelha da cliente só que tem dificuldade em ser detalhista. Quais fios precisam ganhar espessura? Em qual região a densidade está comprometida? Onde o crescimento precisa ser estimulado? Na evolução, só fica na foto do antes e depois mostrando que mudou, mas não explica o quanto. Sem uma ferramenta de análise, essas informações ficam na cabeça e o atendimento Perde a profundidade. Como o mercado evoluiu, e a profissional que hoje trabalha com tratamento de reconstrução precisa detalhar o que vê, comunicar o que planeja e comprovar o que entregou.
+            <p className="font-body text-sm text-[#4A7A5C] leading-relaxed font-light text-justify">
+              Na avaliação, a profissional sabe o que precisa melhorar na sobrancelha da 
+              cliente só que tem dificuldade em ser detalhista. Quais fios precisam ganhar 
+              espessura? Em qual região a densidade está comprometida? Onde o 
+              crescimento precisa ser estimulado? Na evolução, só fica na foto do antes e 
+              depois mostrando que mudou, mas não explica o quanto. Sem uma 
+              ferramenta de análise, essas informações ficam na cabeça e o atendimento perde a profundidade. 
+              O mercado evoluiu, e a profissional que hoje trabalha com tratamento de reconstrução precisa 
+              detalhar o que vê, comunicar o que planeja e comprovar o que entregou.
             </p>
-            <p className="font-body text-sm text-[#1C3A2B] leading-relaxed font-medium">
-              A Elha veio para mudar essa realidade, traduzindo o olhar tricológico em dados técnicos e visuais, ela gera autoridade imediata e um diferencial competitivo que nenhuma outra ferramenta do mercado entrega hoje.
+            <p className="font-body text-sm text-[#1C3A2B] leading-relaxed font-medium text-justify">
+              A Elha veio para mudar essa realidade, traduzindo o olhar tricológico em 
+              dados técnicos e visuais, ela gera autoridade imediata e um diferencial 
+              competitivo que nenhuma outra ferramenta do mercado entrega hoje.
             </p>
           </div>
           <div className="relative flex justify-center">
