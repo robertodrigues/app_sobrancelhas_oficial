@@ -156,9 +156,9 @@ const Landing = () => {
               <div className="w-12 h-12 rounded-xl bg-[#1C3A2B] text-[#E8DECE] flex items-center justify-center">
                 <FileText size={20} />
               </div>
-              <h3 className="font-heading text-lg font-medium text-[#1C3A2B]">relatório técnico</h3>
+              <h3 className="font-heading text-lg font-medium text-[#1C3A2B]">Relatório Técnico</h3>
               <p className="font-body text-xs md:text-sm text-[#4A7A5C] leading-relaxed font-light">
-                Gere um documento clínico elegante com a sua logo e cores para entregar à cliente, detalhando o diagnóstico e o objetivo do tratamento.
+                Gere um documento clínico elegante com a sua logo e cores para entregar à cliente, detalhando o relatório técnico e o objetivo do tratamento.
               </p>
             </div>
           </div>
