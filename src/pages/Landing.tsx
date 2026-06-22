@@ -39,35 +39,6 @@ const Landing = () => {
 
       {/* 1. Hero Section */}
       <section className="px-6 py-20 md:py-32 max-w-5xl mx-auto text-center space-y-8">
-        {/* Prova Social: Avatares de Mulheres + Texto */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
-          <div className="flex -space-x-3">
-            <img 
-              className="w-10 h-10 rounded-full border-2 border-[#F5F0E8] object-cover shadow-sm" 
-              src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&h=100&q=80" 
-              alt="Especialista 1" 
-            />
-            <img 
-              className="w-10 h-10 rounded-full border-2 border-[#F5F0E8] object-cover shadow-sm" 
-              src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&h=100&q=80" 
-              alt="Especialista 2" 
-            />
-            <img 
-              className="w-10 h-10 rounded-full border-2 border-[#F5F0E8] object-cover shadow-sm" 
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80" 
-              alt="Especialista 3" 
-            />
-            <img 
-              className="w-10 h-10 rounded-full border-2 border-[#F5F0E8] object-cover shadow-sm" 
-              src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&h=100&q=80" 
-              alt="Especialista 4" 
-            />
-          </div>
-          <span className="font-heading text-sm font-medium text-[#1C3A2B] tracking-wide">
-            + de 500 Stúdios usam
-          </span>
-        </div>
-        
         <div className="inline-flex items-center gap-2 bg-[#EAF3DE] text-[#3B6D11] px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-[2px] font-label-category">
           <Sparkles size={12} /> Análise Inteligente
         </div>
@@ -191,7 +162,7 @@ const Landing = () => {
               </div>
               <h3 className="font-heading text-lg font-medium text-[#1C3A2B]">Gestão de Clientes</h3>
               <p className="font-body text-xs md:text-sm text-[#4A7A5C] leading-relaxed font-light">
-                Mantenha um histórico completo e organized de todas as análises, fotos e evoluções de cada cliente cadastrada, acessível a qualquer momento.
+                Mantenha um histórico completo e organized of todas as análises, fotos e evoluções de cada cliente cadastrada, acessível a qualquer momento.
               </p>
             </div>
           </div>
