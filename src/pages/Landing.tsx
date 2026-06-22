@@ -48,7 +48,7 @@ const Landing = () => {
         </h1>
         
         <p className="font-body text-sm md:text-base text-[#4A7A5C] max-w-2xl mx-auto font-light leading-relaxed">
-          O primeiro app com inteligência tricológica para sobrancelhas. análise detalhada, relatório personalizado e resultado que a sua cliente consegue ver.
+          O primeiro app com inteligência tricológica para sobrancelhas. Análise detalhada, relatório personalizado e resultado que a sua cliente consegue ver.
         </p>
         
         <div className="pt-4">
