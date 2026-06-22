@@ -19,6 +19,10 @@ const Landing = () => {
     window.location.href = "https://app.elha.com.br/register";
   };
 
+  const handleGoToLogin = () => {
+    window.location.href = "https://app.elha.com.br/login";
+  };
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#F5F0E8] font-sans text-[#1C3A2B] selection:bg-[#1C3A2B] selection:text-[#E8DECE]">
       <header className="sticky top-0 z-50 border-b border-[#D4C9B5]/30 bg-[#F5F0E8]/80 px-6 py-4 backdrop-blur-md">
@@ -30,7 +34,7 @@ const Landing = () => {
             </span>
           </div>
           <button
-            onClick={handleGoToApp}
+            onClick={handleGoToLogin}
             className="btn-elha-primary px-6 py-3 text-[10px] shadow-md transition-all hover:scale-105"
           >
             Acessar App
