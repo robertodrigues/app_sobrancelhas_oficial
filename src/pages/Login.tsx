@@ -42,6 +42,7 @@ const Login = () => {
 
         if (signInAttempt.status === "complete") {
           await setActive({ session: signInAttempt.createdSessionId });
+          await new Promise(resolve => setTimeout(resolve, 300));
           showSuccess("Login realizado com sucesso!");
           window.location.href = "/";
           return;
@@ -99,13 +100,13 @@ const Login = () => {
 
         if (signInAttempt.status === "complete") {
           await setActive({ session: signInAttempt.createdSessionId });
+          await new Promise(resolve => setTimeout(resolve, 300));
           showSuccess("Login realizado com sucesso!");
           window.location.href = "/";
           return;
         }
 
-        await startEmailVerification();
-        return;
+        throw new Error("Não foi possível completar o login. Verifique suas credenciais.");
       }
 
       showSuccess("Login simulado realizado com sucesso!");
@@ -145,6 +146,7 @@ const Login = () => {
 
       if (verificationAttempt.status === "complete") {
         await setActive({ session: verificationAttempt.createdSessionId });
+        await new Promise(resolve => setTimeout(resolve, 300));
         showSuccess("Login confirmado com sucesso!");
         window.location.href = "/";
         return;
@@ -249,6 +251,7 @@ const Login = () => {
         });
         if (result.status === "complete") {
           await setActive({ session: result.createdSessionId });
+          await new Promise(resolve => setTimeout(resolve, 300));
           showSuccess("Senha redefinida e login realizado com sucesso!");
           window.location.href = "/";
           return;
