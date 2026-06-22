@@ -43,7 +43,7 @@ const Login = () => {
         if (signInAttempt.status === "complete") {
           await setActive({ session: signInAttempt.createdSessionId });
           showSuccess("Login realizado com sucesso!");
-          navigate("/");
+          window.location.href = "/";
           return;
         }
 
@@ -100,7 +100,7 @@ const Login = () => {
         if (signInAttempt.status === "complete") {
           await setActive({ session: signInAttempt.createdSessionId });
           showSuccess("Login realizado com sucesso!");
-          navigate("/");
+          window.location.href = "/";
           return;
         }
 
@@ -109,7 +109,7 @@ const Login = () => {
       }
 
       showSuccess("Login simulado realizado com sucesso!");
-      navigate("/");
+      window.location.href = "/";
     } catch (err: any) {
       console.error("Erro de login:", err);
 
@@ -146,7 +146,7 @@ const Login = () => {
       if (verificationAttempt.status === "complete") {
         await setActive({ session: verificationAttempt.createdSessionId });
         showSuccess("Login confirmado com sucesso!");
-        navigate("/");
+        window.location.href = "/";
         return;
       }
 
@@ -250,7 +250,7 @@ const Login = () => {
         if (result.status === "complete") {
           await setActive({ session: result.createdSessionId });
           showSuccess("Senha redefinida e login realizado com sucesso!");
-          navigate("/");
+          window.location.href = "/";
           return;
         }
       } else {
