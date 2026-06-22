@@ -171,7 +171,7 @@ const Landing = () => {
               </div>
               <h3 className="font-heading text-lg font-medium text-[#1C3A2B]">Gestão de Clientes</h3>
               <p className="font-body text-xs md:text-sm text-[#4A7A5C] leading-relaxed font-light">
-                Mantenha um histórico completo e organized of todas as análises, fotos e evoluções de cada cliente cadastrada, acessível a qualquer momento.
+                Mantenha um histórico completo e organizado de todas as análises, fotos e evoluções de cada cliente cadastrada, acessível a qualquer momento.
               </p>
             </div>
           </div>
