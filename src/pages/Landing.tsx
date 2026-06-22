@@ -179,41 +179,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* 4. Para quem é o ELHA */}
-      <section className="bg-[#1C3A2B] text-[#E8DECE] py-24 px-6">
-        <div className="max-w-6xl mx-auto space-y-16">
-          <div className="text-center space-y-3">
-            <p className="font-label-category text-[10px] text-[#8FAF8A] tracking-[3px] uppercase">Para quem é o Elha</p>
-            <h2 className="font-heading text-2xl md:text-4xl font-normal text-[#E8DECE] max-w-3xl mx-auto leading-tight">
-              Para toda profissional que trabalha com tratamento e reconstrução de sobrancelhas e quer ir além da foto do antes e depois. Designer, micropigmentadora ou tricologista, se o seu foco é tratar e comprovar resultado, a Elha foi desenvolvida para você.
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="space-y-4 border-l-2 border-[#4A7A5C] pl-6">
-              <h3 className="font-heading text-xl font-medium text-[#E8DECE]">Designer de Sobrancelhas:</h3>
-              <p className="font-body text-xs md:text-sm text-[#8FAF8A] leading-relaxed font-light">
-                Para profissionais que trabalham com reconstrução e querem documentar cada etapa do tratamento com precisão tricológica. Chega de depender só da foto do antes e depois. Com o Elha, você entrega um relatório técnico que comprova a evolução da sobrancelha da sua cliente e justifica o valor do seu trabalho.
-              </p>
-            </div>
-
-            <div className="space-y-4 border-l-2 border-[#4A7A5C] pl-6">
-              <h3 className="font-heading text-xl font-medium text-[#E8DECE]">Micropigmentadoras</h3>
-              <p className="font-body text-xs md:text-sm text-[#8FAF8A] leading-relaxed font-light">
-                Especialistas que precisam avaliar a integridade da pele e dos fios antes de procedimentos invasivos, garantindo segurança e resultados duradouros.
-              </p>
-            </div>
-
-            <div className="space-y-4 border-l-2 border-[#4A7A5C] pl-6">
-              <h3 className="font-heading text-xl font-medium text-[#E8DECE]">Tricologistas</h3>
-              <p className="font-body text-xs md:text-sm text-[#8FAF8A] leading-relaxed font-light">
-                Clínicas e terapeutas capilares que realizam protocolos de reconstrução folicular e necessitam de acompanhamento técnico rigoroso e científico.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* 5. CTA Final */}
       <section className="px-6 py-24 max-w-4xl mx-auto text-center space-y-8">
         <h2 className="font-heading text-3xl md:text-5xl font-normal text-[#1C3A2B] leading-tight">
