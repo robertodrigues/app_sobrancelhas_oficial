@@ -122,7 +122,7 @@ const Edition = () => {
   const [isDrawingMode, setIsDrawingMode] = useState(false);
 
   const [pdfLogo, setPdfLogo] = useState<string | null>(null);
-  const [pdfBgColor, setPdfBgColor] = useState('#F5F0E8');
+  const [pdfBgColor, setPdfBgColor] = useState('#DC2626');
   const [isExporting, setIsExporting] = useState(false);
   const [isSavingToR2, setIsSavingToR2] = useState(false);
   const [savedR2Url, setSavedR2Url] = useState<string | null>(null);
@@ -130,14 +130,14 @@ const Edition = () => {
   useEffect(() => {
     if (!user?.id) {
       setPdfLogo(null);
-      setPdfBgColor('#F5F0E8');
+      setPdfBgColor('#DC2626');
       return;
     }
 
     const savedLogo = localStorage.getItem(createUserStorageKey(user.id, 'pdf_custom_logo'));
     const savedBg = localStorage.getItem(createUserStorageKey(user.id, 'pdf_custom_bg_color'));
     setPdfLogo(savedLogo);
-    setPdfBgColor(savedBg || '#F5F0E8');
+    setPdfBgColor(savedBg || '#DC2626');
   }, [user?.id]);
 
   useEffect(() => {
@@ -164,7 +164,7 @@ const Edition = () => {
 
     const canvas = canvasRef.current;
     if (canvas) {
-      const ctx = canvas.getContext('2d');
+      const ctx = canvasRef.current.getContext('2d');
       ctx?.clearRect(0, 0, canvas.width, canvas.height);
     }
   }, [user?.id]);
@@ -433,7 +433,7 @@ const Edition = () => {
             <Loader2 className="animate-spin h-12 w-12 mx-auto text-[#8FAF8A]" />
             <h3 className="font-heading text-lg font-normal text-[#E8DECE]">Compilando Edição...</h3>
             <p className="text-xs text-[#8FAF8A] leading-relaxed">
-              Estamos processando seus ajustes de zoom, textos e desenhos para salvar a versão oficial no Cloud R2.
+              Estamos processando seus ajustes de zoom, textos e desenhos para salvar a version oficial no Cloud R2.
             </p>
           </div>
         </div>
@@ -966,7 +966,7 @@ const Edition = () => {
                     setPdfBgColor(e.target.value);
                     savePdfSettings(pdfLogo, e.target.value);
                   }}
-                  placeholder="#F5F0E8"
+                  placeholder="#DC2626"
                   className="bg-[#F5F0E8] border-[#D4C9B5] text-[#1C3A2B] h-8 rounded-lg text-[10px] font-mono px-1.5 focus-visible:ring-[#1C3A2B]"
                 />
               </div>
