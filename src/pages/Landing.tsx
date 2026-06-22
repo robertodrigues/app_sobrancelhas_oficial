@@ -73,7 +73,7 @@ const Landing = () => {
         </div>
         
         <h1 className="font-heading text-3xl md:text-6xl font-normal text-[#1C3A2B] leading-tight max-w-4xl mx-auto">
-          Transforme o seu design em um <span className="italic font-medium">diagnóstico clínico e científico</span>
+          Transforme o seu design em um <span className="font-medium">diagnóstico clínico e científico</span>
         </h1>
         
         <p className="font-body text-sm md:text-base text-[#4A7A5C] max-w-2xl mx-auto font-light leading-relaxed">
