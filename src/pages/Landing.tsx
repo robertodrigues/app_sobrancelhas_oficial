@@ -1,15 +1,16 @@
 "use client";
 
 import React from "react";
-import { 
-  Sparkles, 
-  Camera, 
-  FileText, 
-  ShieldCheck, 
-  ArrowRight, 
-  CheckCircle2, 
-  Users, 
-  Eye
+import {
+  Sparkles,
+  Camera,
+  FileText,
+  ShieldCheck,
+  ArrowRight,
+  CheckCircle2,
+  Users,
+  Eye,
+  Instagram,
 } from "lucide-react";
 import Logo from "@/components/ui/Logo";
 
@@ -20,7 +21,6 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-[#F5F0E8] text-[#1C3A2B] font-sans selection:bg-[#1C3A2B] selection:text-[#E8DECE] overflow-x-hidden">
-      
       {/* Header */}
       <header className="border-b border-[#D4C9B5]/30 bg-[#F5F0E8]/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -42,15 +42,16 @@ const Landing = () => {
         <div className="inline-flex items-center gap-2 bg-[#EAF3DE] text-[#3B6D11] px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-[2px] font-label-category">
           <Sparkles size={12} /> Análise Inteligente
         </div>
-        
+
         <h1 className="font-heading text-3xl md:text-5xl font-normal text-[#1C3A2B] leading-tight max-w-4xl mx-auto">
-          Transforme cada atendimento de Reconstrução de Sobrancelha em uma <span className="font-medium">análise tricológica inteligente e documentada</span>
+          Transforme cada atendimento de Reconstrução de Sobrancelha em uma{" "}
+          <span className="font-medium">análise tricológica inteligente e documentada</span>
         </h1>
-        
+
         <p className="font-body text-sm md:text-base text-[#4A7A5C] max-w-2xl mx-auto font-light leading-relaxed">
           O primeiro app com inteligência tricológica para sobrancelhas. Análise detalhada, relatório personalizado e resultado que a sua cliente consegue ver.
         </p>
-        
+
         <div className="pt-4">
           <button
             onClick={handleGoToApp}
@@ -70,18 +71,18 @@ const Landing = () => {
               O design de sobrancelhas deixou de ser apenas intuitivo
             </h2>
             <p className="font-body text-sm text-[#4A7A5C] leading-relaxed font-light text-justify">
-              Na avaliação, a profissional sabe o que precisa melhorar na sobrancelha da 
-              cliente só que tem dificuldade em ser detalhista. Quais fios precisam ganhar 
-              espessura? Em qual região a densidade está comprometida? Onde o 
-              crescimento precisa ser estimulado? Na evolução, só fica na foto do antes e 
-              depois mostrando que mudou, mas não explica o quanto. Sem uma 
-              ferramenta de análise, essas informações ficam na cabeça e o atendimento perde a profundidade. 
-              O mercado evoluiu, e a profissional que hoje trabalha com tratamento de reconstrução precisa 
+              Na avaliação, a profissional sabe o que precisa melhorar na sobrancelha da
+              cliente só que tem dificuldade em ser detalhista. Quais fios precisam ganhar
+              espessura? Em qual região a densidade está comprometida? Onde o
+              crescimento precisa ser estimulado? Na evolução, só fica na foto do antes e
+              depois mostrando que mudou, mas não explica o quanto. Sem uma
+              ferramenta de análise, essas informações ficam na cabeça e o atendimento perde a profundidade.
+              O mercado evoluiu, e a profissional que hoje trabalha com tratamento de reconstrução precisa
               detalhar o que vê, comunicar o que planeja e comprovar o que entregou.
             </p>
             <p className="font-body text-sm text-[#1C3A2B] leading-relaxed font-medium text-justify">
-              A Elha veio para mudar essa realidade, traduzindo o olhar tricológico em 
-              dados técnicos e visuais, ela gera autoridade imediata e um diferencial 
+              A Elha veio para mudar essa realidade, traduzindo o olhar tricológico em
+              dados técnicos e visuais, ela gera autoridade imediata e um diferencial
               competitivo que nenhuma outra ferramenta do mercado entrega hoje.
             </p>
           </div>
@@ -123,8 +124,6 @@ const Landing = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          
-          {/* Card 1 */}
           <div className="bg-[#E8DECE]/40 border border-[#D4C9B5]/40 p-8 rounded-2xl space-y-4 hover:shadow-md transition-all flex flex-col justify-between">
             <div className="space-y-4">
               <div className="w-12 h-12 rounded-xl bg-[#1C3A2B] text-[#E8DECE] flex items-center justify-center">
@@ -137,7 +136,6 @@ const Landing = () => {
             </div>
           </div>
 
-          {/* Card 2 */}
           <div className="bg-[#E8DECE]/40 border border-[#D4C9B5]/40 p-8 rounded-2xl space-y-4 hover:shadow-md transition-all flex flex-col justify-between">
             <div className="space-y-4">
               <div className="w-12 h-12 rounded-xl bg-[#1C3A2B] text-[#E8DECE] flex items-center justify-center">
@@ -150,7 +148,6 @@ const Landing = () => {
             </div>
           </div>
 
-          {/* Card 3 */}
           <div className="bg-[#E8DECE]/40 border border-[#D4C9B5]/40 p-8 rounded-2xl space-y-4 hover:shadow-md transition-all flex flex-col justify-between">
             <div className="space-y-4">
               <div className="w-12 h-12 rounded-xl bg-[#1C3A2B] text-[#E8DECE] flex items-center justify-center">
@@ -163,7 +160,6 @@ const Landing = () => {
             </div>
           </div>
 
-          {/* Card 4 */}
           <div className="bg-[#E8DECE]/40 border border-[#D4C9B5]/40 p-8 rounded-2xl space-y-4 hover:shadow-md transition-all flex flex-col justify-between">
             <div className="space-y-4">
               <div className="w-12 h-12 rounded-xl bg-[#1C3A2B] text-[#E8DECE] flex items-center justify-center">
@@ -175,7 +171,6 @@ const Landing = () => {
               </p>
             </div>
           </div>
-
         </div>
       </section>
 
@@ -223,8 +218,16 @@ const Landing = () => {
           </div>
 
           <div className="flex flex-col md:flex-row items-center gap-6">
+            <a
+              href="https://www.instagram.com/elhaapp"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Abrir Instagram da ELHA"
+              className="inline-flex items-center justify-center rounded-full border border-[#D4C9B5] bg-[#F5F0E8] p-3 text-[#1C3A2B] transition-transform hover:scale-105 hover:bg-[#E8DECE]"
+            >
+              <Instagram size={18} />
+            </a>
             <div className="text-xs text-[#1C3A2B] font-medium space-y-1 md:text-right">
-              <p>Instagram: @elhaapp</p>
               <p>Pagamentos por Mercado Pago</p>
             </div>
             <button
