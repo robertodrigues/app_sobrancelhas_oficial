@@ -145,7 +145,7 @@ const Landing = () => {
               </div>
               <h3 className="font-heading text-lg font-medium text-[#1C3A2B]">Tricoscopia de Sobrancelhas</h3>
               <p className="font-body text-xs md:text-sm text-[#4A7A5C] leading-relaxed font-light">
-                Avalie profundamente a saúde da pele, descamação, óstios foliculares e identifique fios em desenvolvimento ou miniaturizados com precisão microscópica.
+                Avalie profundamente a saúde da pele, descamação, óstios foliculares e identifique fios em desenvolvimento ou miniaturizados com precisão.
               </p>
             </div>
           </div>
