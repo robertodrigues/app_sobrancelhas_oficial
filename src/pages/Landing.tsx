@@ -266,8 +266,7 @@ const Landing = () => {
                 Sobre nós
               </h3>
               <div className="space-y-2 text-sm text-[#4A7A5C]">
-                <p>Sobre nós</p>
-                <p>Sobre a transfereIA</p>
+                <p>Sobre a Elha</p>
               </div>
             </div>
 
