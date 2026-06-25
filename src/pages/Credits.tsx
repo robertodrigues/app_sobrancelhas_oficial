@@ -35,9 +35,9 @@ type CreditTransaction = {
 };
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://app-sobrancelhas-oficial-5svn.onrender.com';
-const MIN_AMOUNT = 5;
+const MIN_AMOUNT = 30; // Atualizado para R$ 30,00
 const MAX_AMOUNT = 100;
-const QUICK_VALUES = [10, 20, 50, 100];
+const QUICK_VALUES = [30, 40, 50, 100]; // Ajustado para valores válidos a partir de R$ 30,00
 
 const formatCurrency = (value: number) =>
   value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -114,7 +114,7 @@ const Credits = () => {
     }
 
     if (numericAmount < MIN_AMOUNT || numericAmount > MAX_AMOUNT) {
-      showError(`A recarga deve ficar entre ${formatCurrency(MIN_AMOUNT)} e ${formatCurrency(MAX_AMOUNT)}.`);
+      showError(`O valor mínimo para recarga é de ${formatCurrency(MIN_AMOUNT)}.`);
       return;
     }
 
@@ -132,7 +132,8 @@ const Credits = () => {
       });
 
       if (!response.ok) {
-        throw new Error(await response.text());
+        const errData = await response.json();
+        throw new Error(errData.error || 'Não foi possível gerar o Pix.');
       }
 
       const data = await response.json();
@@ -252,7 +253,7 @@ const Credits = () => {
                 min={MIN_AMOUNT}
                 max={MAX_AMOUNT}
                 step="1"
-                placeholder="Ex: 10"
+                placeholder="Ex: 30"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 className="mt-2 bg-white border-[#D4C9B5] text-[#1C3A2B] placeholder-[#4A7A5C]/70 h-11 rounded-xl text-sm focus-visible:ring-[#1C3A2B]"
@@ -271,7 +272,7 @@ const Credits = () => {
               Mínimo {formatCurrency(MIN_AMOUNT)} e máximo {formatCurrency(MAX_AMOUNT)}.
             </p>
 
-            <Button onClick={handleStartRecharge} disabled={loading || !amount.trim()} className="btn-elha-primary w-full gap-2 h-12">
+            <Button onClick={handleStartRecharge} disabled={loading || !amount.trim() || Number(amount) < MIN_AMOUNT} className="btn-elha-primary w-full gap-2 h-12">
               {loading ? <Loader2 className="animate-spin" /> : <>Gerar QR Code Pix</>}
             </Button>
           </div>
@@ -285,10 +286,10 @@ const Credits = () => {
                   <div key={item.id} className="flex items-center justify-between rounded-xl border border-[#D4C9B5] bg-[#F5F0E8] px-4 py-3">
                     <div>
                       <p className="font-heading text-sm font-medium text-[#1C3A2B]">
-                        {item.type === 'debit' ? '-' : '+'} {formatCurrency(item.amount_cents / 100)}
+                        {item.type === 'debit' ? '-' : item.type === 'bonus' ? '+' : '+'} {formatCurrency(item.amount_cents / 100)}
                       </p>
                       <p className="font-body text-[10px] text-[#4A7A5C]">
-                        {item.type === 'debit' ? 'Uso em análise' : 'Recarga Pix'} • {new Date(item.created_at).toLocaleDateString('pt-BR')}
+                        {item.type === 'debit' ? 'Uso em análise' : item.type === 'bonus' ? 'Bônus de boas-vindas' : 'Recarga Pix'} • {new Date(item.created_at).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
                     <div className="text-[10px] uppercase tracking-[1px] text-[#4A7A5C]">{item.status}</div>

@@ -10,6 +10,8 @@ import { useUser, useClerk, isClerkConfigured } from "@/lib/auth";
 import { showSuccess, showError } from "@/utils/toast";
 import { getUserStorageItem, setUserStorageItem } from "@/lib/userStorage";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://app-sobrancelhas-oficial-5svn.onrender.com";
+
 const Index = () => {
   const { user } = useUser();
   const { signOut } = useClerk();
@@ -24,6 +26,21 @@ const Index = () => {
   const navigate = useNavigate();
 
   const firstName = user?.firstName || user?.fullName?.split(" ")[0] || "Especialista";
+
+  // Aplica o bônus de boas-vindas de R$ 6,00 para novos usuários
+  const applyWelcomeBonus = async (userId: string) => {
+    try {
+      await fetch(`${API_BASE_URL.replace(/\/$/, "")}/api/credits/welcome-bonus`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),
+      });
+    } catch (err) {
+      console.warn("Erro ao tentar aplicar bônus de boas-vindas:", err);
+    }
+  };
 
   useEffect(() => {
     if (user?.id && !isClerkConfigured) {
@@ -47,6 +64,9 @@ const Index = () => {
           setLoading(false);
           return;
         }
+
+        // Aplica o bônus de boas-vindas de forma transparente
+        await applyWelcomeBonus(user.id);
 
         const { data: clientRows, error: clientError } = await supabase
           .from("clients")

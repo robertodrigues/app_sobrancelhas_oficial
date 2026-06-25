@@ -280,6 +280,11 @@ app.post('/api/credits/create-pix', async (req, res) => {
       return res.status(400).json({ error: 'userId e amount são obrigatórios.' });
     }
 
+    // Validação de valor mínimo de recarga de R$ 30,00
+    if (transactionAmount < 30) {
+      return res.status(400).json({ error: 'O valor mínimo para recarga é de R$ 30,00' });
+    }
+
     if (!mercadoPagoAccessToken) {
       return res.status(500).json({ error: 'MERCADO_PAGO_ACCESS_TOKEN não configurado.' });
     }
@@ -707,6 +712,85 @@ app.post('/api/credits/consume', async (req, res) => {
   } catch (error) {
     console.error('Erro ao consumir crédito:', error);
     return res.status(500).json({ error: 'Erro ao consumir crédito.' });
+  }
+});
+
+// Rota para aplicar o bônus de boas-vindas de R$ 6,00 (600 cents)
+app.post('/api/credits/welcome-bonus', async (req, res) => {
+  try {
+    const userId = typeof req.body?.userId === 'string' ? req.body.userId.trim() : '';
+    if (!userId) {
+      return res.status(400).json({ error: 'userId é obrigatório.' });
+    }
+
+    const supabase = getSupabaseAdmin();
+    if (!supabase) {
+      return res.status(500).json({ error: 'Configuração do Supabase ausente no servidor.' });
+    }
+
+    // Verifica se o usuário já recebeu o bônus de boas-vindas
+    const { data: existingBonus, error: checkError } = await supabase
+      .from('credit_transactions')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('type', 'bonus')
+      .maybeSingle();
+
+    if (checkError) {
+      throw checkError;
+    }
+
+    if (existingBonus) {
+      return res.json({ success: true, message: 'Bônus já concedido anteriormente.' });
+    }
+
+    // Busca a carteira atual ou cria uma nova
+    const { data: wallet, error: walletFetchError } = await supabase
+      .from('credit_wallets')
+      .select('balance_cents')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (walletFetchError) {
+      throw walletFetchError;
+    }
+
+    const currentBalance = wallet?.balance_cents || 0;
+    const bonusAmount = 600; // R$ 6,00
+    const newBalance = currentBalance + bonusAmount;
+
+    // Atualiza o saldo da carteira
+    const { error: walletError } = await supabase
+      .from('credit_wallets')
+      .upsert(
+        { user_id: userId, balance_cents: newBalance, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' },
+      );
+
+    if (walletError) {
+      throw walletError;
+    }
+
+    // Registra a transação de bônus
+    const { error: transactionError } = await supabase.from('credit_transactions').insert({
+      user_id: userId,
+      type: 'bonus',
+      amount_cents: bonusAmount,
+      payment_id: null,
+      status: 'completed',
+      metadata: {
+        reason: 'welcome_bonus',
+      },
+    });
+
+    if (transactionError) {
+      throw transactionError;
+    }
+
+    return res.json({ success: true, newBalance });
+  } catch (error) {
+    console.error('Erro ao aplicar bônus de boas-vindas:', error);
+    return res.status(500).json({ error: 'Erro ao aplicar bônus de boas-vindas.' });
   }
 });
 
