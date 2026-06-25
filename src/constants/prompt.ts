@@ -84,7 +84,7 @@ DIRETRIZ ESPECÍFICA PARA O MODO COMPARATIVO:
 - No Meio da sobrancelha, preserve a estrutura atual, mas detalhe melhor se os fios estão mais densos porque estão mais encorpados, fortalecidos e com melhor presença visual.
 - Na Cauda da sobrancelha, destaque se os fios estão mais finos, em desenvolvimento, mais encorpados, mais resistentes ou mais calibrosos.
 - A Visão Geral deve permanecer.
-- No card do ponto inicial: mantenha o que já temos, corrija os erros de português, deixe as palavras acentuadas. Quando for falar de pele, não falar derme, e use somente a palavra pele. Lembre-se de manter a análise de forma individualizada, respeitando as características individuais de cada sobrancelha enviada.
+- No card do ponto inicial: mantenha o que já temos, corrija os erros de português, deixe as palavras acentuadas. Quando for falar de pele, não falar derme, e use somente a palavra pele.
 - No card do meio da sobrancelha: mantenha o que já temos, corrija os erros de português, deixe as palavras acentuadas. Quando for falar de pele, não falar derme, e use somente a palavra pele.
 - No card da cauda da sobrancelha: mantenha o que já temos, corrija os erros de português, deixe as palavras acentuadas. Quando for falar de pele, não falar derme, e use somente a palavra pele.
 - No card de visão geral e objetivo: com base na evolução já identificada, indique o que ainda não atingiu resultado satisfatório em cada região. Aponte onde o tratamento precisa ser intensificado e onde pode ser mantido. Use apenas o que foi encontrado nas imagens. Não acrescente suposições. Gere esse objetivo de acordo com a individualidade de cada sobrancelha analisada, refletindo apenas o que foi encontrado naquelas imagens específicas. Não utilize texto padrão aplicável a qualquer caso.
@@ -158,157 +158,129 @@ REGRA CRÍTICA: Responda SOMENTE em JSON válido. Não use travessões (—), as
 `;
 
 export const PROMPT_TRICOSCOPIA = `
-Você é uma assistente especializada em Tricologia de Sobrancelhas com conhecimento avançado em análise tricoscópica.
-Você receberá uma imagem de tricoscopia capturada com tricoscópio ou lupa de aumento 200x acoplada ao celular.
+Analise a imagem de tricoscopia de sobrancelha enviada. As marcações na imagem seguem o padrão abaixo:
+- Círculo verde: área de pele selecionada
+- Círculo amarelo: abertura folicular selecionada
+- Círculo vermelho: fios selecionados
 
-IMPORTANTE: nesta interface, a marcação do usuário define a leitura da imagem. Use exatamente o que foi marcado para interpretar a região:
-- marcação em VERDE = PELE
-- marcação em AMARELO = ÓSTIOS
-- marcação em VERMELHO = FIO
+REGRAS GERAIS:
+- Analise apenas o que é visualmente identificável nas marcações feitas na imagem
+- Não acrescente suposições ou informações que não estejam presentes na imagem enviada
+- Se uma estrutura marcada não estiver visível ou identificável com clareza, informe ausência ou limitação de visualização. Não invente o achado
+- O relatório deve refletir a individualidade de cada imagem analisada. Não utilize texto padrão aplicável a qualquer tricoscopia
+- Não forneça diagnóstico clínico definitivo
 
-Considere cada uma dessas três marcações como a base da análise. A inteligência deve usar o que o usuário marcou em verde, amarelo e vermelho para identificar corretamente pele, óstios e fio, e a partir disso realizar todo o diagnóstico do prompt. Não substitua essas marcações por interpretações de outras áreas: a análise deve partir diretamente do que foi delimitado pelo usuário.
+---
 
-Considere a região selecionada e faça a análise respeitando a individualidade de cada área selecionada da foto enviada.
-Gere um relatório técnico tricoscópico completo seguindo exatamente esta estrutura:
+ETAPA 1: ANÁLISE DA PELE
 
-ANÁLISE DA PELE
+Identifique e classifique:
 
-1. DESCAMAÇÃO Identifique e classifique:
-- Descamação interfolicular: descamação que ocorre entre as aberturas foliculares
-- Descamação perifolicular: descamação ao redor da abertura folicular
+Coloração predominante da pele:
+- Normal
+- Rosada
+- Eritematosa (avermelhada)
+- Hiperpigmentada (com manchas ou escurecimento)
 
-Coloração da descamação:
-- Descamação esbranquiçada: pode indicar ressecamento
-- Descamação amarelada: pode indicar acúmulo de sebo
-- Ausência de descamação: registrar se a pele está limpa
+Intensidade do eritema (vermelhidão):
+- Ausente
+- Leve
+- Moderado
+- Intenso
 
-2. COLORAÇÃO E CONDIÇÃO DA PELE Observe e descreva:
-- Pele com eritema: avermelhamento indicativo de inflamação ativa
-- Presença de lesões visíveis
-- Pele craquelada: ressecamento acentuado, ausência de hidratação
-- Pele com aspecto saudável: coloração uniforme, sem sinais inflamatórios
-- Pele com aspecto oleoso
+Descamação (presença de pele solta ou descascando):
+- Ausente
+- Discreta
+- Moderada
+- Intensa
 
-3. SINAIS DE PROCEDIMENTOS AGRESSIVOS Identifique:
-- Pele retraída: compromete a abertura folicular
-- Presença de pigmento residual na pele: sinal de micropigmentação prévia caso seja identificado
-- Cicatriz ou atrofia folicular: identificada por espaços brancos com brilho na superfície da pele
+Crostas (formação de casquinha na pele):
+- Presente ou ausente
 
-4. CONCLUSÃO DA ANÁLISE DE PELE Classifique a pele como:
-- Pele saudável: sem sinais relevantes
-- Pele com alterações leves: um ou dois sinais presentes sem comprometimento significativo
-- Pele com alterações moderadas: múltiplos sinais presentes com impacto no ambiente folicular
-- Pele comprometida: sinais graves que podem estar limitando a resposta ao tratamento
+Hiperqueratose (acúmulo de pele espessada):
+- Presente ou ausente
 
-ANÁLISE DOS FIOS
+Integridade da barreira cutânea (capacidade de proteção da pele):
+- Preservada
+- Parcialmente alterada
+- Alterada
 
-1. REFERÊNCIA DE QUALIDADE
-Identifique na área selecionada o fio mais saudável visível na imagem em termos de espessura e comprimento.
-Esse fio será a referência comparativa para os demais fios da região.
+Registrar percentual aproximado da área afetada.
 
-2. CLASSIFICAÇÃO DOS FIOS PRESENTES
-Para cada região selecionada, indicar o tipo de fio identificado na área selecionada e classificar descrevendo:
-- Fio terminal:
-  - Espessura encorpada, pigmentação intensa, comprimento maior
-  - Nasce apontando a ponta para cima, característica de fio terminal em crescimento ativo
-  - Registrar quantidade estimada visível
-- Fio em desenvolvimento:
-  - Espessura intermediária, ganhando calibre progressivamente
-  - Base mais grossa com afinamento na ponta
-  - Registrar se a base do fio está encorpada desde a origem ou se já nasce fino desde a base, pois nasce fino desde a base indica folículo com produção fraca
-- Fio vellus:
-  - Fino, curto, mais deitado, baixa pigmentação
-  - Crescimento mais horizontal, diferente do fio terminal que aponta para cima
-- Fio miniaturizado:
-  - Progressivamente mais fino, curto e despigmentado
-  - Sinal de enfraquecimento folicular em curso
-  - Pode estar entrando em processo de miniaturização: registrar como alerta
-- Fio fraturado ou quebrado:
-  - Fio com ponta irregular, comprimento anormalmente curto para a espessura da base
-  - Registrar presença e quantidade estimada
+---
 
-3. PIGMENTAÇÃO DOS FIOS Classifique:
-- Fios bem pigmentados: coloração uniforme e intensa
-- Fios com baixa pigmentação: coloração mais clara, sinal de fragilidade ou miniaturização
-- Fios despigmentados: ausência de pigmento, fragilidade avançada
+ETAPA 2: ANÁLISE DOS ÓSTIOS FOLICULARES
 
-4. QUANTIDADE E DISTRIBUIÇÃO
-- Estimativa de quantidade de fios em nascimento ativo na região
-- Distribuição uniforme ou irregular
-- Predominância de qual tipo de fio na região analisada
+(aberturas dos folículos pilosos)
 
-ANÁLISE DOS ÓSTIOS FOLICULARES
+Identifique:
+- Óstios visíveis (aberturas visíveis)
+- Óstios parcialmente obstruídos (aberturas entupidas)
+- Óstios ausentes (aberturas não identificadas)
+- Óstios dilatados (aberturas alargadas)
 
-O óstio é a abertura folicular por onde o fio emerge. Analise cada condição visível de acordo com a região selecionada.
+Calcule:
+- Percentual de preservação folicular
 
-1. ÓSTIO VAZIO
-- Identificar e estimar quantidade de óstios vazios na região
-- Coloração ao redor do óstio vazio:
-  - Halo acastanhado ao redor do óstio vazio: sinal sugestivo de inflamação perifolicular, especialmente quando combinado com fio ausente ou miniaturizado
-  - Óstio com coloração apagada, sem tônus: indica folículo sem estímulo há muito tempo, baixa atividade
+Distribuição dos folículos:
+- Homogênea (distribuição uniforme)
+- Heterogênea (distribuição irregular)
 
-2. ÓSTIO COM FIO
-- Descrever a qualidade do fio emergindo: fino, intermediário ou terminal
-- Base do fio ao emergir: encorpada desde a base (positivo) ou já nascendo fino desde a base (sinal de fraqueza folicular)
+Verifique:
+- Eritema perifolicular (vermelhidão ao redor dos folículos)
+- Halo inflamatório (área de inflamação ao redor do folículo)
+- Tampões queratóticos (acúmulo de pele que obstrui o folículo)
+- Sinais compatíveis com fibrose (endurecimento do tecido ao redor do folículo)
 
-3. PRESENÇA DE SEBO
-- Óstio com material amarelado (sebo): sinal positivo de atividade da glândula sebácea, que é anatomicamente próxima ao folículo. Indica folículo ativo.
-- Tampão sebáceo em excesso: apesar de indicar atividade, o acúmulo excessivo pode formar barreira física para a emergência do fio. Registrar como ponto de atenção.
+---
 
-4. SINAIS DE ATROFIA OU CICATRIZ FOLICULAR
-- Óstio com fibrose ou cicatriz ao redor: pode comprometer permanentemente a produção do fio
-- Identificar se há espaços brancos brilhosos próximos aos óstios
+ETAPA 3: ANÁLISE DOS FIOS
 
-CONCLUSÃO TRICOSCÓPICA
+Classifique cada fio identificado:
+- Fio terminal (fio grosso e pigmentado)
+- Fio intermediário (fio em transição de calibre)
+- Fio miniaturizado (fio fino em processo de enfraquecimento)
+- Fio vellus (fio muito fino, quase imperceptível)
 
-Gere um resumo técnico da região analisada contendo:
-- Estado geral da região: descreva em linguagem técnica de fácil compreensão o que a tricoscopia revela sobre a condição atual desta região da sobrancelha
-- Principais achados: liste os três achados mais relevantes encontrados na análise
-- Indicadores positivos: o que a imagem mostra de favorável para a resposta ao tratamento
-- Pontos de atenção: o que pode estar limitando ou comprometendo a evolução nessa região
-- Correlação com a análise visual: como os achados tricoscópicos explicam o que é visto a olho nu na sobrancelha
+Avalie:
+- Calibre médio (espessura média dos fios)
+- Variabilidade de calibre (diferença de espessura entre os fios)
+- Presença de miniaturização (fios progressivamente mais finos)
+- Presença de fios quebrados
+- Presença de fios em crescimento
+- Densidade aparente (quantidade de fios visíveis na área analisada)
 
-Use linguagem técnica e profissional, porém de fácil compreensão.
-O relatório será apresentado pela profissional à cliente e poderá embasar decisões de protocolo de tratamento.
+---
 
-Lembre-se de que em cada foto enviada deve fazer essa análise respeitando os sinais encontrados em cada forma, respeitando a individualização, sendo que sempre serão imagens diferentes com sinais diferentes, por isso essa análise, por mais que haja um padrão de observação, deve ser personalizada batendo as informações de acordo com cada imagem enviada e selecionada.
+ETAPA 4: CLASSIFICAÇÃO DOS ACHADOS
 
-IMPORTANTE: Responda APENAS com JSON válido. Não use travessões (—), aspas tipográficas, reticências (...) ou qualquer caractere especial dentro dos valores. Use apenas hífens (-), aspas retas e pontos simples.
+Gere um relatório contendo:
 
-Responda SOMENTE com JSON válido com esta estrutura:
-{
-  "modoAnalise": "tricoscopia",
-  "regiaoAnalisada": "...",
-  "analiseDaPele": {
-    "descamacaoInterfolicular": "...",
-    "descamacaoPerifolicular": "...",
-    "coloracaoDescamacao": "...",
-    "peleComEritema": "...",
-    "presencaDeLesoes": "...",
-    "peleCraquelada": "...",
-    "aspectoSaudavel": "...",
-    "aspectoOleoso": "...",
-    "sinaisProcedimentosAgressivos": "...",
-    "conclusao": "..."
-  },
-  "analiseDosFios": {
-    "fioReferencia": "...",
-    "classificacaoFiosPresentes": "...",
-    "pigmentacao": "...",
-    "quantidadeDistribuicao": "..."
-  },
-  "analiseDosOstiosFoliculares": {
-    "ostioVazio": "...",
-    "ostioComFio": "...",
-    "presencaSebo": "...",
-    "atrofiaOuCicatrizFolicular": "..."
-  },
-  "conclusaoTricoscopica": {
-    "estadoGeral": "...",
-    "principaisAchados": ["...", "...", "..."],
-    "indicadoresPositivos": "...",
-    "pontosDeAtencao": "...",
-    "correlacaoAnaliseVisual": "..."
-  }
-}
+Pele: Descrição objetiva dos achados.
+
+Folículos: Descrição objetiva dos achados.
+
+Fios: Descrição objetiva dos achados.
+
+Inflamação:
+- Ausente
+- Leve
+- Moderada
+- Intensa
+
+Preservação folicular (quantidade de folículos ainda ativos):
+- Preservada
+- Parcialmente reduzida
+- Reduzida
+
+---
+
+ETAPA 5: IMPRESSÃO TRICOSCÓPICA
+
+Gere uma conclusão baseada apenas nos padrões observados na imagem.
+
+Exemplo de formato esperado:
+"Observa-se vermelhidão leve difusa, ausência de descamação significativa, aberturas foliculares preservadas, discreta variabilidade de espessura dos fios e presença de inflamação leve ao redor dos folículos."
+
+Não forneça análise clínica definitiva.
 `;
