@@ -90,6 +90,11 @@ app.use(cors());
 app.options('*', cors());
 app.use(express.json({ limit: '50mb' }));
 
+// Rota de Health Check para o Keep-Alive
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 app.post('/api/anthropic', async (req, res) => {
   try {
     const { messages, max_tokens, temperature } = req.body;
