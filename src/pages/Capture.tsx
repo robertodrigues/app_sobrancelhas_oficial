@@ -419,6 +419,7 @@ const Capture = () => {
                   <BrainCircuit className="mb-3 h-12 w-12 animate-pulse text-[#8FAF8A]" />
                   <p className="text-sm font-bold">Processando Diagnóstico...</p>
                   <p className="mt-1 text-[10px] text-slate-300">Analisando evolução técnica</p>
+                  <p className="mt-2 text-[10px] font-medium text-[#E8DECE]">Aguarde de 1 a 2 minutos</p>
                 </div>
               )}
             </div>
@@ -442,7 +443,7 @@ const Capture = () => {
                 onClick={() => cameraInputRef.current?.click()}
                 className="btn-elha-outline h-11 gap-1.5 text-xs"
               >
-                <Camera size={14} />
+                <Upload size={14} />
                 Câmera
               </Button>
             </div>
@@ -503,7 +504,7 @@ const Capture = () => {
             disabled={isAnalyzing}
           >
             {isAnalyzing ? <Loader2 className="animate-spin" size={14} /> : <Check size={14} />}
-            Gerar Diagnóstico
+            Gerar Análise
           </Button>
         )}
       </main>
