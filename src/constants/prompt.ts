@@ -86,10 +86,15 @@ DIRETRIZ ESPECÍFICA PARA O MODO COMPARATIVO:
 
 DIRETRIZ ESPECÍFICA PARA O MODO SEM COMPARAÇÃO:
 - O alerta de fator interno deve permanecer.
-- No Ponto Inicial da sobrancelha, mantenha a classificação de densidade e a porcentagem, continue informando a exposição da pele e se há espaçamentos entre os fios. Classifique os fios como fino, intermediário ou terminal. Na característica dos fios, diga se eles estão finos, mais pigmentados ou pouco pigmentados, usando linguagem simples.
-- No Meio da sobrancelha, mantenha a classificação de densidade e a porcentagem, continue informando a exposição da pele e os espaços entre os fios. Só diga que a pele não está exposta quando os fios estiverem bem juntos; caso contrário, diga que a pele não está totalmente coberta. Classifique os fios como fino, intermediário ou terminal. Na característica dos fios, diga se eles estão finos, mais pigmentados ou pouco pigmentados, usando linguagem simples.
-- Na Cauda da sobrancelha, mantenha o padrão atual.
+- No Ponto Inicial da sobrancelha, mantenha a classificação de densidade e a porcentagem, continue informando a exposição da pele e se há espaçamentos entre os fios. Classifique os fios como fino, intermediário ou terminal. Na característica dos fios, diga se eles estão finos, mais pigmentados ou pouco pigmentados, usando linguagem simples. Mantenha a análise de forma individualizada, respeitando as características individuais de cada sobrancelha enviada.
+- No Meio da sobrancelha, mantenha a classificação de densidade e a porcentagem, continue informando a exposição da pele e os espaços entre os fios. Só diga que a pele não está exposta quando os fios estiverem bem juntos; caso contrário, diga que a pele não está totalmente coberta. Classifique os fios como fino, intermediário ou terminal. Na característica dos fios, diga se eles estão finos, mais pigmentados ou pouco pigmentados, usando linguagem simples. Respeite as características individuais de cada sobrancelha enviada.
+- Na Cauda da sobrancelha, mantenha o padrão atual. Respeite as características individuais de cada sobrancelha enviada.
 - A Visão Geral deve permanecer.
+- No card de alerta de fator interno, mantenha o que já temos, corrija os erros de português e deixe as palavras acentuadas. Quando for falar de pele, evite usar a palavra derme e use somente pele. Acrescente que, se identificar um padrão que sugira comprometimento e falha maior nas regiões selecionadas, emita um alerta indicando que a região merece uma investigação mais detalhada, sem afirmar causa ou diagnóstico, e oriente que se recomenda uma avaliação do contexto geral para identificar possíveis fatores contribuintes, incluindo histórico de saúde e hábitos alimentares.
+- No card do Ponto Inicial, mantenha o que já temos, corrija os erros de português e deixe as palavras acentuadas. Quando for falar de pele, evite usar a palavra derme e use somente pele. Lembre-se sempre de manter a análise de forma individualizada, respeitando as características individuais de cada sobrancelha enviada.
+- No card do Meio da sobrancelha, mantenha o que já temos, corrija os erros de português e deixe as palavras acentuadas. Quando for falar de pele, evite usar a palavra derme e use somente pele. Respeite as características individuais de cada sobrancelha enviada.
+- No card da Cauda da sobrancelha, mantenha o que já temos, corrija os erros de português e deixe as palavras acentuadas. Quando for falar de pele, evite usar a palavra derme e use somente pele. Respeite as características individuais de cada sobrancelha enviada.
+- No card de Visão Geral e Objetivo, relatar o objetivo do tratamento de acordo com a necessidade individual de cada região da sobrancelha. Indique qual região precisa de maior intensidade de tratamento e por quê, com base no que foi identificado na análise. Indique o que ainda pode ser melhorado nas demais regiões, com base no que foi identificado na análise. Use apenas o que foi encontrado na imagem. Não acrescente suposições ou informações que não estejam presentes na análise. O objetivo deve ser gerado de acordo com a individualidade de cada sobrancelha analisada, refletindo apenas o que foi encontrado naquela imagem específica. Não utilize texto padrão aplicável a qualquer caso. E sempre corrija os erros de português e deixe as palavras acentuadas.
 
 ---
 
@@ -263,7 +268,7 @@ Lembre-se de que em cada foto enviada deve fazer essa análise respeitando os si
 
 IMPORTANTE: Responda APENAS com JSON válido. Não use travessões (—), aspas tipográficas, reticências (...) ou qualquer caractere especial dentro dos valores. Use apenas hífens (-), aspas retas e pontos simples.
 
-Responda SOMENTE em JSON válido com esta estrutura:
+Responda SOMENTE com JSON válido com esta estrutura:
 {
   "modoAnalise": "tricoscopia",
   "regiaoAnalisada": "...",
