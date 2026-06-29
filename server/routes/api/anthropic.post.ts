@@ -1,24 +1,82 @@
+import OpenAI from "openai";
 import { defineHandler, useRuntimeConfig } from "nitro";
 import { createError, readBody } from "nitro/h3";
 import {
   buildRepairMessages,
-  parseAnthropicResult,
-  validateAnthropicAnalysisResult,
+  parseAnalysisResult,
+  validateAnalysisResult,
   type AnalysisMode,
-} from "../../utils/anthropic";
+} from "../../utils/openai";
 
-type AnthropicRequestBody = {
-  messages?: Array<{ role: string; content: unknown }>;
+type AnalysisMessage = {
+  role: string;
+  content: unknown;
+};
+
+type AnalysisRequestBody = {
+  messages?: AnalysisMessage[];
   max_tokens?: number;
   temperature?: number;
   analysisMode?: AnalysisMode;
 };
 
 const REMOTE_BACKEND_URL = "https://app-sobrancelhas-oficial-5svn.onrender.com/api/anthropic";
-const DEFAULT_MODEL = "claude-sonnet-4-6";
+const DEFAULT_MODEL = "gpt-4o";
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
+
+const normalizeRole = (role: string): "system" | "user" | "assistant" | "developer" =>
+  role === "system" || role === "assistant" || role === "developer" ? role : "user";
+
+const toOpenAIContent = (content: unknown) => {
+  if (typeof content === "string") {
+    return content;
+  }
+
+  if (Array.isArray(content)) {
+    const parts = content.flatMap((item) => {
+      if (!isObject(item)) return [];
+
+      if (item.type === "text" && typeof item.text === "string") {
+        return [{ type: "text" as const, text: item.text }];
+      }
+
+      if (
+        item.type === "image" &&
+        isObject(item.source) &&
+        item.source.type === "base64" &&
+        typeof item.source.data === "string" &&
+        typeof item.source.media_type === "string"
+      ) {
+        return [
+          {
+            type: "image_url" as const,
+            image_url: {
+              url: `data:${item.source.media_type};base64,${item.source.data}`,
+            },
+          },
+        ];
+      }
+
+      return [];
+    });
+
+    return parts.length > 0 ? parts : "";
+  }
+
+  if (content === null || content === undefined) {
+    return "";
+  }
+
+  return String(content);
+};
+
+const convertMessagesForOpenAI = (messages: AnalysisMessage[]) =>
+  messages.map((message) => ({
+    role: normalizeRole(message.role),
+    content: toOpenAIContent(message.content),
+  }));
 
 const getCandidateText = (raw: unknown) => {
   if (isObject(raw) && isObject(raw.result)) {
@@ -44,36 +102,36 @@ const getCandidateText = (raw: unknown) => {
 };
 
 const requestUpstream = async (
-  body: AnthropicRequestBody,
+  body: AnalysisRequestBody,
   runtimeConfig: ReturnType<typeof useRuntimeConfig>,
+  messages: AnalysisMessage[],
 ) => {
-  const apiKey = runtimeConfig.NITRO_ANTHROPIC_API_KEY as string | undefined;
+  const apiKey = runtimeConfig.NITRO_OPENAI_API_KEY as string | undefined;
+  const model = (runtimeConfig.NITRO_OPENAI_MODEL as string | undefined) || DEFAULT_MODEL;
 
   if (apiKey) {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: DEFAULT_MODEL,
-        messages: body.messages,
-        max_tokens: body.max_tokens ?? 2000,
-        temperature: body.temperature ?? 0,
-      }),
+    const client = new OpenAI({ apiKey });
+
+    const response = await client.chat.completions.create({
+      model,
+      messages: convertMessagesForOpenAI(messages),
+      max_completion_tokens: body.max_tokens ?? 2000,
+      temperature: body.temperature ?? 0,
+      response_format: { type: "json_object" },
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
+    const text = response.choices[0]?.message?.content?.trim();
+
+    if (!text) {
       throw createError({
-        statusCode: response.status,
-        statusMessage: errorText || "Falha ao consultar a Anthropic.",
+        statusCode: 502,
+        statusMessage: "A OpenAI não retornou um texto válido.",
       });
     }
 
-    return response.json();
+    return {
+      content: [{ type: "text", text }],
+    };
   }
 
   const response = await fetch(REMOTE_BACKEND_URL, {
@@ -82,7 +140,7 @@ const requestUpstream = async (
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      messages: body.messages,
+      messages,
       max_tokens: body.max_tokens ?? 2000,
       temperature: body.temperature ?? 0,
       analysisMode: body.analysisMode,
@@ -102,7 +160,7 @@ const requestUpstream = async (
 
 export default defineHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig();
-  const body = await readBody<AnthropicRequestBody>(event);
+  const body = await readBody<AnalysisRequestBody>(event);
 
   if (!Array.isArray(body?.messages) || body.messages.length === 0) {
     throw createError({
@@ -136,14 +194,15 @@ export default defineHandler(async (event) => {
           analysisMode,
         },
         runtimeConfig,
+        outgoingMessages,
       );
 
       const candidateText = getCandidateText(rawResponse);
       lastResponseText = candidateText;
 
-      const parsedResult = parseAnthropicResult(candidateText);
+      const parsedResult = parseAnalysisResult(candidateText);
 
-      if (!validateAnthropicAnalysisResult(parsedResult, analysisMode)) {
+      if (!validateAnalysisResult(parsedResult, analysisMode)) {
         throw new Error("A resposta da IA não corresponde ao formato esperado.");
       }
 

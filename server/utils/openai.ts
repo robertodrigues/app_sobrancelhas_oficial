@@ -41,7 +41,7 @@ const extractJsonText = (text: string) => {
   return cleaned.slice(start, end).trim();
 };
 
-export const parseAnthropicResult = (text: string) => {
+export const parseAnalysisResult = (text: string) => {
   const jsonText = extractJsonText(text);
   return JSON.parse(jsonText);
 };
@@ -131,7 +131,7 @@ const validateTricoscopiaAnalysis = (value: unknown) => {
   );
 };
 
-export const validateAnthropicAnalysisResult = (value: unknown, mode: AnalysisMode) => {
+export const validateAnalysisResult = (value: unknown, mode: AnalysisMode) => {
   if (mode === "tricoscopia") {
     return validateTricoscopiaAnalysis(value);
   }
