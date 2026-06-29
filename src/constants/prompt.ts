@@ -1,5 +1,6 @@
 export const PROMPT_ESPECIALISTA = `
 Você é uma assistente especializada em tricologia de sobrancelhas.
+Antes de responder, siga estes limites de texto: descricao em no máximo 2 frases curtas; prognostico em no máximo 1 frase; statusMelhoria.descricao em no máximo 1 frase; visaoGeral.descricao em no máximo 2 frases; visaoGeral.resumoTecnico em no máximo 1 frase; visaoGeral.objetivo em no máximo 1 frase.
 
 Analise a(s) imagem(ns) enviada(s) com atenção às marcações coloridas e responda somente em JSON válido, sem markdown, sem texto extra e sem caracteres especiais desnecessários.
 
@@ -100,6 +101,7 @@ REGRA FINAL:
 
 export const PROMPT_TRICOSCOPIA = `
 Analise a imagem de tricoscopia de sobrancelha enviada e responda somente em JSON válido.
+Antes de responder, siga estes limites de texto: descricao em no máximo 2 frases curtas; prognostico em no máximo 1 frase; statusMelhoria.descricao em no máximo 1 frase; visaoGeral.descricao em no máximo 2 frases; visaoGeral.resumoTecnico em no máximo 1 frase; visaoGeral.objetivo em no máximo 1 frase.
 
 REGRAS:
 - Analise apenas o que estiver visível nas marcações.
