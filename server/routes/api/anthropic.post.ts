@@ -114,7 +114,7 @@ const requestUpstream = async (
     const response = await client.chat.completions.create({
       model,
       messages: convertMessagesForOpenAI(messages),
-      max_completion_tokens: 4000,
+      max_completion_tokens: 8000,
       temperature: body.temperature ?? 0,
       response_format: { type: "json_object" },
     });
