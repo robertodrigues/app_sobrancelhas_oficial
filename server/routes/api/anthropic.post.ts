@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { defineHandler, useRuntimeConfig } from "nitro";
+import { defineHandler } from "nitro";
 import { createError, readBody } from "nitro/h3";
 import {
   buildRepairMessages,
@@ -103,11 +103,10 @@ const getCandidateText = (raw: unknown) => {
 
 const requestUpstream = async (
   body: AnalysisRequestBody,
-  runtimeConfig: ReturnType<typeof useRuntimeConfig>,
   messages: AnalysisMessage[],
 ) => {
-  const apiKey = runtimeConfig.OPENAI_API_KEY as string | undefined;
-  const model = (runtimeConfig.OPENAI_MODEL as string | undefined) || DEFAULT_MODEL;
+  const apiKey = process.env.OPENAI_API_KEY;
+  const model = process.env.OPENAI_MODEL || DEFAULT_MODEL;
 
   if (apiKey) {
     const client = new OpenAI({ apiKey });
@@ -159,7 +158,6 @@ const requestUpstream = async (
 };
 
 export default defineHandler(async (event) => {
-  const runtimeConfig = useRuntimeConfig();
   const body = await readBody<AnalysisRequestBody>(event);
 
   if (!Array.isArray(body?.messages) || body.messages.length === 0) {
@@ -193,7 +191,6 @@ export default defineHandler(async (event) => {
           temperature: body.temperature,
           analysisMode,
         },
-        runtimeConfig,
         outgoingMessages,
       );
 
