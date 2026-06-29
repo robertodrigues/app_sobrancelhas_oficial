@@ -739,7 +739,8 @@ const AnalysisResult = () => {
               <section className="space-y-4">
                 <h2 className="font-label-category text-xs font-medium text-[#1C3A2B] flex items-center gap-2">
                   <Target size={18} className="text-[#4A7A5C]" />
-                  Diagnóstico por Região
+                  Análise por Região
+
                 </h2>
 
                 {regionEntries.map(([key, data]: [string, any]) => {

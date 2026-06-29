@@ -389,7 +389,8 @@ const Capture = () => {
 
                     <div className="text-center">
                       <h3 className="font-heading text-sm font-normal text-[#E8DECE]">Tudo pronto</h3>
-                      <p className="mt-0.5 font-body text-[10px] text-[#8FAF8A]">Agora você pode gerar o diagnóstico.</p>
+                      <p className="mt-0.5 font-body text-[10px] text-[#8FAF8A]">Agora você pode gerar a análise.</p>
+
                     </div>
                   </div>
                 )
@@ -417,7 +418,8 @@ const Capture = () => {
               {isAnalyzing && (
                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md">
                   <BrainCircuit className="mb-3 h-12 w-12 animate-pulse text-[#8FAF8A]" />
-                  <p className="text-sm font-bold">Processando Diagnóstico...</p>
+                  <p className="text-sm font-bold">Processando Análise...</p>
+
                   <p className="mt-1 text-[10px] text-slate-300">Analisando evolução técnica</p>
                   <p className="mt-2 text-[10px] font-medium text-[#E8DECE]">Aguarde de 1 a 2 minutos</p>
                 </div>
@@ -490,7 +492,8 @@ const Capture = () => {
                   {hasAtLeastOneImage ? 'Imagem pronta para análise' : 'Nenhuma imagem carregada'}
                 </p>
                 <p className="mt-0.5 text-[10px] text-[#4A7A5C]">
-                  {hasAtLeastOneImage ? 'Clique abaixo para gerar o diagnóstico.' : 'Escolha uma imagem para começar.'}
+                  {hasAtLeastOneImage ? 'Clique abaixo para gerar a análise.' : 'Escolha uma imagem para começar.'}
+
                 </p>
               </div>
             )}

@@ -234,7 +234,8 @@ const Landing = () => {
               </span>
             </div>
             <p className="font-body text-xs font-light text-[#4A7A5C] max-w-xs">
-              A primeira plataforma de diagnóstico clínico e científico para especialistas em sobrancelhas.
+              A primeira plataforma de análise clínica e científica para especialistas em sobrancelhas.
+
             </p>
           </div>
 
