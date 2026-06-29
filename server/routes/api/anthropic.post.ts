@@ -106,8 +106,8 @@ const requestUpstream = async (
   runtimeConfig: ReturnType<typeof useRuntimeConfig>,
   messages: AnalysisMessage[],
 ) => {
-  const apiKey = runtimeConfig.NITRO_OPENAI_API_KEY as string | undefined;
-  const model = (runtimeConfig.NITRO_OPENAI_MODEL as string | undefined) || DEFAULT_MODEL;
+  const apiKey = runtimeConfig.OPENAI_API_KEY as string | undefined;
+  const model = (runtimeConfig.OPENAI_MODEL as string | undefined) || DEFAULT_MODEL;
 
   if (apiKey) {
     const client = new OpenAI({ apiKey });
