@@ -101,7 +101,6 @@ REGRA FINAL:
 
 export const PROMPT_TRICOSCOPIA = `
 Analise a imagem de tricoscopia de sobrancelha enviada e responda somente em JSON válido.
-Antes de responder, siga estes limites de texto: descricao em no máximo 2 frases curtas; prognostico em no máximo 1 frase; statusMelhoria.descricao em no máximo 1 frase; visaoGeral.descricao em no máximo 2 frases; visaoGeral.resumoTecnico em no máximo 1 frase; visaoGeral.objetivo em no máximo 1 frase.
 
 REGRAS:
 - Analise apenas o que estiver visível nas marcações.
