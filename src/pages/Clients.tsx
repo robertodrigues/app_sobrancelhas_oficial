@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Search, UserPlus, MoreVertical, Phone, Mail, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
-import { supabase } from '@/lib/supabase';
 import { showError, showSuccess } from '@/utils/toast';
 import { useUser } from '@/lib/auth';
+import { useSupabaseClient } from '@/lib/supabase';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,6 +45,7 @@ type ClientRecord = {
 
 const Clients = () => {
   const { user } = useUser();
+  const supabase = useSupabaseClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [clients, setClients] = useState<ClientRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +63,7 @@ const Clients = () => {
 
   useEffect(() => {
     fetchClients();
-  }, [user?.id]);
+  }, [user?.id, supabase]);
 
   const fetchClients = async () => {
     setLoading(true);

@@ -21,10 +21,10 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
 import { performDualAnalysis } from '@/services/analysis';
-import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { uploadPhotoToR2 } from '@/lib/r2';
 import { useUser } from '@/lib/auth';
+import { useSupabaseClient } from '@/lib/supabase';
 import type { AnalysisImage } from '@/services/types';
 import { consumeAnalysisCredit } from '@/services/credits';
 
@@ -87,6 +87,7 @@ const dataURLtoFile = (dataurl: string, filename: string): File => {
 
 const Capture = () => {
   const { user } = useUser();
+  const supabase = useSupabaseClient();
   const [capturedImages, setCapturedImages] = useState<AnalysisImage[]>([]);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
   const [isAnnotating, setIsAnnotating] = useState(false);
@@ -135,7 +136,7 @@ const Capture = () => {
     };
 
     fetchClients();
-  }, [user?.id]);
+  }, [user?.id, supabase]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

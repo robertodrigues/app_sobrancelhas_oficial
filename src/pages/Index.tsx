@@ -13,7 +13,7 @@ import { Plus, Users, FileText, Camera, Sparkles, Loader2, ChevronRight, LogOut,
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useMemo, useState, useRef } from "react";
-import { supabase } from "@/lib/supabase";
+import { useSupabaseClient } from "@/lib/supabase";
 import { useUser, useClerk, isClerkConfigured } from "@/lib/auth";
 import { showSuccess, showError } from "@/utils/toast";
 import { getUserStorageItem, setUserStorageItem } from "@/lib/userStorage";
@@ -23,6 +23,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "https://api.elha.com.br";
 const Index = () => {
   const { user } = useUser();
   const { signOut } = useClerk();
+  const supabase = useSupabaseClient();
   const [stats, setStats] = useState({ clients: 0, analyses: 0 });
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [allAnalyses, setAllAnalyses] = useState<any[]>([]);
@@ -168,7 +169,7 @@ const Index = () => {
       clearTimeout(timer);
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [user?.id]);
+  }, [user?.id, supabase]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

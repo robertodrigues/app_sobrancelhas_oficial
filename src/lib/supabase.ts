@@ -1,8 +1,21 @@
-import { createClient } from '@supabase/supabase-js';
+import { useMemo } from "react";
+import { useSession } from "@clerk/clerk-react";
+import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = 'https://mirvthmrjscgrifzbyrc.supabase.co';
-const supabaseAnonKey = 'sb_publishable_J6W4FGdANq6K6EHdIIRHRA_qS0iyHqh';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://mirvthmrjscgrifzbyrc.supabase.co";
+const supabaseAnonKey =
+  import.meta.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_J6W4FGdANq6K6EHdIIRHRA_qS0iyHqh";
 
-export const setSupabaseAccessTokenGetter = (_getter: any) => {};
+export function useSupabaseClient() {
+  const { session } = useSession();
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  return useMemo(
+    () =>
+      createClient(supabaseUrl, supabaseAnonKey, {
+        accessToken: async () => {
+          return session?.getToken() ?? null;
+        },
+      }),
+    [session],
+  );
+}
