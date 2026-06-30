@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const crypto = require('crypto');
-const { Anthropic } = require('@anthropic-ai/sdk');
+const OpenAI = require('openai');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { v4: uuidv4 } = require('uuid');
 const { createClient } = require('@supabase/supabase-js');
@@ -10,10 +10,6 @@ const ws = require('ws');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || 'dummy-key-for-build-safety',
-});
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -86,6 +82,64 @@ const verifyMercadoPagoWebhookSignature = ({ signatureHeader, requestId, payment
   return crypto.timingSafeEqual(receivedBuffer, expectedBuffer);
 };
 
+const normalizeRole = (role) => {
+  if (role === 'system' || role === 'assistant' || role === 'developer') {
+    return role;
+  }
+
+  return 'user';
+};
+
+const toOpenAIContent = (content) => {
+  if (typeof content === 'string') {
+    return content;
+  }
+
+  if (Array.isArray(content)) {
+    return content.flatMap((item) => {
+      if (!item || typeof item !== 'object') {
+        return [];
+      }
+
+      if (item.type === 'text' && typeof item.text === 'string') {
+        return [{ type: 'text', text: item.text }];
+      }
+
+      if (
+        item.type === 'image' &&
+        item.source &&
+        typeof item.source === 'object' &&
+        item.source.type === 'base64' &&
+        typeof item.source.data === 'string' &&
+        typeof item.source.media_type === 'string'
+      ) {
+        return [
+          {
+            type: 'image_url',
+            image_url: {
+              url: `data:${item.source.media_type};base64,${item.source.data}`,
+            },
+          },
+        ];
+      }
+
+      return [];
+    });
+  }
+
+  if (content === null || content === undefined) {
+    return '';
+  }
+
+  return String(content);
+};
+
+const convertMessagesForOpenAI = (messages) =>
+  messages.map((message) => ({
+    role: normalizeRole(message.role),
+    content: toOpenAIContent(message.content),
+  }));
+
 app.use(cors());
 app.options('*', cors());
 app.use(express.json({ limit: '50mb' }));
@@ -98,62 +152,47 @@ app.get('/health', (req, res) => {
 app.post('/api/anthropic', async (req, res) => {
   try {
     const { messages, max_tokens, temperature } = req.body;
-    const model = 'claude-sonnet-4-6';
+    const openaiApiKey = process.env.OPENAI_API_KEY;
+    const model = process.env.OPENAI_MODEL || 'gpt-4o';
 
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return res.status(500).json({ error: 'ANTHROPIC_API_KEY não configurada.' });
+    if (!openaiApiKey) {
+      return res.status(500).json({ error: 'OPENAI_API_KEY não configurada.' });
     }
 
-    const response = await anthropic.messages.create({
-      model,
-      messages,
-      max_tokens,
-      temperature,
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: 'messages é obrigatório.' });
+    }
+
+    const client = new OpenAI({
+      apiKey: openaiApiKey,
     });
 
-    if (response?.content?.[0]?.type === 'text') {
-      const raw = response.content[0].text;
-      const cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
-      const start = cleaned.indexOf('{');
-      const end = cleaned.lastIndexOf('}') + 1;
-      if (start !== -1 && end > start) {
-        const jsonText = cleaned.substring(start, end);
-        const sanitized = jsonText
-          .replace(/[\u2013\u2014\u2015]/g, '-')
-          .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
-          .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
-          .replace(/\u2026/g, '...')
-          .replace(/[\u00A0\u202F\u2009]/g, ' ');
+    const response = await client.chat.completions.create({
+      model,
+      messages: convertMessagesForOpenAI(messages),
+      max_tokens: max_tokens ?? 2000,
+      temperature: temperature ?? 0,
+      response_format: { type: 'json_object' },
+    });
 
-        // Corrige quebras de linha dentro de strings JSON
-        const fixedJson = sanitized.replace(/"([^"]*)"/g, (match) => {
-          return match
-            .replace(/\n/g, ' ')
-            .replace(/\r/g, ' ')
-            .replace(/\t/g, ' ');
-        });
+    const text = response.choices[0]?.message?.content?.trim();
 
-        try {
-          const parsed = JSON.parse(fixedJson);
-          response.content[0].text = JSON.stringify(parsed);
-        } catch (e) {
-          console.error('Parse falhou:', e.message);
-          // Tenta forçar remoção de todos os controles
-          const brutal = fixedJson.replace(/[\u0000-\u001F]/g, ' ');
-          try {
-            const parsed = JSON.parse(brutal);
-            response.content[0].text = JSON.stringify(parsed);
-          } catch (e2) {
-            console.error('Parse brutal falhou:', e2.message, 'trecho:', brutal.slice(5980, 6010));
-          }
-        }
-      }
+    if (!text) {
+      return res.status(500).json({ error: 'A OpenAI não retornou um texto válido.' });
     }
 
-    res.json(response);
+    // Mantém o formato que o frontend já sabe ler: content[0].text
+    return res.json({
+      content: [
+        {
+          type: 'text',
+          text,
+        },
+      ],
+    });
   } catch (error) {
-    console.error('Erro na API da Anthropic:', error?.message);
-    return res.status(500).json({ error: error?.message || 'Erro na API da Anthropic' });
+    console.error('Erro na API da OpenAI:', error?.message);
+    return res.status(500).json({ error: error?.message || 'Erro na API da OpenAI' });
   }
 });
 
