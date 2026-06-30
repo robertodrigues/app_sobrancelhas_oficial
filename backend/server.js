@@ -2,7 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const crypto = require('crypto');
-const OpenAI = require('openai');
+const AnthropicSdk = require('@anthropic-ai/sdk');
+const Anthropic = AnthropicSdk.default || AnthropicSdk;
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { v4: uuidv4 } = require('uuid');
 const { createClient } = require('@supabase/supabase-js');
@@ -82,6 +83,8 @@ const verifyMercadoPagoWebhookSignature = ({ signatureHeader, requestId, payment
   return crypto.timingSafeEqual(receivedBuffer, expectedBuffer);
 };
 
+const isObject = (value) => typeof value === 'object' && value !== null && !Array.isArray(value);
+
 const normalizeRole = (role) => {
   if (role === 'system' || role === 'assistant' || role === 'developer') {
     return role;
@@ -90,14 +93,14 @@ const normalizeRole = (role) => {
   return 'user';
 };
 
-const toOpenAIContent = (content) => {
+const toAnthropicContent = (content) => {
   if (typeof content === 'string') {
     return content;
   }
 
   if (Array.isArray(content)) {
     return content.flatMap((item) => {
-      if (!item || typeof item !== 'object') {
+      if (!isObject(item)) {
         return [];
       }
 
@@ -107,17 +110,18 @@ const toOpenAIContent = (content) => {
 
       if (
         item.type === 'image' &&
-        item.source &&
-        typeof item.source === 'object' &&
+        isObject(item.source) &&
         item.source.type === 'base64' &&
         typeof item.source.data === 'string' &&
         typeof item.source.media_type === 'string'
       ) {
         return [
           {
-            type: 'image_url',
-            image_url: {
-              url: `data:${item.source.media_type};base64,${item.source.data}`,
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: item.source.media_type,
+              data: item.source.data,
             },
           },
         ];
@@ -134,11 +138,102 @@ const toOpenAIContent = (content) => {
   return String(content);
 };
 
-const convertMessagesForOpenAI = (messages) =>
-  messages.map((message) => ({
-    role: normalizeRole(message.role),
-    content: toOpenAIContent(message.content),
-  }));
+const convertMessagesForAnthropic = (messages) => {
+  const systemParts = [];
+  const convertedMessages = [];
+
+  messages.forEach((message) => {
+    const role = normalizeRole(message.role);
+    const content = toAnthropicContent(message.content);
+
+    if (role === 'system') {
+      if (typeof content === 'string' && content.trim()) {
+        systemParts.push(content.trim());
+      }
+      return;
+    }
+
+    convertedMessages.push({
+      role: role === 'assistant' ? 'assistant' : 'user',
+      content,
+    });
+  });
+
+  return {
+    messages: convertedMessages,
+    system: systemParts.join('\n').trim(),
+  };
+};
+
+const getCandidateText = (raw) => {
+  if (isObject(raw) && isObject(raw.result)) {
+    return JSON.stringify(raw.result);
+  }
+
+  if (isObject(raw) && Array.isArray(raw.content) && raw.content[0] && isObject(raw.content[0])) {
+    const firstItem = raw.content[0];
+    if (typeof firstItem.text === 'string') {
+      return firstItem.text;
+    }
+  }
+
+  if (isObject(raw) && typeof raw.text === 'string') {
+    return raw.text;
+  }
+
+  if (typeof raw === 'string') {
+    return raw;
+  }
+
+  return JSON.stringify(raw);
+};
+
+const requestUpstream = async (body, messages) => {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const model = process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022';
+
+  console.log('=== VERIFICANDO PROVEDOR DE IA ===');
+  console.log('ANTHROPIC_API_KEY existe?', !!process.env.ANTHROPIC_API_KEY);
+  console.log('Modelo configurado:', model);
+
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY não configurada.');
+  }
+
+  const client = new Anthropic({
+    apiKey,
+  });
+
+  const { messages: anthropicMessages, system } = convertMessagesForAnthropic(messages);
+
+  console.log('>>> CHAMANDO ANTHROPIC AGORA <<<');
+
+  const response = await client.messages.create({
+    model,
+    messages: anthropicMessages,
+    max_tokens: body.max_tokens ?? 2000,
+    temperature: body.temperature ?? 0,
+    ...(system ? { system } : {}),
+  });
+
+  const text = Array.isArray(response.content)
+    ? response.content
+        .map((block) => (block && block.type === 'text' && typeof block.text === 'string' ? block.text : ''))
+        .join('')
+        .trim()
+    : '';
+
+  if (!text) {
+    throw createError({
+      statusCode: 502,
+      statusMessage: 'A Anthropic não retornou um texto válido.',
+    });
+  }
+
+  return {
+    content: [{ type: 'text', text }],
+  };
+};
 
 app.use(cors());
 app.options('*', cors());
@@ -152,53 +247,28 @@ app.get('/health', (req, res) => {
 app.post('/api/anthropic', async (req, res) => {
   try {
     const { messages, max_tokens, temperature } = req.body;
-    const openaiApiKey = process.env.OPENAI_API_KEY;
-    const model = process.env.OPENAI_MODEL || 'gpt-4o';
 
-    console.log("=== ROTA ANTHROPIC CHAMADA NO backend/server.js ===");
-    console.log("OPENAI_API_KEY existe?", !!openaiApiKey);
-    console.log("Modelo:", model);
-
-    if (!openaiApiKey) {
-      return res.status(500).json({ error: 'OPENAI_API_KEY não configurada.' });
-    }
+    console.log('=== ROTA ANTHROPIC CHAMADA NO backend/server.js ===');
+    console.log('ANTHROPIC_API_KEY existe?', !!process.env.ANTHROPIC_API_KEY);
+    console.log('Modelo:', process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022');
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'messages é obrigatório.' });
     }
 
-    const client = new OpenAI({
-      apiKey: openaiApiKey,
-    });
-
-    console.log(">>> CHAMANDO OPENAI VIA backend/server.js <<<");
-
-    const response = await client.chat.completions.create({
-      model,
-      messages: convertMessagesForOpenAI(messages),
-      max_tokens: max_tokens ?? 2000,
-      temperature: temperature ?? 0,
-      response_format: { type: 'json_object' },
-    });
-
-    const text = response.choices[0]?.message?.content?.trim();
-
-    if (!text) {
-      return res.status(500).json({ error: 'A OpenAI não retornou um texto válido.' });
-    }
+    const response = await requestUpstream(
+      {
+        max_tokens,
+        temperature,
+      },
+      messages,
+    );
 
     // Mantém o formato que o frontend já sabe ler: content[0].text
-    return res.json({
-      content: [
-        {
-          type: 'text',
-          text,
-        },
-      ],
-    });
+    return res.json(response);
   } catch (error) {
-    console.error('Erro na API da OpenAI:', error?.message);
-    return res.status(500).json({ error: error?.message || 'Erro na API da OpenAI' });
+    console.error('Erro na API da Anthropic:', error?.message);
+    return res.status(500).json({ error: error?.message || 'Erro na API da Anthropic' });
   }
 });
 
