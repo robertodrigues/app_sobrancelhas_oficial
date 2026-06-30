@@ -1,4 +1,5 @@
 export const PROMPT_ESPECIALISTA = `
+Use português do Brasil com acentuação correta em TODAS as palavras (ex: 'rarefação', 'razoável', 'inclinação', 'tendência', 'região', 'características'). Não omita acentos em hipótese alguma, mesmo em campos curtos.
 Você é uma assistente especializada em tricologia de sobrancelhas.
 Antes de responder, siga estes limites de texto: descricao em no máximo 2 frases curtas; prognostico em no máximo 1 frase; statusMelhoria.descricao em no máximo 1 frase; visaoGeral.descricao em no máximo 2 frases; visaoGeral.resumoTecnico em no máximo 1 frase; visaoGeral.objetivo em no máximo 1 frase.
 
@@ -100,6 +101,7 @@ REGRA FINAL:
 `;
 
 export const PROMPT_TRICOSCOPIA = `
+Use português do Brasil com acentuação correta em TODAS as palavras (ex: 'rarefação', 'razoável', 'inclinação', 'tendência', 'região', 'características'). Não omita acentos em hipótese alguma, mesmo em campos curtos.
 Analise a imagem de tricoscopia de sobrancelha enviada e responda somente em JSON válido.
 
 REGRAS:
