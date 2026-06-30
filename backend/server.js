@@ -155,6 +155,10 @@ app.post('/api/anthropic', async (req, res) => {
     const openaiApiKey = process.env.OPENAI_API_KEY;
     const model = process.env.OPENAI_MODEL || 'gpt-4o';
 
+    console.log("=== ROTA ANTHROPIC CHAMADA NO backend/server.js ===");
+    console.log("OPENAI_API_KEY existe?", !!openaiApiKey);
+    console.log("Modelo:", model);
+
     if (!openaiApiKey) {
       return res.status(500).json({ error: 'OPENAI_API_KEY não configurada.' });
     }
@@ -166,6 +170,8 @@ app.post('/api/anthropic', async (req, res) => {
     const client = new OpenAI({
       apiKey: openaiApiKey,
     });
+
+    console.log(">>> CHAMANDO OPENAI VIA backend/server.js <<<");
 
     const response = await client.chat.completions.create({
       model,
