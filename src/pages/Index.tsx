@@ -1,10 +1,18 @@
 import Navbar from "@/components/layout/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, FileText, Camera, Sparkles, Loader2, ChevronRight, LogOut, Upload } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Plus, Users, FileText, Camera, Sparkles, Loader2, ChevronRight, LogOut, Upload, Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useUser, useClerk, isClerkConfigured } from "@/lib/auth";
 import { showSuccess, showError } from "@/utils/toast";
@@ -21,6 +29,11 @@ const Index = () => {
   const [showSplash, setShowSplash] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [customAvatar, setCustomAvatar] = useState<string | null>(null);
+  const [showAllAnalyses, setShowAllAnalyses] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [analysisPage, setAnalysisPage] = useState(1);
+  const analysesPerPage = 12;
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -225,7 +238,23 @@ const Index = () => {
     navigate("/resultado", { state: payload });
   };
 
+  const filteredAnalyses = useMemo(
+    () =>
+      recentActivities.filter((activity) => {
+        const name = String(activity.clients?.name || "").toLowerCase();
+        const date = new Date(activity.created_at).toLocaleString("pt-BR").toLowerCase();
+        const query = searchTerm.trim().toLowerCase();
+        if (!query) return true;
+        return name.includes(query) || date.includes(query);
+      }),
+    [recentActivities, searchTerm],
+  );
+
+  const totalAnalysisPages = Math.max(1, Math.ceil(filteredAnalyses.length / analysesPerPage));
+  const paginatedAnalyses = filteredAnalyses.slice((analysisPage - 1) * analysesPerPage, analysisPage * analysesPerPage);
+
   return (
+
     <>
       <AnimatePresence>
         {showSplash && (
@@ -383,7 +412,11 @@ const Index = () => {
               <h2 className="font-label-category text-xs font-medium text-[#8FAF8A]">
                 Atividades Recentes
               </h2>
-              <Button variant="link" className="text-[#8FAF8A] hover:text-[#1C3A2B] font-medium text-xs tracking-[1px] uppercase">
+              <Button
+                variant="link"
+                className="text-[#8FAF8A] hover:text-[#1C3A2B] font-medium text-xs tracking-[1px] uppercase"
+                onClick={() => setShowAllAnalyses(true)}
+              >
                 Ver tudo
               </Button>
             </div>
@@ -420,6 +453,88 @@ const Index = () => {
               )}
             </div>
           </section>
+
+          <Dialog open={showAllAnalyses} onOpenChange={setShowAllAnalyses}>
+            <DialogContent className="max-w-2xl bg-[#F6F0E8] text-[#1C3A2B] border-[#D4C9B5]">
+              <DialogHeader>
+                <DialogTitle>Buscar análises antigas</DialogTitle>
+                <DialogDescription>
+                  Pesquise pelo nome do cliente ou pela data da análise.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                <div className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4A7A5C]" />
+                  <Input
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setAnalysisPage(1);
+                    }}
+                    placeholder="Buscar por cliente ou data"
+                    className="pl-9 bg-white border-[#D4C9B5]"
+                  />
+                </div>
+
+                <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+                  {filteredAnalyses.length > 0 ? (
+                    paginatedAnalyses.map((activity) => (
+                      <div
+                        key={activity.id}
+                        className="flex items-center justify-between p-4 bg-[#E8DECE] text-[#1C3A2B] rounded-2xl shadow-sm border border-[#D4C9B5] cursor-pointer hover:bg-[#E8DECE]/90 transition-colors"
+                        onClick={() => {
+                          openAnalysisResult(activity);
+                          setShowAllAnalyses(false);
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#D4C9B5]">
+                            <img src={activity.image_url} alt="Análise" className="w-full h-full object-cover" />
+                          </div>
+                          <div>
+                            <h4 className="font-heading text-sm font-medium text-[#1C3A2B]">{activity.clients?.name || "Cliente"}</h4>
+                            <p className="font-body text-[10px] text-[#4A7A5C] font-medium uppercase tracking-[1px]">
+                              {new Date(activity.created_at).toLocaleDateString("pt-BR")} às {new Date(activity.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                        </div>
+                        <ChevronRight size={18} className="text-[#4A7A5C]" />
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 bg-white rounded-2xl border border-dashed border-[#D4C9B5]">
+                      <p className="font-body text-sm text-[#4A7A5C]">Nenhuma análise encontrada</p>
+                    </div>
+                  )}
+                </div>
+
+                {totalAnalysisPages > 1 && (
+                  <div className="flex items-center justify-between gap-3">
+                    <Button
+                      variant="outline"
+                      disabled={analysisPage === 1}
+                      onClick={() => setAnalysisPage((prev) => Math.max(1, prev - 1))}
+                      className="border-[#D4C9B5]"
+                    >
+                      Anterior
+                    </Button>
+                    <p className="text-xs text-[#4A7A5C]">
+                      Página {analysisPage} de {totalAnalysisPages}
+                    </p>
+                    <Button
+                      variant="outline"
+                      disabled={analysisPage === totalAnalysisPages}
+                      onClick={() => setAnalysisPage((prev) => Math.min(totalAnalysisPages, prev + 1))}
+                      className="border-[#D4C9B5]"
+                    >
+                      Próxima
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </main>
       </div>
     </>
