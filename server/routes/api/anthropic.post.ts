@@ -108,8 +108,13 @@ const requestUpstream = async (
   const apiKey = process.env.OPENAI_API_KEY;
   const model = process.env.OPENAI_MODEL || DEFAULT_MODEL;
 
+  console.log("=== VERIFICANDO PROVEDOR DE IA ===");
+  console.log("OPENAI_API_KEY existe?", !!process.env.OPENAI_API_KEY);
+  console.log("Modelo configurado:", model);
+
   if (apiKey) {
     const client = new OpenAI({ apiKey });
+    console.log(">>> CHAMANDO OPENAI AGORA <<<");
 
     const response = await client.chat.completions.create({
       model,
@@ -133,6 +138,7 @@ const requestUpstream = async (
     };
   }
 
+  console.log(">>> CAINDO NO FALLBACK - CHAMANDO CLAUDE <<<");
   const response = await fetch(REMOTE_BACKEND_URL, {
     method: "POST",
     headers: {
