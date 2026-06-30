@@ -111,7 +111,7 @@ const Index = () => {
           .select("id, client_id, image_url, result, created_at")
           .in("client_id", clientIds)
           .order("created_at", { ascending: false })
-          .limit(5);
+          .limit(200);
 
         if (recentError) {
           throw recentError;
