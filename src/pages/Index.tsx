@@ -25,6 +25,8 @@ const Index = () => {
   const { signOut } = useClerk();
   const [stats, setStats] = useState({ clients: 0, analyses: 0 });
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [allAnalyses, setAllAnalyses] = useState<any[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [showSplash, setShowSplash] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -119,18 +121,24 @@ const Index = () => {
           throw analysisCountError;
         }
 
-        const { data: recentAnalyses, error: recentError } = await supabase
+        const { data: analysesRows, error: recentError } = await supabase
           .from("analyses")
           .select("id, client_id, image_url, result, created_at")
           .in("client_id", clientIds)
           .order("created_at", { ascending: false })
-          .limit(5);
+          .limit(200);
 
         if (recentError) {
           throw recentError;
         }
 
         const clientNameById = new Map(clientList.map((client) => [client.id, client.name]));
+        const analysesWithClients = (analysesRows || []).map((analysis) => ({
+          ...analysis,
+          clients: {
+            name: clientNameById.get(analysis.client_id) || "Cliente",
+          },
+        }));
 
         setStats((prev) => ({
           ...prev,
@@ -138,14 +146,9 @@ const Index = () => {
           analyses: analysisCount || 0,
         }));
 
-        setRecentActivities(
-          (recentAnalyses || []).map((analysis) => ({
-            ...analysis,
-            clients: {
-              name: clientNameById.get(analysis.client_id) || "Cliente",
-            },
-          })),
-        );
+        setAllAnalyses(analysesWithClients);
+        setRecentActivities(analysesWithClients.slice(0, 5));
+
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
         setStats((prev) => ({
@@ -240,14 +243,14 @@ const Index = () => {
 
   const filteredAnalyses = useMemo(
     () =>
-      recentActivities.filter((activity) => {
+      allAnalyses.filter((activity) => {
         const name = String(activity.clients?.name || "").toLowerCase();
         const date = new Date(activity.created_at).toLocaleString("pt-BR").toLowerCase();
         const query = searchTerm.trim().toLowerCase();
         if (!query) return true;
         return name.includes(query) || date.includes(query);
       }),
-    [recentActivities, searchTerm],
+    [allAnalyses, searchTerm],
   );
 
   const totalAnalysisPages = Math.max(1, Math.ceil(filteredAnalyses.length / analysesPerPage));
