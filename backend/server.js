@@ -190,7 +190,7 @@ const getCandidateText = (raw) => {
 
 const requestUpstream = async (body, messages) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  const model = process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022';
+  const model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
 
   console.log('=== VERIFICANDO PROVEDOR DE IA ===');
   console.log('ANTHROPIC_API_KEY existe?', !!process.env.ANTHROPIC_API_KEY);
@@ -250,7 +250,7 @@ app.post('/api/anthropic', async (req, res) => {
 
     console.log('=== ROTA ANTHROPIC CHAMADA NO backend/server.js ===');
     console.log('ANTHROPIC_API_KEY existe?', !!process.env.ANTHROPIC_API_KEY);
-    console.log('Modelo:', process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022');
+    console.log('Modelo:', process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514');
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'messages é obrigatório.' });
