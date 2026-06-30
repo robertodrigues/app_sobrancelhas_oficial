@@ -10,7 +10,7 @@ import { useUser, useClerk, isClerkConfigured } from "@/lib/auth";
 import { showSuccess, showError } from "@/utils/toast";
 import { getUserStorageItem, setUserStorageItem } from "@/lib/userStorage";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://app-sobrancelhas-oficial-5svn.onrender.com";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://api.elha.com.br";
 
 const Index = () => {
   const { user } = useUser();

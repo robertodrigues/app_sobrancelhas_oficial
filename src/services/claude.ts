@@ -4,7 +4,7 @@ import type { AnalysisImage, AnalysisMode } from "./types";
 import { jsonrepair } from "jsonrepair";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "https://app-sobrancelhas-oficial-5svn.onrender.com";
+  import.meta.env.VITE_API_URL || "https://api.elha.com.br";
 
 type AnthropicMessageContent =
   | { type: "text"; text: string }

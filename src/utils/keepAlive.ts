@@ -1,5 +1,6 @@
 export function startKeepAlive() {
-  const apiUrl = import.meta.env.VITE_API_URL || "https://app-sobrancelhas-oficial-5svn.onrender.com";
+  const apiUrl = import.meta.env.VITE_API_URL || "https://api.elha.com.br";
+
   const healthUrl = `${apiUrl.replace(/\/$/, "")}/health`;
 
   const ping = async () => {

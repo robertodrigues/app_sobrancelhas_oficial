@@ -34,7 +34,8 @@ type CreditTransaction = {
   created_at: string;
 };
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://app-sobrancelhas-oficial-5svn.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.elha.com.br';
+
 const MIN_AMOUNT = 30; // Atualizado para R$ 30,00
 const MAX_AMOUNT = 100;
 const QUICK_VALUES = [30, 40, 50, 100]; // Ajustado para valores válidos a partir de R$ 30,00
