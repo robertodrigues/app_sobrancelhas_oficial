@@ -42,7 +42,6 @@ const Index = () => {
 
   const firstName = user?.firstName || user?.fullName?.split(" ")[0] || "Especialista";
 
-  // Aplica o bônus de boas-vindas de R$ 6,00 para novos usuários
   const applyWelcomeBonus = async (userId: string) => {
     try {
       await fetch(`${API_BASE_URL.replace(/\/$/, "")}/api/credits/welcome-bonus`, {
@@ -73,6 +72,7 @@ const Index = () => {
       setLoading(true);
       setStats({ clients: 0, analyses: 0 });
       setRecentActivities([]);
+      setAllAnalyses([]);
 
       try {
         if (!user?.id) {
@@ -80,7 +80,6 @@ const Index = () => {
           return;
         }
 
-        // Aplica o bônus de boas-vindas de forma transparente
         await applyWelcomeBonus(user.id);
 
         const { data: clientRows, error: clientError } = await supabase
@@ -96,18 +95,13 @@ const Index = () => {
         const clientList = clientRows || [];
         const clientIds = clientList.map((client) => client.id);
 
-        setStats((prev) => ({
-          ...prev,
-          clients: clientList.length,
-        }));
-
         if (clientIds.length === 0) {
-          setStats((prev) => ({
-            ...prev,
+          setStats({
             clients: clientList.length,
             analyses: 0,
-          }));
+          });
           setRecentActivities([]);
+          setAllAnalyses([]);
           setLoading(false);
           return;
         }
@@ -140,15 +134,13 @@ const Index = () => {
           },
         }));
 
-        setStats((prev) => ({
-          ...prev,
+        setStats({
           clients: clientList.length,
           analyses: analysisCount || 0,
-        }));
+        });
 
         setAllAnalyses(analysesWithClients);
         setRecentActivities(analysesWithClients.slice(0, 5));
-
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
         setStats((prev) => ({
@@ -157,6 +149,7 @@ const Index = () => {
           analyses: prev.analyses || 0,
         }));
         setRecentActivities([]);
+        setAllAnalyses([]);
       } finally {
         setLoading(false);
       }
@@ -257,7 +250,6 @@ const Index = () => {
   const paginatedAnalyses = filteredAnalyses.slice((analysisPage - 1) * analysesPerPage, analysisPage * analysesPerPage);
 
   return (
-
     <>
       <AnimatePresence>
         {showSplash && (
@@ -353,7 +345,10 @@ const Index = () => {
 
           <div className="grid grid-cols-2 gap-4 mb-8">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <Card className="border-none shadow-sm bg-[#3D6B52] rounded-2xl">
+              <Card
+                className="border-none shadow-sm bg-[#3D6B52] rounded-2xl cursor-pointer"
+                onClick={() => navigate("/clientes")}
+              >
                 <CardContent className="p-5">
                   <div className="w-10 h-10 rounded-xl bg-[#1C3A2B]/30 flex items-center justify-center mb-3 mx-auto">
                     <Users className="h-5 w-5 text-[#8FAF8A]" />
@@ -385,7 +380,6 @@ const Index = () => {
                   </p>
                 </CardContent>
               </Card>
-
             </motion.div>
           </div>
 
