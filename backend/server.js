@@ -225,10 +225,7 @@ const requestUpstream = async (body, messages) => {
     : '';
 
   if (!text) {
-    throw createError({
-      statusCode: 502,
-      statusMessage: 'A Anthropic não retornou um texto válido.',
-    });
+    throw new Error('A Anthropic não retornou um texto válido.');
   }
 
   return {
