@@ -124,7 +124,7 @@ const Index = () => {
           .select("id, client_id, image_url, result, created_at")
           .in("client_id", clientIds)
           .order("created_at", { ascending: false })
-          .limit(200);
+          .limit(5);
 
         if (recentError) {
           throw recentError;
@@ -366,7 +366,10 @@ const Index = () => {
             </motion.div>
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <Card className="border-none shadow-sm bg-[#3D6B52] rounded-2xl">
+              <Card
+                className="border-none shadow-sm bg-[#3D6B52] rounded-2xl cursor-pointer"
+                onClick={() => setShowAllAnalyses(true)}
+              >
                 <CardContent className="p-5">
                   <div className="w-10 h-10 rounded-xl bg-[#1C3A2B]/30 flex items-center justify-center mb-3 mx-auto">
                     <FileText className="h-5 w-5 text-[#8FAF8A]" />
@@ -379,6 +382,7 @@ const Index = () => {
                   </p>
                 </CardContent>
               </Card>
+
             </motion.div>
           </div>
 
