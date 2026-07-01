@@ -69,6 +69,9 @@ const calculateDensityFromCanvas = (canvas: HTMLCanvasElement): number => {
   }
 
   const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  console.log("Canvas dimensões:", canvas.width, canvas.height);
+  console.log("Amostra de pixels:", data[0], data[1], data[2], data[3], "|", data[400], data[401], data[402], data[403]);
+
   let darkPixels = 0;
   const totalPixels = width * height;
 
@@ -108,9 +111,17 @@ const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<{ dataUrl
 
   canvas.width = Math.max(1, width);
   canvas.height = Math.max(1, height);
+  console.log("Origem da imagem (src):", img.src.slice(0, 60));
   ctx.drawImage(img, x, y, width, height, 0, 0, width, height);
 
-  const density = calculateDensityFromCanvas(canvas);
+  let density = 0;
+  try {
+    density = calculateDensityFromCanvas(canvas);
+  } catch (err) {
+    console.error("Erro ao calcular densidade (possível CORS taint):", err);
+    throw err;
+  }
+
   console.log("Densidade calculada:", density, "BBox:", bbox);
   const dataUrl = await compressDataUrl(canvas.toDataURL("image/jpeg", 0.82), 900, 0.78);
 
