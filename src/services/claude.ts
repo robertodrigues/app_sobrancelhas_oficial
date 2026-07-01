@@ -72,21 +72,49 @@ const calculateDensityFromCanvas = (canvas: HTMLCanvasElement): number => {
   console.log("Canvas dimensões:", canvas.width, canvas.height);
   console.log("Amostra de pixels:", data[0], data[1], data[2], data[3], "|", data[400], data[401], data[402], data[403]);
 
-  let darkPixels = 0;
-  const totalPixels = width * height;
+  const luminances: number[] = [];
+  let totalLuminance = 0;
+  let totalPixels = 0;
 
   for (let i = 0; i < data.length; i += 4) {
-    const luminance = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-    if (luminance < DARK_THRESHOLD) {
-      darkPixels += 1;
+    const alpha = data[i + 3];
+    if (alpha === 0) {
+      continue;
     }
+
+    const luminance = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    luminances.push(luminance);
+    totalLuminance += luminance;
+    totalPixels += 1;
   }
 
   if (totalPixels === 0) {
     return 0;
   }
 
-  return Math.round((darkPixels / totalPixels) * 100);
+  luminances.sort((a, b) => a - b);
+  const quantileIndex = (quantile: number) => Math.min(luminances.length - 1, Math.max(0, Math.floor(luminances.length * quantile)));
+  const darkRef = luminances[quantileIndex(0.15)];
+  const midRef = luminances[quantileIndex(0.5)];
+  const brightRef = luminances[quantileIndex(0.85)];
+  const averageLuminance = totalLuminance / totalPixels;
+
+  const adaptiveThreshold = Math.max(45, Math.min(DARK_THRESHOLD, brightRef - 35));
+  let darkPixels = 0;
+
+  for (const luminance of luminances) {
+    if (luminance < adaptiveThreshold) {
+      darkPixels += 1;
+    }
+  }
+
+  const darkCoverage = darkPixels / totalPixels;
+  const contrastSpan = Math.max(1, brightRef - darkRef);
+  const contrastScore = Math.max(0, Math.min(1, (brightRef - averageLuminance) / contrastSpan));
+  const midToneScore = Math.max(0, Math.min(1, (brightRef - midRef) / contrastSpan));
+  const densityScore = Math.max(0, Math.min(1, darkCoverage * 0.6 + contrastScore * 0.25 + midToneScore * 0.15));
+
+  return Math.round(densityScore * 100);
 };
 
 const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<{ dataUrl: string; density: number }> => {
