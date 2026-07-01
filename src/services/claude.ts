@@ -111,6 +111,7 @@ const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<{ dataUrl
   ctx.drawImage(img, x, y, width, height, 0, 0, width, height);
 
   const density = calculateDensityFromCanvas(canvas);
+  console.log("Densidade calculada:", density, "BBox:", bbox);
   const dataUrl = await compressDataUrl(canvas.toDataURL("image/jpeg", 0.82), 900, 0.78);
 
   return { dataUrl, density };
@@ -187,6 +188,7 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
 
       for (const [name, box] of Object.entries(images[i].bboxes)) {
         const { dataUrl: croppedData, density } = await cropImage(imageDataUrl, box);
+        console.log(`Densidade: ${name}`, density);
         content.push({ type: "text", text: `Densidade calculada automaticamente para esta região: ${density}%` });
         content.push({ type: "text", text: `Detalhe ${label} - Região ${name.toUpperCase()}` });
         content.push({
