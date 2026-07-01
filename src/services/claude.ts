@@ -277,6 +277,8 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
         },
       });
 
+      console.log("bboxes recebidos para esta imagem:", images[i].bboxes);
+
       for (const [name, box] of Object.entries(images[i].bboxes)) {
         const { dataUrl: croppedData, density } = await cropImage(imageDataUrl, box);
         console.log(`Densidade: ${name}`, density);
