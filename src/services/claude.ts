@@ -6,6 +6,8 @@ import { jsonrepair } from "jsonrepair";
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "https://api.elha.com.br";
 
+const DARK_THRESHOLD = 100;
+
 type AnthropicMessageContent =
   | { type: "text"; text: string }
   | { type: "image"; source: { type: "base64"; media_type: "image/jpeg"; data: string } };
@@ -60,7 +62,31 @@ const prepareImageDataUrl = async (source: string): Promise<string> => {
   return compressDataUrl(dataUrl);
 };
 
-const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<string> => {
+const calculateDensityFromCanvas = (canvas: HTMLCanvasElement): number => {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Erro ao criar contexto canvas");
+  }
+
+  const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  let darkPixels = 0;
+  const totalPixels = width * height;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const luminance = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    if (luminance < DARK_THRESHOLD) {
+      darkPixels += 1;
+    }
+  }
+
+  if (totalPixels === 0) {
+    return 0;
+  }
+
+  return Math.round((darkPixels / totalPixels) * 100);
+};
+
+const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<{ dataUrl: string; density: number }> => {
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve(image);
@@ -84,7 +110,10 @@ const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<string> =
   canvas.height = Math.max(1, height);
   ctx.drawImage(img, x, y, width, height, 0, 0, width, height);
 
-  return compressDataUrl(canvas.toDataURL("image/jpeg", 0.82), 900, 0.78);
+  const density = calculateDensityFromCanvas(canvas);
+  const dataUrl = await compressDataUrl(canvas.toDataURL("image/jpeg", 0.82), 900, 0.78);
+
+  return { dataUrl, density };
 };
 
 const sanitizeJsonText = (text: string) =>
@@ -157,7 +186,8 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
       });
 
       for (const [name, box] of Object.entries(images[i].bboxes)) {
-        const croppedData = await cropImage(imageDataUrl, box);
+        const { dataUrl: croppedData, density } = await cropImage(imageDataUrl, box);
+        content.push({ type: "text", text: `Densidade calculada automaticamente para esta região: ${density}%` });
         content.push({ type: "text", text: `Detalhe ${label} - Região ${name.toUpperCase()}` });
         content.push({
           type: "image",
@@ -168,6 +198,7 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
           },
         });
       }
+
     }
 
     content.push({ type: "text", text: prompt });
