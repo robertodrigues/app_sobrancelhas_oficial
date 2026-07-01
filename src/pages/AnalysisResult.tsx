@@ -129,7 +129,7 @@ const AnalysisResult = () => {
     return image || analysis?.image_url || "";
   }, [analysis?.image_url, displayAfterImage, hasTwoImages, image]);
 
-  const regionEntries = Object.entries(analysis?.regioes || {});
+  const ordemRegioes = ["inicio", "meio", "cauda"] as const;
   const isTricoscopia = analysis?.modoAnalise === "tricoscopia";
 
   const getRegionTheme = (key: string) => {
@@ -252,7 +252,7 @@ const AnalysisResult = () => {
 
         if (customHeaderLogo) {
           const logoProps = pdf.getImageProperties(customHeaderLogo);
-          const logoWidth = 37.2; // Aumentado em 20% (31 * 1.2)
+          const logoWidth = 37.2;
           const logoHeight = (logoProps.height / logoProps.width) * logoWidth;
           const logoX = (pageWidth - logoWidth) / 2;
           const logoY = 4.5;
@@ -524,7 +524,10 @@ const AnalysisResult = () => {
         addKeyValue("Pontos de atenção", analysis.conclusaoTricoscopica?.pontosDeAtencao);
         addKeyValue("Correlação com a análise visual", analysis.conclusaoTricoscopica?.correlacaoAnaliseVisual);
       } else {
-        for (const [key, data] of regionEntries as [string, any][]) {
+        for (const key of ordemRegioes) {
+          const data = analysis?.regioes?.[key];
+          if (!data) continue;
+
           const labelMap: Record<string, string> = {
             inicio: "Ponto Inicial",
             meio: "Meio da Sobrancelha",
@@ -743,7 +746,10 @@ const AnalysisResult = () => {
 
                 </h2>
 
-                {regionEntries.map(([key, data]: [string, any]) => {
+                {ordemRegioes.map((key) => {
+                  const data = analysis?.regioes?.[key];
+                  if (!data) return null;
+
                   const theme = getRegionTheme(key);
                   const percent = data.densidade?.percentual || 50;
 
