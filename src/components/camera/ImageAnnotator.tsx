@@ -139,15 +139,25 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   }, [image]);
 
   const updateBBox = (region: string, x: number, y: number) => {
+    const canvas = mainCanvasRef.current;
+    if (!canvas || canvas.width === 0 || canvas.height === 0) return;
+
+    const normalizedX = x / canvas.width;
+    const normalizedY = y / canvas.height;
+    const halfBrushX = (brushSize / canvas.width) / 2;
+    const halfBrushY = (brushSize / canvas.height) / 2;
+
+    const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
+
     setCurrentBBoxes((prev) => {
-      const current = prev[region] || { minX: x, minY: y, maxX: x, maxY: y };
+      const current = prev[region] || { minX: normalizedX, minY: normalizedY, maxX: normalizedX, maxY: normalizedY };
       const next = {
         ...prev,
         [region]: {
-          minX: Math.min(current.minX, x - brushSize / 2),
-          minY: Math.min(current.minY, y - brushSize / 2),
-          maxX: Math.max(current.maxX, x + brushSize / 2),
-          maxY: Math.max(current.maxY, y + brushSize / 2),
+          minX: clamp01(Math.min(current.minX, normalizedX - halfBrushX)),
+          minY: clamp01(Math.min(current.minY, normalizedY - halfBrushY)),
+          maxX: clamp01(Math.max(current.maxX, normalizedX + halfBrushX)),
+          maxY: clamp01(Math.max(current.maxY, normalizedY + halfBrushY)),
         },
       };
 

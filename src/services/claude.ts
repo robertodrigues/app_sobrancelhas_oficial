@@ -114,12 +114,37 @@ const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<{ dataUrl
   }
 
   const padding = 28;
-  const x = Math.max(0, bbox.minX - padding);
-  const y = Math.max(0, bbox.minY - padding);
-  const width = Math.min(img.width - x, bbox.maxX - bbox.minX + padding * 2);
-  const height = Math.min(img.height - y, bbox.maxY - bbox.minY + padding * 2);
-  const expectedWidth = bbox.maxX - bbox.minX + padding * 2;
-  const expectedHeight = bbox.maxY - bbox.minY + padding * 2;
+  const imgWidth = img.naturalWidth || img.width;
+  const imgHeight = img.naturalHeight || img.height;
+  const bboxIsNormalized = bbox.maxX <= 1 && bbox.maxY <= 1 && bbox.minX >= 0 && bbox.minY >= 0;
+  const scaleX = bboxIsNormalized ? imgWidth : 1;
+  const scaleY = bboxIsNormalized ? imgHeight : 1;
+
+  const scaledMinX = bbox.minX * scaleX;
+  const scaledMinY = bbox.minY * scaleY;
+  const scaledMaxX = bbox.maxX * scaleX;
+  const scaledMaxY = bbox.maxY * scaleY;
+
+  const x = Math.max(0, scaledMinX - padding);
+  const y = Math.max(0, scaledMinY - padding);
+  const expectedWidth = scaledMaxX - scaledMinX + padding * 2;
+  const expectedHeight = scaledMaxY - scaledMinY + padding * 2;
+  const width = Math.min(imgWidth - x, expectedWidth);
+  const height = Math.min(imgHeight - y, expectedHeight);
+
+  if (width <= 0 || height <= 0) {
+    console.warn("Recorte inválido após normalização da bbox:", {
+      bbox,
+      imgWidth,
+      imgHeight,
+      x,
+      y,
+      width,
+      height,
+      bboxIsNormalized,
+    });
+    throw new Error("Recorte inválido para a imagem atual.");
+  }
 
   if (width < expectedWidth * 0.5 || height < expectedHeight * 0.5) {
     console.warn("Possível mismatch de escala entre bbox e imagem:", {
@@ -127,16 +152,17 @@ const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<{ dataUrl
       height,
       expectedWidth,
       expectedHeight,
-      imgWidth: img.width,
-      imgHeight: img.height,
+      imgWidth,
+      imgHeight,
       bbox,
+      bboxIsNormalized,
     });
   }
 
-  canvas.width = Math.max(1, width);
-  canvas.height = Math.max(1, height);
+  canvas.width = Math.max(1, Math.round(width));
+  canvas.height = Math.max(1, Math.round(height));
   console.log("Origem da imagem (src):", img.src.slice(0, 60));
-  ctx.drawImage(img, x, y, width, height, 0, 0, width, height);
+  ctx.drawImage(img, x, y, width, height, 0, 0, canvas.width, canvas.height);
 
   let density = 0;
   try {
