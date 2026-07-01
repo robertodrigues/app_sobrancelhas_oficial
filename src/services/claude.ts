@@ -279,10 +279,14 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
 
       console.log("bboxes recebidos para esta imagem:", images[i].bboxes);
 
-      for (const [name, box] of Object.entries(images[i].bboxes)) {
+      const ordemRegioes = ["ponto_inicial", "meio", "cauda"] as const;
+      for (const name of ordemRegioes) {
+        const box = images[i].bboxes[name];
+        if (!box) continue;
+
         const { dataUrl: croppedData, density } = await cropImage(imageDataUrl, box);
         console.log(`Densidade: ${name}`, density);
-        content.push({ type: "text", text: `Densidade calculada automaticamente para esta região: ${density}%` });
+        content.push({ type: "text", text: `Região: ${name.toUpperCase()} | Densidade calculada automaticamente: ${density}%` });
         content.push({ type: "text", text: `Detalhe ${label} - Região ${name.toUpperCase()}` });
         content.push({
           type: "image",
