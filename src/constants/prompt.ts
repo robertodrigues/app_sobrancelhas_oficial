@@ -25,6 +25,8 @@ MODO COMPARATIVO:
 
 O que observar em cada região:
 1. Densidade: baixa, média ou alta, com percentual coerente com a imagem.
+   - Quando houver o texto "Densidade calculada automaticamente para esta região: X%", use esse percentual como referência principal para o campo densidade.percentual e para a classificação visual.
+   - A leitura visual deve complementar esse número, não contrariá-lo.
 2. Pele visível entre os fios: ausente, discreta, moderada ou intensa.
 3. Espessura dos fios: finos, médios, grossos ou mistos.
 4. Direção e organização dos fios: informe se estão organizados, pouco organizados ou desorganizados, e se há predominância de uma direção visível.
@@ -40,6 +42,7 @@ ORIENTAÇÕES POR REGIÃO:
 - Ponto inicial: descreva preenchimento, espessura dos fios, organização e eventual necessidade de manutenção ou estímulo.
 - Meio: descreva densidade, continuidade visual e equilíbrio entre fios e pele visível.
 - Cauda: descreva com atenção especial a quantidade de fios, alinhamento, fios curtos ou em desenvolvimento e necessidade de intensificação quando houver falha.
+- Se a densidade automática vier junto do recorte, essa informação deve prevalecer sobre impressões visuais subjetivas quando houver dúvida entre duas leituras.
 
 VISÃO GERAL:
 - Descreva o aspecto geral de forma individualizada.
