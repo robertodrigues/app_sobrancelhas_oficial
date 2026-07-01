@@ -92,10 +92,20 @@ const calculateDensityFromCanvas = (canvas: HTMLCanvasElement): number => {
 const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<{ dataUrl: string; density: number }> => {
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
+    image.crossOrigin = "anonymous";
     image.onload = () => resolve(image);
     image.onerror = reject;
     image.src = base64Str;
   });
+
+  if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
+    console.error("Imagem inválida ou não carregada corretamente:", {
+      naturalWidth: img.naturalWidth,
+      naturalHeight: img.naturalHeight,
+      complete: img.complete,
+    });
+    throw new Error("Imagem não carregou corretamente antes do recorte.");
+  }
 
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -108,6 +118,20 @@ const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<{ dataUrl
   const y = Math.max(0, bbox.minY - padding);
   const width = Math.min(img.width - x, bbox.maxX - bbox.minX + padding * 2);
   const height = Math.min(img.height - y, bbox.maxY - bbox.minY + padding * 2);
+  const expectedWidth = bbox.maxX - bbox.minX + padding * 2;
+  const expectedHeight = bbox.maxY - bbox.minY + padding * 2;
+
+  if (width < expectedWidth * 0.5 || height < expectedHeight * 0.5) {
+    console.warn("Possível mismatch de escala entre bbox e imagem:", {
+      width,
+      height,
+      expectedWidth,
+      expectedHeight,
+      imgWidth: img.width,
+      imgHeight: img.height,
+      bbox,
+    });
+  }
 
   canvas.width = Math.max(1, width);
   canvas.height = Math.max(1, height);
