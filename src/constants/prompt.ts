@@ -25,8 +25,9 @@ MODO COMPARATIVO:
 
 O que observar em cada região:
 1. Densidade: baixa, média ou alta, com percentual coerente com a imagem.
-   - Quando houver o texto "Densidade calculada automaticamente para esta região: X%", use esse percentual como referência principal para o campo densidade.percentual e para a classificação visual.
-   - A leitura visual deve complementar esse número, não contrariá-lo.
+   - Quando houver o texto "Densidade calculada automaticamente para esta região: X%", use esse percentual como referência principal e literal para o campo densidade.percentual e para a classificação visual.
+   - A leitura visual deve apenas complementar esse número, nunca contrariá-lo.
+   - Se houver conflito entre leitura visual e o número automático, o número automático prevalece.
 2. Pele visível entre os fios: ausente, discreta, moderada ou intensa.
 3. Espessura dos fios: finos, médios, grossos ou mistos.
 4. Direção e organização dos fios: informe se estão organizados, pouco organizados ou desorganizados, e se há predominância de uma direção visível.
@@ -34,20 +35,20 @@ O que observar em cada região:
 6. Status de melhoria: explique o que ainda pode ser melhorado naquela região.
 7. Escala de dano: descreva o nível visual de preservação ou fragilidade.
 
-ALERTA INTERNO:
-- Gere apenas quando houver rarefação mais evidente, falhas expressivas ou um padrão visual que mereça investigação.
-- O texto deve sugerir avaliação do contexto geral, incluindo histórico de saúde e hábitos alimentares, sem afirmar diagnóstico.
-
 ORIENTAÇÕES POR REGIÃO:
 - Ponto inicial: descreva preenchimento, espessura dos fios, organização e eventual necessidade de manutenção ou estímulo.
 - Meio: descreva densidade, continuidade visual e equilíbrio entre fios e pele visível.
 - Cauda: descreva com atenção especial a quantidade de fios, alinhamento, fios curtos ou em desenvolvimento e necessidade de intensificação quando houver falha.
 - Se a densidade automática vier junto do recorte, essa informação deve prevalecer sobre impressões visuais subjetivas quando houver dúvida entre duas leituras.
+- Não reduza a densidade percentual abaixo do valor automático sem evidência visual muito forte e clara.
+- Não eleve a gravidade da leitura visual além do que o número automático sustenta.
 
 VISÃO GERAL:
 - Descreva o aspecto geral de forma individualizada.
 - Explique se a sobrancelha está mais cheia, mais espaçada ou com mistura de áreas.
 - Indique qual região precisa de maior intensidade de tratamento e por quê.
+- Dê preferência ao comportamento numérico das densidades por região ao resumir a conclusão geral.
+- Não conclua uma região como crítica ou muito comprometida se a densidade automática estiver em faixa intermediária e não houver evidência visual muito forte para isso.
 - Diga o que ainda pode ser melhorado nas demais regiões, usando apenas o que estiver visível.
 
 REGRA FINAL:
