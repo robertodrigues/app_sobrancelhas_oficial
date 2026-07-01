@@ -98,8 +98,10 @@ const calculateDensityFromCanvas = (canvas: HTMLCanvasElement): number => {
   const midRef = luminances[quantileIndex(0.5)];
   const brightRef = luminances[quantileIndex(0.85)];
   const averageLuminance = totalLuminance / totalPixels;
+  const brightnessSpread = Math.max(1, brightRef - darkRef);
+  const contrastSpread = Math.max(1, brightRef - midRef);
 
-  const adaptiveThreshold = Math.max(45, Math.min(DARK_THRESHOLD, brightRef - 35));
+  const adaptiveThreshold = Math.max(55, Math.min(DARK_THRESHOLD, brightRef - brightnessSpread * 0.35));
   let darkPixels = 0;
 
   for (const luminance of luminances) {
@@ -109,10 +111,10 @@ const calculateDensityFromCanvas = (canvas: HTMLCanvasElement): number => {
   }
 
   const darkCoverage = darkPixels / totalPixels;
-  const contrastSpan = Math.max(1, brightRef - darkRef);
-  const contrastScore = Math.max(0, Math.min(1, (brightRef - averageLuminance) / contrastSpan));
-  const midToneScore = Math.max(0, Math.min(1, (brightRef - midRef) / contrastSpan));
-  const densityScore = Math.max(0, Math.min(1, darkCoverage * 0.6 + contrastScore * 0.25 + midToneScore * 0.15));
+  const contrastScore = Math.max(0, Math.min(1, (brightRef - averageLuminance) / brightnessSpread));
+  const midToneScore = Math.max(0, Math.min(1, contrastSpread / brightnessSpread));
+  const highlightPenalty = Math.max(0, Math.min(1, (averageLuminance - brightRef) / 255));
+  const densityScore = Math.max(0, Math.min(1, darkCoverage * 0.5 + contrastScore * 0.3 + midToneScore * 0.2 - highlightPenalty * 0.15));
 
   return Math.round(densityScore * 100);
 };
