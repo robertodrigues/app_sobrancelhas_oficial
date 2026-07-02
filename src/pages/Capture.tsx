@@ -19,7 +19,7 @@ import {
   FileText,
   Columns,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
 import { performDualAnalysis } from '@/services/analysis';
 import { cn } from '@/lib/utils';
@@ -36,6 +36,13 @@ const ANALYSIS_MODES = [
 ] as const;
 
 type AnalysisMode = (typeof ANALYSIS_MODES)[number]['id'];
+
+type PendingAnalysisState = {
+  image?: string;
+  bboxes?: Record<string, RegionBBox>;
+};
+
+const PENDING_ANALYSIS_KEY = 'elha:pending-analysis';
 
 const MAX_UPLOAD_DIMENSION = 8192;
 
@@ -89,6 +96,7 @@ const dataURLtoFile = (dataurl: string, filename: string): File => {
 const Capture = () => {
   const { user } = useUser();
   const supabase = useSupabaseClient();
+  const location = useLocation();
   const [capturedImages, setCapturedImages] = useState<AnalysisImage[]>([]);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
   const [isAnnotating, setIsAnnotating] = useState(false);
@@ -110,6 +118,33 @@ const Capture = () => {
     setAnalysisMode('single');
     setIsAnalyzing(false);
   }, [user?.id]);
+
+  useEffect(() => {
+    const pendingState = location.state as PendingAnalysisState | null;
+    const savedState = sessionStorage.getItem(PENDING_ANALYSIS_KEY);
+
+    const payload = pendingState?.image
+      ? pendingState
+      : savedState
+        ? (JSON.parse(savedState) as PendingAnalysisState)
+        : null;
+
+    if (!payload?.image) {
+      return;
+    }
+
+    setCapturedImages([
+      {
+        url: payload.image,
+        dataUrl: payload.image,
+        bboxes: payload.bboxes || {},
+      },
+    ]);
+    setCurrentImage(null);
+    setIsAnnotating(false);
+    setSelectedClientId('');
+    sessionStorage.removeItem(PENDING_ANALYSIS_KEY);
+  }, [location.state]);
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -279,7 +314,10 @@ const Capture = () => {
         image={currentImage}
         onConfirm={async (croppedImage) => {
           setIsAnnotating(false);
-          await addImageToFlow(croppedImage, {});
+          sessionStorage.setItem(PENDING_ANALYSIS_KEY, JSON.stringify({ image: croppedImage }));
+          navigate('/mapeamento-tecnico', {
+            state: { image: croppedImage },
+          });
         }}
         onCancel={() => setIsAnnotating(false)}
       />

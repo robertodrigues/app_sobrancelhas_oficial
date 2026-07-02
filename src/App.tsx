@@ -17,6 +17,7 @@ import Edition from "./pages/Edition";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Landing from "./pages/Landing";
+import TechnicalMapping from "./pages/TechnicalMapping";
 
 const queryClient = new QueryClient();
 
@@ -126,6 +127,12 @@ const App = () => {
                 <Route path="/captura" element={
                   <AppRouteGuard>
                     <SignedIn><Capture /></SignedIn>
+                    <SignedOut><RedirectToSignIn /></SignedOut>
+                  </AppRouteGuard>
+                } />
+                <Route path="/mapeamento-tecnico" element={
+                  <AppRouteGuard>
+                    <SignedIn><TechnicalMapping /></SignedIn>
                     <SignedOut><RedirectToSignIn /></SignedOut>
                   </AppRouteGuard>
                 } />
