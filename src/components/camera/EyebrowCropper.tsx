@@ -97,6 +97,57 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
     setOffset({ x: 0, y: 0 });
   }, [loadedImage, stageSize.width, stageSize.height]);
 
+  useEffect(() => {
+    const preventGesture = (event: Event) => {
+      event.preventDefault();
+    };
+
+    document.addEventListener('gesturestart', preventGesture);
+    document.addEventListener('gesturechange', preventGesture);
+    document.addEventListener('gestureend', preventGesture);
+
+    return () => {
+      document.removeEventListener('gesturestart', preventGesture);
+      document.removeEventListener('gesturechange', preventGesture);
+      document.removeEventListener('gestureend', preventGesture);
+    };
+  }, []);
+
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+
+    const wheelHandler = (event: WheelEvent) => {
+      event.preventDefault();
+      if (!loadedImage) return;
+
+      const rect = el.getBoundingClientRect();
+      const focusPoint = {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+      };
+
+      const zoomFactor = event.deltaY < 0 ? 1.08 : 0.92;
+      const nextScale = clampScale(scale * zoomFactor);
+      const safeBaseScale = scale || 1;
+      const scaleRatio = nextScale / safeBaseScale;
+      const centerX = stageSize.width / 2;
+      const centerY = stageSize.height / 2;
+
+      setScale(nextScale);
+      setOffset({
+        x: offset.x + (1 - scaleRatio) * (focusPoint.x - centerX - offset.x),
+        y: offset.y + (1 - scaleRatio) * (focusPoint.y - centerY - offset.y),
+      });
+    };
+
+    el.addEventListener('wheel', wheelHandler, { passive: false });
+
+    return () => {
+      el.removeEventListener('wheel', wheelHandler);
+    };
+  }, [loadedImage, offset, scale, stageSize]);
+
   const resetPosition = () => {
     if (!loadedImage || stageSize.width === 0 || stageSize.height === 0) return;
 
@@ -132,7 +183,7 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
     });
   };
 
-  const handleWheel = (event: React.WheelEvent) => {
+  const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     event.preventDefault();
     if (!loadedImage) return;
 
@@ -185,7 +236,7 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
     if (!loadedImage) return;
     if (!pointersRef.current.has(event.pointerId)) return;
 
-    pointersRef.current.set(event.pointerId, getPoint(event));
+    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
     const pointers = Array.from(pointersRef.current.values());
     const gesture = gestureRef.current;
 
@@ -281,8 +332,14 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
 
     ctx.drawImage(
       loadedImage,
-      sourceX, sourceY, sourceW, sourceH,
-      destX, destY, destW, destH,
+      sourceX,
+      sourceY,
+      sourceW,
+      sourceH,
+      destX,
+      destY,
+      destW,
+      destH,
     );
 
     return canvas.toDataURL('image/jpeg', 0.95);
@@ -344,7 +401,6 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
-          onWheel={handleWheel}
         >
           {isReady && loadedImage ? (
             <>
