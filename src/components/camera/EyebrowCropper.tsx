@@ -236,7 +236,7 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
     if (!loadedImage) return;
     if (!pointersRef.current.has(event.pointerId)) return;
 
-    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    pointersRef.current.set(event.pointerId, getPoint(event));
     const pointers = Array.from(pointersRef.current.values());
     const gesture = gestureRef.current;
 
@@ -401,6 +401,7 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
+          onWheel={handleWheel}
         >
           {isReady && loadedImage ? (
             <>
