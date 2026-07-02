@@ -294,10 +294,10 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
   };
 
   const totalScale = baseScale * scale;
-  const displayW = loadedImage ? loadedImage.naturalWidth : 0;
-  const displayH = loadedImage ? loadedImage.naturalHeight : 0;
-  const imageX = stageSize.width / 2 + offset.x;
-  const imageY = stageSize.height / 2 + offset.y;
+  const displayW = loadedImage ? loadedImage.naturalWidth * totalScale : 0;
+  const displayH = loadedImage ? loadedImage.naturalHeight * totalScale : 0;
+  const imageX = stageSize.width / 2 + offset.x - displayW / 2;
+  const imageY = stageSize.height / 2 + offset.y - displayH / 2;
 
   return (
     <div className="absolute inset-0 z-50 flex h-full w-full flex-col overflow-hidden bg-[#1C3A2B] text-[#E8DECE]">
@@ -353,8 +353,6 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
                   top: imageY,
                   userSelect: 'none',
                   pointerEvents: 'none',
-                  transform: `translate(-50%, -50%) scale(${totalScale})`,
-                  transformOrigin: 'center center',
                 }}
               />
 
@@ -423,12 +421,7 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <Button
-            variant="outline"
-            onClick={onCancel}
-            disabled={isConfirming}
-            className="h-12 border-[#4A7A5C] bg-transparent text-[#E8DECE] hover:bg-white/10"
-          >
+          <Button variant="outline" onClick={onCancel} disabled={isConfirming} className="h-12 border-[#4A7A5C] bg-transparent text-[#E8DECE] hover:bg-white/10">
             Cancelar
           </Button>
           <Button
