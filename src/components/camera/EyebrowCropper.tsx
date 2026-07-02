@@ -257,25 +257,32 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
     const drawX = stageSize.width / 2 + offset.x - renderW / 2;
     const drawY = stageSize.height / 2 + offset.y - renderH / 2;
 
-    const sourceX = Math.max(0, (0 - drawX) / totalScale);
-    const sourceY = Math.max(0, (0 - drawY) / totalScale);
-    const sourceW = Math.min(loadedImage.naturalWidth - sourceX, stageSize.width / totalScale);
-    const sourceH = Math.min(loadedImage.naturalHeight - sourceY, stageSize.height / totalScale);
+    const visLeft = Math.max(0, drawX);
+    const visTop = Math.max(0, drawY);
+    const visRight = Math.min(stageSize.width, drawX + renderW);
+    const visBottom = Math.min(stageSize.height, drawY + renderH);
 
-    if (sourceW <= 0 || sourceH <= 0) {
-      throw new Error('Não foi possível recortar a imagem.');
+    const visWidth = visRight - visLeft;
+    const visHeight = visBottom - visTop;
+
+    if (visWidth <= 0 || visHeight <= 0) {
+      throw new Error('A imagem está fora da área de recorte. Ajuste a posição.');
     }
+
+    const sourceX = (visLeft - drawX) / totalScale;
+    const sourceY = (visTop - drawY) / totalScale;
+    const sourceW = visWidth / totalScale;
+    const sourceH = visHeight / totalScale;
+
+    const destX = visLeft * outputScale;
+    const destY = visTop * outputScale;
+    const destW = visWidth * outputScale;
+    const destH = visHeight * outputScale;
 
     ctx.drawImage(
       loadedImage,
-      sourceX,
-      sourceY,
-      sourceW,
-      sourceH,
-      0,
-      0,
-      canvas.width,
-      canvas.height,
+      sourceX, sourceY, sourceW, sourceH,
+      destX, destY, destW, destH,
     );
 
     return canvas.toDataURL('image/jpeg', 0.95);
