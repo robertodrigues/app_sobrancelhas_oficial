@@ -69,12 +69,8 @@ const calculateDensityFromCanvas = (canvas: HTMLCanvasElement): number => {
   }
 
   const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  console.log("Canvas dimensões:", canvas.width, canvas.height);
-  console.log("Amostra de pixels:", data[0], data[1], data[2], data[3], "|", data[400], data[401], data[402], data[403]);
-
-  const luminances: number[] = [];
-  let totalLuminance = 0;
-  let totalPixels = 0;
+  const totalPixels = width * height;
+  let darkPixels = 0;
 
   for (let i = 0; i < data.length; i += 4) {
     const alpha = data[i + 3];
@@ -83,40 +79,21 @@ const calculateDensityFromCanvas = (canvas: HTMLCanvasElement): number => {
     }
 
     const luminance = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-    luminances.push(luminance);
-    totalLuminance += luminance;
-    totalPixels += 1;
-  }
-
-  if (totalPixels === 0) {
-    return 0;
-  }
-
-  luminances.sort((a, b) => a - b);
-  const quantileIndex = (quantile: number) => Math.min(luminances.length - 1, Math.max(0, Math.floor(luminances.length * quantile)));
-  const darkRef = luminances[quantileIndex(0.15)];
-  const midRef = luminances[quantileIndex(0.5)];
-  const brightRef = luminances[quantileIndex(0.85)];
-  const averageLuminance = totalLuminance / totalPixels;
-  const brightnessSpread = Math.max(1, brightRef - darkRef);
-  const contrastSpread = Math.max(1, brightRef - midRef);
-
-  const adaptiveThreshold = Math.max(55, Math.min(DARK_THRESHOLD, brightRef - brightnessSpread * 0.35));
-  let darkPixels = 0;
-
-  for (const luminance of luminances) {
-    if (luminance < adaptiveThreshold) {
+    if (luminance < DARK_THRESHOLD) {
       darkPixels += 1;
     }
   }
 
-  const darkCoverage = darkPixels / totalPixels;
-  const contrastScore = Math.max(0, Math.min(1, (brightRef - averageLuminance) / brightnessSpread));
-  const midToneScore = Math.max(0, Math.min(1, contrastSpread / brightnessSpread));
-  const highlightPenalty = Math.max(0, Math.min(1, (averageLuminance - brightRef) / 255));
-  const densityScore = Math.max(0, Math.min(1, darkCoverage * 0.5 + contrastScore * 0.3 + midToneScore * 0.2 - highlightPenalty * 0.15));
+  const lightPixels = totalPixels - darkPixels;
+  const densityPercent = totalPixels === 0 ? 0 : Math.round((darkPixels / totalPixels) * 100);
 
-  return Math.round(densityScore * 100);
+  console.log("Pixels totais da ROI:", totalPixels);
+  console.log("Pixels classificados como fio:", darkPixels);
+  console.log("Pixels classificados como pele:", lightPixels);
+  console.log("Threshold usado:", DARK_THRESHOLD);
+  console.log(`Percentual de fio: ${densityPercent}%`);
+
+  return densityPercent;
 };
 
 const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<{ dataUrl: string; density: number }> => {
@@ -143,7 +120,6 @@ const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<{ dataUrl
     throw new Error("Erro ao criar contexto canvas");
   }
 
-  const padding = 28;
   const imgWidth = img.naturalWidth || img.width;
   const imgHeight = img.naturalHeight || img.height;
   const bboxIsNormalized = bbox.maxX <= 1 && bbox.maxY <= 1 && bbox.minX >= 0 && bbox.minY >= 0;
@@ -155,10 +131,17 @@ const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<{ dataUrl
   const scaledMaxX = bbox.maxX * scaleX;
   const scaledMaxY = bbox.maxY * scaleY;
 
-  const x = Math.max(0, scaledMinX - padding);
-  const y = Math.max(0, scaledMinY - padding);
-  const expectedWidth = scaledMaxX - scaledMinX + padding * 2;
-  const expectedHeight = scaledMaxY - scaledMinY + padding * 2;
+  const bboxWidth = scaledMaxX - scaledMinX;
+  const bboxHeight = scaledMaxY - scaledMinY;
+
+  const paddingX = Math.round(bboxWidth * 0.05);
+  const paddingY = Math.round(bboxHeight * 0.05);
+  console.log("Padding calculado para a região:", { paddingX, paddingY, bboxWidth, bboxHeight });
+
+  const x = Math.max(0, scaledMinX - paddingX);
+  const y = Math.max(0, scaledMinY - paddingY);
+  const expectedWidth = bboxWidth + paddingX * 2;
+  const expectedHeight = bboxHeight + paddingY * 2;
   const width = Math.min(imgWidth - x, expectedWidth);
   const height = Math.min(imgHeight - y, expectedHeight);
 
