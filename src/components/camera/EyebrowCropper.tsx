@@ -183,16 +183,6 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
     });
   };
 
-  const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    if (!loadedImage) return;
-
-    const focusPoint = getPoint(event);
-    const zoomFactor = event.deltaY < 0 ? 1.08 : 0.92;
-    const nextScale = clampScale(scale * zoomFactor);
-    applyZoomAtPoint(nextScale, focusPoint, scale, offset);
-  };
-
   const pointerDistance = (a: { x: number; y: number }, b: { x: number; y: number }) =>
     Math.hypot(a.x - b.x, a.y - b.y);
 
@@ -401,7 +391,6 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
-          onWheel={handleWheel}
         >
           {isReady && loadedImage ? (
             <>
