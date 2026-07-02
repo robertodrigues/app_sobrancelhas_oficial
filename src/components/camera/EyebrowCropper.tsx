@@ -309,7 +309,7 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
       <div className="flex-1 px-3 py-3 sm:px-4">
         <div
           ref={stageRef}
-          className="relative h-full min-h-[62vh] overflow-hidden rounded-3xl border-2 border-dashed border-[#8FAF8A]/60 bg-[#10261C] touch-none"
+          className="relative mx-auto h-full min-h-[62vh] w-full max-w-[420px] overflow-hidden rounded-3xl border-2 border-dashed border-[#8FAF8A]/60 bg-[#10261C] aspect-[3/4] touch-none"
           style={{ touchAction: 'none' }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -317,6 +317,7 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
           onPointerCancel={handlePointerUp}
           onWheel={handleWheel}
         >
+
           {isReady && loadedImage ? (
             <>
               <img
@@ -337,10 +338,10 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_45%,rgba(15,31,22,0.08)_100%)]" />
 
               <div className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 px-6">
-                <div className="mx-auto max-w-[440px]">
-                  <svg viewBox="0 0 360 150" className="h-24 w-full opacity-90">
+                <div className="mx-auto max-w-[280px]">
+                  <svg viewBox="0 0 220 260" className="h-[72vh] w-full opacity-90">
                     <path
-                      d={guideCurve}
+                      d="M 82 22 C 58 56, 44 95, 42 136 C 40 178, 53 214, 74 240"
                       fill="none"
                       stroke="#FFD089"
                       strokeWidth="4"
@@ -348,7 +349,7 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
                       strokeDasharray="8 8"
                     />
                     <path
-                      d="M 48 94 C 110 56, 176 56, 264 94"
+                      d="M 138 22 C 162 56, 176 95, 178 136 C 180 178, 167 214, 146 240"
                       fill="none"
                       stroke="#8FAF8A"
                       strokeWidth="2"
@@ -356,8 +357,18 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
                       strokeDasharray="5 6"
                       opacity="0.9"
                     />
+                    <path
+                      d="M 88 30 C 94 82, 94 138, 88 232"
+                      fill="none"
+                      stroke="#E8DECE"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeDasharray="3 6"
+                      opacity="0.8"
+                    />
                   </svg>
                 </div>
+
               </div>
 
               <div className="pointer-events-none absolute inset-x-0 bottom-5 flex justify-center px-5">
