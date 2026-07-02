@@ -19,7 +19,7 @@ REGRAS PRINCIPAIS:
 - A análise de espessura, direção e textura dos fios deve ser descrita apenas como observação visual qualitativa subjetiva da imagem (ex: "aparenta direção diagonal", "parece apresentar espessura média"), nunca como fato técnico medido. O relatório deve deixar essa distinção implícita na linguagem usada, evitando afirmações categóricas sobre biologia capilar.
 - Não afirme causas internas como fato. Use linguagem de sugestão, como "pode indicar" e "sugere investigação".
 - Não invente achados que não estejam visíveis.
-- Se algo não puder ser confirmado pela foto, escreva exatamente: "Não é possível confirmar este aspect apenas pela imagem".
+- Se algo não puder ser confirmado pela foto, escreva exatamente: "Não é possível confirmar este aspecto apenas pela imagem".
 - Corrija erros de português, use acentuação correta e linguagem técnica simples.
 - Evite termos excessivamente científicos. Use "pele" em vez de "derme", "espessura dos fios" em vez de "calibre dos fios" e "pele visível entre os fios" sempre que falar de exposição.
 - O campo "cor" em statusMelhoria deve ser exatamente:
@@ -135,7 +135,7 @@ REGRAS:
 Avalie:
 - Pele: coloração, eritema, descamação, crostas e integridade da barreira.
 - Folículos: preservação, obstrução, dilatação, distribuição e sinais perifoliculares.
-- Fios: calibre, miniaturização, terminal, intermediário, vellus, quebra e crescimento.
+- Fios: calibre aparente, tipo aparente (terminal, intermediário ou vellus, apenas por aspecto visual), quebra visível.
 - Conclusão: descreva apenas os padrões observados, com linguagem simples e técnica.
 
 Formato esperado:

@@ -69,8 +69,11 @@ const calculateDensityFromCanvas = (canvas: HTMLCanvasElement): number => {
   }
 
   const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const totalPixels = width * height;
+  console.log("Canvas dimensões:", canvas.width, canvas.height);
+  console.log("Amostra de pixels:", data[0], data[1], data[2], data[3], "|", data[400], data[401], data[402], data[403]);
+
   let darkPixels = 0;
+  let totalPixels = 0;
 
   for (let i = 0; i < data.length; i += 4) {
     const alpha = data[i + 3];
@@ -78,6 +81,7 @@ const calculateDensityFromCanvas = (canvas: HTMLCanvasElement): number => {
       continue;
     }
 
+    totalPixels += 1;
     const luminance = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
     if (luminance < DARK_THRESHOLD) {
       darkPixels += 1;
