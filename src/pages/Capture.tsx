@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import EyebrowCropper from '@/components/camera/EyebrowCropper';
 import ImageAnnotator, { RegionBBox } from '@/components/camera/ImageAnnotator';
 import AnalysisModeIllustration from '@/components/camera/AnalysisModeIllustration';
 import AnalysisTutorialDialog from '@/components/camera/AnalysisTutorialDialog';
@@ -153,7 +154,7 @@ const Capture = () => {
     }
   };
 
-  const addImageToFlow = async (annotatedBase64: string, bboxes: Record<string, RegionBBox>) => {
+  const addImageToFlow = async (annotatedBase64: string, bboxes: Record<string, RegionBBox> = {}) => {
     if (!user?.id) {
       showError('Sessão inválida. Faça login novamente.');
       return;
@@ -274,10 +275,12 @@ const Capture = () => {
 
   if (isAnnotating && currentImage) {
     return (
-      <ImageAnnotator
+      <EyebrowCropper
         image={currentImage}
-        mode={analysisMode}
-        onSave={(img, boxes) => addImageToFlow(img, boxes)}
+        onConfirm={async (croppedImage) => {
+          setIsAnnotating(false);
+          await addImageToFlow(croppedImage, {});
+        }}
         onCancel={() => setIsAnnotating(false)}
       />
     );
