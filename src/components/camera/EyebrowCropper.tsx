@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeftRight, Check, RotateCcw, X } from 'lucide-react';
 
@@ -10,11 +10,9 @@ interface EyebrowCropperProps {
 
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 4;
-const OUTPUT_SCALE = 2;
 
 const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCancel }) => {
   const stageRef = useRef<HTMLDivElement>(null);
-  const imageRef = useRef<HTMLImageElement | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const pointersRef = useRef(new Map<number, { x: number; y: number }>());
   const gestureRef = useRef<{
@@ -33,22 +31,13 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
 
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const [loadedImage, setLoadedImage] = useState<HTMLImageElement | null>(null);
+  const [baseScale, setBaseScale] = useState(1);
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isConfirming, setIsConfirming] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
   const clampScale = (value: number) => Math.max(MIN_SCALE, Math.min(MAX_SCALE, value));
-
-  const getPoint = (event: React.PointerEvent | React.WheelEvent) => {
-    const rect = stageRef.current?.getBoundingClientRect();
-    if (!rect) return { x: 0, y: 0 };
-
-    return {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
-    };
-  };
 
   const updateStageSize = () => {
     const el = stageRef.current;
@@ -63,7 +52,6 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
     }
 
     img.onload = () => {
-      imageRef.current = img;
       setLoadedImage(img);
       setIsReady(true);
     };
@@ -99,23 +87,40 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
       return;
     }
 
-    const fitScale = Math.min(stageSize.width / loadedImage.naturalWidth, stageSize.height / loadedImage.naturalHeight);
-    const nextScale = clampScale(fitScale || 1);
+    const fitScale = Math.min(
+      stageSize.width / loadedImage.naturalWidth,
+      stageSize.height / loadedImage.naturalHeight,
+    );
 
-    setScale(nextScale);
+    setBaseScale(fitScale || 1);
+    setScale(1);
     setOffset({ x: 0, y: 0 });
   }, [loadedImage, stageSize.width, stageSize.height]);
 
   const resetPosition = () => {
     if (!loadedImage || stageSize.width === 0 || stageSize.height === 0) return;
 
-    const fitScale = Math.min(stageSize.width / loadedImage.naturalWidth, stageSize.height / loadedImage.naturalHeight);
-    setScale(clampScale(fitScale || 1));
+    setScale(1);
     setOffset({ x: 0, y: 0 });
   };
 
-  const applyZoomAtPoint = (nextScale: number, focusPoint: { x: number; y: number }, baseScale: number, baseOffset: { x: number; y: number }) => {
-    const safeBaseScale = baseScale || 1;
+  const getPoint = (event: React.PointerEvent | React.WheelEvent) => {
+    const rect = stageRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
+
+    return {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    };
+  };
+
+  const applyZoomAtPoint = (
+    nextScale: number,
+    focusPoint: { x: number; y: number },
+    baseUserScale: number,
+    baseOffset: { x: number; y: number },
+  ) => {
+    const safeBaseScale = baseUserScale || 1;
     const scaleRatio = nextScale / safeBaseScale;
     const centerX = stageSize.width / 2;
     const centerY = stageSize.height / 2;
@@ -162,6 +167,7 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
         startScale: scale,
         startDistance: 0,
       };
+      return;
     }
 
     if (pointers.length === 2) {
@@ -202,7 +208,7 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
 
   const handlePointerUp = (event: React.PointerEvent) => {
     const el = stageRef.current;
-    if (el.hasPointerCapture(event.pointerId)) {
+    if (el && el.hasPointerCapture(event.pointerId)) {
       el.releasePointerCapture(event.pointerId);
     }
 
@@ -245,14 +251,20 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
     ctx.fillStyle = '#0f1f16';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const renderW = loadedImage.naturalWidth * scale;
-    const renderH = loadedImage.naturalHeight * scale;
+    const totalScale = baseScale * scale;
+    const renderW = loadedImage.naturalWidth * totalScale;
+    const renderH = loadedImage.naturalHeight * totalScale;
     const drawX = stageSize.width / 2 + offset.x - renderW / 2;
     const drawY = stageSize.height / 2 + offset.y - renderH / 2;
-    const sourceX = (0 - drawX) / scale;
-    const sourceY = (0 - drawY) / scale;
-    const sourceW = stageSize.width / scale;
-    const sourceH = stageSize.height / scale;
+
+    const sourceX = Math.max(0, (0 - drawX) / totalScale);
+    const sourceY = Math.max(0, (0 - drawY) / totalScale);
+    const sourceW = Math.min(loadedImage.naturalWidth - sourceX, stageSize.width / totalScale);
+    const sourceH = Math.min(loadedImage.naturalHeight - sourceY, stageSize.height / totalScale);
+
+    if (sourceW <= 0 || sourceH <= 0) {
+      throw new Error('Não foi possível recortar a imagem.');
+    }
 
     ctx.drawImage(
       loadedImage,
@@ -281,27 +293,37 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
     }
   };
 
-  const displayW = loadedImage ? loadedImage.naturalWidth * scale : 0;
-  const displayH = loadedImage ? loadedImage.naturalHeight * scale : 0;
-  const imageX = stageSize.width / 2 + offset.x - displayW / 2;
-  const imageY = stageSize.height / 2 + offset.y - displayH / 2;
-  const guideCurve = useMemo(
-    () =>
-      'M 25 70 C 85 18, 155 18, 215 62 C 252 88, 286 96, 333 78',
-    [],
-  );
+  const totalScale = baseScale * scale;
+  const displayW = loadedImage ? loadedImage.naturalWidth : 0;
+  const displayH = loadedImage ? loadedImage.naturalHeight : 0;
+  const imageX = stageSize.width / 2 + offset.x;
+  const imageY = stageSize.height / 2 + offset.y;
 
   return (
     <div className="absolute inset-0 z-50 flex h-full w-full flex-col overflow-hidden bg-[#1C3A2B] text-[#E8DECE]">
       <div className="flex shrink-0 items-center justify-between border-b border-[#4A7A5C]/30 bg-[#1C3A2B] px-3 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:px-4">
-        <Button variant="ghost" size="icon" onClick={onCancel} disabled={isConfirming} className="text-[#E8DECE] hover:bg-white/10">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onCancel}
+          disabled={isConfirming}
+          className="text-[#E8DECE] hover:bg-white/10 disabled:opacity-50"
+        >
           <X size={24} />
         </Button>
         <div className="min-w-0 flex-1 px-2 text-center">
           <h2 className="truncate font-heading text-base font-normal text-[#E8DECE]">Ajuste o enquadramento</h2>
-          <p className="font-label-category text-[9px] text-[#8FAF8A]">Arraste e dê zoom para posicionar a sobrancelha na moldura</p>
+          <p className="font-label-category text-[9px] text-[#8FAF8A]">
+            Arraste e dê zoom para posicionar a sobrancelha na moldura
+          </p>
         </div>
-        <Button variant="ghost" size="icon" onClick={resetPosition} disabled={isConfirming} className="text-[#E8DECE] hover:bg-white/10">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={resetPosition}
+          disabled={isConfirming}
+          className="text-[#E8DECE] hover:bg-white/10"
+        >
           <RotateCcw size={20} />
         </Button>
       </div>
@@ -317,7 +339,6 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
           onPointerCancel={handlePointerUp}
           onWheel={handleWheel}
         >
-
           {isReady && loadedImage ? (
             <>
               <img
@@ -332,6 +353,8 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
                   top: imageY,
                   userSelect: 'none',
                   pointerEvents: 'none',
+                  transform: `translate(-50%, -50%) scale(${totalScale})`,
+                  transformOrigin: 'center center',
                 }}
               />
 
@@ -368,13 +391,16 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
                     />
                   </svg>
                 </div>
-
               </div>
 
               <div className="pointer-events-none absolute inset-x-0 bottom-5 flex justify-center px-5">
                 <div className="max-w-sm rounded-2xl border border-[#4A7A5C] bg-[#1C3A2B]/90 px-4 py-3 text-center backdrop-blur-md">
-                  <p className="font-heading text-sm font-normal text-[#E8DECE]">Centralize a sobrancelha na moldura</p>
-                  <p className="mt-1 text-[10px] text-[#8FAF8A]">A foto será recortada exatamente como estiver aqui</p>
+                  <p className="font-heading text-sm font-normal text-[#E8DECE]">
+                    Centralize a sobrancelha na moldura
+                  </p>
+                  <p className="mt-1 text-[10px] text-[#8FAF8A]">
+                    A foto será recortada exatamente como estiver aqui
+                  </p>
                 </div>
               </div>
             </>
@@ -397,7 +423,12 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <Button variant="outline" onClick={onCancel} disabled={isConfirming} className="h-12 border-[#4A7A5C] bg-transparent text-[#E8DECE] hover:bg-white/10">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={isConfirming}
+            className="h-12 border-[#4A7A5C] bg-transparent text-[#E8DECE] hover:bg-white/10"
+          >
             Cancelar
           </Button>
           <Button
