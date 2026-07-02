@@ -402,6 +402,8 @@ const EyebrowCropper: React.FC<EyebrowCropperProps> = ({ image, onConfirm, onCan
                 style={{
                   width: displayW,
                   height: displayH,
+                  maxWidth: 'none',
+                  maxHeight: 'none',
                   left: imageX,
                   top: imageY,
                   userSelect: 'none',
