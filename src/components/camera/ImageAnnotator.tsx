@@ -5,11 +5,17 @@ import { cn } from '@/lib/utils';
 import AnalysisProcessingOverlay from '@/components/camera/AnalysisProcessingOverlay';
 import type { RegionAnalysisMetrics } from '@/services/types';
 
+type Point = {
+  x: number;
+  y: number;
+};
+
 export interface RegionBBox {
   minX: number;
   minY: number;
   maxX: number;
   maxY: number;
+  points: Point[];
 }
 
 interface ImageAnnotatorProps {
@@ -31,11 +37,6 @@ type Region = 'ponto_inicial' | 'meio' | 'cauda' | 'falha' | 'ideal' | null;
 type DrawingSnapshot = {
   data: string;
   bboxes: Record<string, RegionBBox>;
-};
-
-type Point = {
-  x: number;
-  y: number;
 };
 
 type DensityComputation = {
@@ -106,12 +107,11 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     return inside;
   };
 
-  const getRegionPolygon = (bbox: RegionBBox, width: number, height: number) => [
-    { x: bbox.minX * width, y: bbox.minY * height },
-    { x: bbox.maxX * width, y: bbox.minY * height },
-    { x: bbox.maxX * width, y: bbox.maxY * height },
-    { x: bbox.minX * width, y: bbox.maxY * height },
-  ];
+  const getRegionPolygon = (bbox: RegionBBox, width: number, height: number) =>
+    bbox.points.map((point) => ({
+      x: point.x * width,
+      y: point.y * height,
+    }));
 
   const getPolygonBounds = (polygon: Point[]) => {
     const xs = polygon.map((point) => point.x);
@@ -234,7 +234,18 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
 
     setCurrentBBoxes((prev) => {
-      const current = prev[region] || { minX: normalizedX, minY: normalizedY, maxX: normalizedX, maxY: normalizedY };
+      const current =
+        prev[region] || {
+          minX: normalizedX,
+          minY: normalizedY,
+          maxX: normalizedX,
+          maxY: normalizedY,
+          points: [],
+        };
+
+      const nextPoint = { x: normalizedX, y: normalizedY };
+      const nextPoints = [...current.points, nextPoint];
+
       const next = {
         ...prev,
         [region]: {
@@ -242,6 +253,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
           minY: clamp01(Math.min(current.minY, normalizedY - halfBrushY)),
           maxX: clamp01(Math.max(current.maxX, normalizedX + halfBrushX)),
           maxY: clamp01(Math.max(current.maxY, normalizedY + halfBrushY)),
+          points: nextPoints,
         },
       };
 
@@ -418,7 +430,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     for (const region of regions) {
       const bbox = regionsBBoxes[region];
 
-      if (!bbox) {
+      if (!bbox || bbox.points.length < 3) {
         densities[region] = 0;
         metrics[region] = {
           percentual_falha: 0,
