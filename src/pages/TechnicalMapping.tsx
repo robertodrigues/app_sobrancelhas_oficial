@@ -3,11 +3,13 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ImageAnnotator, { type RegionBBox } from "@/components/camera/ImageAnnotator";
+import type { RegionAnalysisMetrics } from "@/services/types";
 
 type TechnicalMappingState = {
   image?: string;
   bboxes?: Record<string, RegionBBox>;
   densities?: Record<string, number>;
+  analysisMetrics?: Record<string, RegionAnalysisMetrics>;
   step?: "regions" | "density";
 };
 
@@ -31,6 +33,7 @@ const TechnicalMapping = () => {
     annotatedImage: string,
     bboxes: Record<string, RegionBBox>,
     densities?: Record<string, number>,
+    analysisMetrics?: Record<string, RegionAnalysisMetrics>,
   ) => {
     if (!state?.image) return;
 
@@ -47,6 +50,7 @@ const TechnicalMapping = () => {
       image: annotatedImage,
       bboxes: state.bboxes || bboxes,
       densities,
+      analysisMetrics,
       step: "density" as const,
     };
 

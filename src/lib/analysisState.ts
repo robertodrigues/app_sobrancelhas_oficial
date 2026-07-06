@@ -4,6 +4,7 @@ export type CompactAnalysisImage = {
   url: string;
   bboxes?: AnalysisImage["bboxes"];
   densities?: AnalysisImage["densities"];
+  analysisMetrics?: AnalysisImage["analysisMetrics"];
 };
 
 export type AnalysisRouteState = {
@@ -13,10 +14,11 @@ export type AnalysisRouteState = {
 };
 
 const compactImages = (images: AnalysisImage[]): CompactAnalysisImage[] =>
-  images.map(({ url, bboxes, densities }) => ({
+  images.map(({ url, bboxes, densities, analysisMetrics }) => ({
     url,
     bboxes,
     densities,
+    analysisMetrics,
   }));
 
 export const buildAnalysisRouteState = (

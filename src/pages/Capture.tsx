@@ -43,6 +43,7 @@ type PendingAnalysisState = {
   image?: string;
   bboxes?: Record<string, RegionBBox>;
   densities?: Record<string, number>;
+  analysisMetrics?: AnalysisImage['analysisMetrics'];
   step?: 'regions' | 'density';
 };
 
@@ -132,6 +133,7 @@ const Capture = () => {
         dataUrl: pendingState.image,
         bboxes: pendingState.bboxes || {},
         densities: pendingState.densities,
+        analysisMetrics: pendingState.analysisMetrics,
       },
     ]);
 
@@ -264,13 +266,18 @@ const Capture = () => {
       resultToNavigate = {
         analysis: routeState.analysis,
         image: routeState.image,
-        allImages: capturedImages.map(({ url, bboxes, densities }) => ({ url, bboxes, densities } as AnalysisImage)),
+        allImages: capturedImages,
       };
 
       persistAnalysisRouteState({
         analysis: resultToNavigate.analysis,
         image: resultToNavigate.image,
-        allImages: resultToNavigate.allImages.map(({ url, bboxes, densities }) => ({ url, bboxes, densities })),
+        allImages: resultToNavigate.allImages.map(({ url, bboxes, densities, analysisMetrics }) => ({
+          url,
+          bboxes,
+          densities,
+          analysisMetrics,
+        })),
       });
 
       showSuccess('Análise concluída!');

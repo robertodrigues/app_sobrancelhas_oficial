@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Undo2, Redo2, Check, X, MousePointer2, Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AnalysisProcessingOverlay from '@/components/camera/AnalysisProcessingOverlay';
+import type { RegionAnalysisMetrics } from '@/services/types';
 
 export interface RegionBBox {
   minX: number;
@@ -16,7 +17,8 @@ interface ImageAnnotatorProps {
   onSave: (
     annotatedImage: string,
     bboxes: Record<string, RegionBBox>,
-    densities?: Record<string, number>
+    densities?: Record<string, number>,
+    analysisMetrics?: Record<string, RegionAnalysisMetrics>,
   ) => Promise<void> | void;
   onCancel: () => void;
   mode?: 'single' | 'comparison' | 'tricoscopia';
@@ -29,6 +31,16 @@ type Region = 'ponto_inicial' | 'meio' | 'cauda' | 'falha' | 'ideal' | null;
 type DrawingSnapshot = {
   data: string;
   bboxes: Record<string, RegionBBox>;
+};
+
+type Point = {
+  x: number;
+  y: number;
+};
+
+type DensityComputation = {
+  densities: Record<string, number>;
+  metrics: Record<string, RegionAnalysisMetrics>;
 };
 
 const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
@@ -56,8 +68,8 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     ponto_inicial: '#16A34A',
     meio: '#EAB308',
     cauda: '#DC2626',
-    falha: 'rgba(220, 38, 38, 0.65)', // Red with 65% opacity for density mapping
-    ideal: 'rgba(22, 163, 74, 0.65)',  // Green with 65% opacity for density mapping
+    falha: 'rgba(220, 38, 38, 0.65)',
+    ideal: 'rgba(22, 163, 74, 0.65)',
   };
 
   const footerLabels =
@@ -72,6 +84,46 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
           meio: 'Meio',
           cauda: 'Cauda',
         };
+
+  const pointInPolygon = (point: Point, polygon: Point[]) => {
+    let inside = false;
+
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i, i += 1) {
+      const xi = polygon[i].x;
+      const yi = polygon[i].y;
+      const xj = polygon[j].x;
+      const yj = polygon[j].y;
+
+      const intersects =
+        yi > point.y !== yj > point.y &&
+        point.x < ((xj - xi) * (point.y - yi)) / (yj - yi || 1) + xi;
+
+      if (intersects) {
+        inside = !inside;
+      }
+    }
+
+    return inside;
+  };
+
+  const getRegionPolygon = (bbox: RegionBBox, width: number, height: number) => [
+    { x: bbox.minX * width, y: bbox.minY * height },
+    { x: bbox.maxX * width, y: bbox.minY * height },
+    { x: bbox.maxX * width, y: bbox.maxY * height },
+    { x: bbox.minX * width, y: bbox.maxY * height },
+  ];
+
+  const getPolygonBounds = (polygon: Point[]) => {
+    const xs = polygon.map((point) => point.x);
+    const ys = polygon.map((point) => point.y);
+
+    return {
+      minX: Math.max(0, Math.floor(Math.min(...xs))),
+      minY: Math.max(0, Math.floor(Math.min(...ys))),
+      maxX: Math.max(0, Math.ceil(Math.max(...xs))),
+      maxY: Math.max(0, Math.ceil(Math.max(...ys))),
+    };
+  };
 
   const render = () => {
     const canvas = mainCanvasRef.current;
@@ -347,65 +399,89 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     restoreSnapshot(snapshot);
   };
 
-  const calculateDensities = (): Record<string, number> => {
+  const calculateDensityMetrics = (): DensityComputation => {
     const drawingCanvas = drawingCanvasRef.current;
-    if (!drawingCanvas || !regionsBBoxes) return {};
+    if (!drawingCanvas || !regionsBBoxes) {
+      return { densities: {}, metrics: {} };
+    }
 
     const dCtx = drawingCanvas.getContext('2d');
-    if (!dCtx) return {};
+    if (!dCtx) {
+      return { densities: {}, metrics: {} };
+    }
 
     const { data, width, height } = dCtx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
     const densities: Record<string, number> = {};
-
+    const metrics: Record<string, RegionAnalysisMetrics> = {};
     const regions = ['ponto_inicial', 'meio', 'cauda'] as const;
+
     for (const region of regions) {
       const bbox = regionsBBoxes[region];
+
       if (!bbox) {
-        densities[region] = 100; // Default to 100% if no bbox
+        densities[region] = 0;
+        metrics[region] = {
+          percentual_falha: 0,
+          percentual_ideal: 0,
+          area_pixels: 0,
+          falha_pixels: 0,
+          ideal_pixels: 0,
+        };
         continue;
       }
 
-      const startX = Math.max(0, Math.floor(bbox.minX * width));
-      const startY = Math.max(0, Math.floor(bbox.minY * height));
-      const endX = Math.min(width, Math.ceil(bbox.maxX * width));
-      const endY = Math.min(height, Math.ceil(bbox.maxY * height));
+      const polygon = getRegionPolygon(bbox, width, height);
+      const bounds = getPolygonBounds(polygon);
 
       let falhaPixels = 0;
       let idealPixels = 0;
+      let areaPixels = 0;
 
-      for (let y = startY; y < endY; y++) {
-        for (let x = startX; x < endX; x++) {
+      for (let y = bounds.minY; y < bounds.maxY; y += 1) {
+        for (let x = bounds.minX; x < bounds.maxX; x += 1) {
+          const inside = pointInPolygon({ x: x + 0.5, y: y + 0.5 }, polygon);
+
+          if (!inside) {
+            continue;
+          }
+
+          areaPixels += 1;
+
           const idx = (y * width + x) * 4;
           const r = data[idx];
           const g = data[idx + 1];
           const b = data[idx + 2];
           const a = data[idx + 3];
 
-          if (a > 30) { // If painted (alpha threshold)
-            // Check if it's closer to Red (Falha) or Green (Ideal)
-            // Falha: rgba(220, 38, 38, 0.65) -> r=220, g=38, b=38
-            // Ideal: rgba(22, 163, 74, 0.65) -> r=22, g=163, b=74
-            if (r > g && r > 100) {
-              falhaPixels++;
-            } else if (g > r && g > 100) {
-              idealPixels++;
-            }
+          if (a <= 30) {
+            continue;
+          }
+
+          const isRed = r > g && r > b && r > 100;
+          const isGreen = g > r && g > b && g > 100;
+
+          if (isRed) {
+            falhaPixels += 1;
+          } else if (isGreen) {
+            idealPixels += 1;
           }
         }
       }
 
-      const totalPainted = falhaPixels + idealPixels;
-      if (totalPainted > 0) {
-        // Density is the percentage of ideal (healthy) pixels
-        densities[region] = Math.round((idealPixels / totalPainted) * 100);
-      } else {
-        // If nothing was painted in this region, default to 100% (no falhas)
-        densities[region] = 100;
-      }
+      const percentualFalha = areaPixels > 0 ? Math.round((falhaPixels / areaPixels) * 100) : 0;
+      const percentualIdeal = areaPixels > 0 ? Math.round((idealPixels / areaPixels) * 100) : 0;
+
+      densities[region] = percentualIdeal;
+      metrics[region] = {
+        percentual_falha: percentualFalha,
+        percentual_ideal: percentualIdeal,
+        area_pixels: areaPixels,
+        falha_pixels: falhaPixels,
+        ideal_pixels: idealPixels,
+      };
     }
 
-    console.log('Densidades calculadas:', densities);
-    return densities;
+    return { densities, metrics };
   };
 
   const handleSave = async () => {
@@ -414,8 +490,8 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     setIsSaving(true);
     try {
       if (step === 'density') {
-        const densities = calculateDensities();
-        await Promise.resolve(onSave(image, regionsBBoxes || {}, densities));
+        const { densities, metrics } = calculateDensityMetrics();
+        await Promise.resolve(onSave(image, regionsBBoxes || {}, densities, metrics));
       } else {
         await Promise.resolve(onSave(mainCanvasRef.current?.toDataURL('image/jpeg', 0.9) || image, currentBBoxesRef.current));
       }
