@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { showError, showSuccess } from "@/utils/toast";
 import { createUserStorageKey } from "@/lib/userStorage";
 import { useUser } from "@/lib/auth";
+import { persistAnalysisRouteState } from "@/lib/analysisState";
 
 type AnalysisPayload = {
   analysis?: any;
@@ -89,7 +90,14 @@ const AnalysisResult = () => {
 
   useEffect(() => {
     if (routeState?.analysis || routeState?.image) {
-      sessionStorage.setItem("elha:last-analysis", JSON.stringify(routeState));
+      persistAnalysisRouteState({
+        analysis: routeState.analysis,
+        image: routeState.image || "",
+        allImages: (routeState.allImages || []).map((item) => ({
+          url: item.url || item.dataUrl || "",
+          bboxes: item.bboxes,
+        })),
+      });
     }
   }, [routeState]);
 

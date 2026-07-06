@@ -17,6 +17,7 @@ import { useSupabaseClient } from "@/lib/supabase";
 import { useUser, useClerk, isClerkConfigured } from "@/lib/auth";
 import { showSuccess, showError } from "@/utils/toast";
 import { getUserStorageItem, setUserStorageItem } from "@/lib/userStorage";
+import { buildSingleImageState, persistAnalysisRouteState } from "@/lib/analysisState";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://api.elha.com.br";
 
@@ -217,21 +218,10 @@ const Index = () => {
         }
       : { image_url: imageUrl };
 
-    const payload = {
-      analysis,
-      image: imageUrl,
-      allImages: imageUrl
-        ? [
-            {
-              url: imageUrl,
-              dataUrl: imageUrl,
-              bboxes: {},
-            },
-          ]
-        : [],
-    };
+    const payload = buildSingleImageState(analysis, imageUrl);
 
-    sessionStorage.setItem("elha:last-analysis", JSON.stringify(payload));
+    persistAnalysisRouteState(payload);
+
     navigate("/resultado", { state: payload });
   };
 

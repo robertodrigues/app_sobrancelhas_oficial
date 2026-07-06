@@ -29,6 +29,7 @@ import { useSupabaseClient } from '@/lib/supabase';
 import type { AnalysisImage } from '@/services/types';
 import type { RegionBBox } from '@/components/camera/ImageAnnotator';
 import { consumeAnalysisCredit } from '@/services/credits';
+import { buildAnalysisRouteState, persistAnalysisRouteState } from '@/lib/analysisState';
 
 const ANALYSIS_MODES = [
   { id: 'single', label: 'Sem Comparações', icon: FileText },
@@ -248,6 +249,7 @@ const Capture = () => {
       }
 
       const lastImageUrl = capturedImages[capturedImages.length - 1].url;
+      const routeState = buildAnalysisRouteState(result, lastImageUrl, capturedImages);
 
       const insertData = {
         client_id: selectedClientId,
@@ -260,12 +262,17 @@ const Capture = () => {
       if (error) throw error;
 
       resultToNavigate = {
-        analysis: result,
-        image: lastImageUrl,
-        allImages: capturedImages,
+        analysis: routeState.analysis,
+        image: routeState.image,
+        allImages: capturedImages.map(({ url, bboxes, densities }) => ({ url, bboxes, densities } as AnalysisImage)),
       };
 
-      sessionStorage.setItem('elha:last-analysis', JSON.stringify(resultToNavigate));
+      persistAnalysisRouteState({
+        analysis: resultToNavigate.analysis,
+        image: resultToNavigate.image,
+        allImages: resultToNavigate.allImages.map(({ url, bboxes, densities }) => ({ url, bboxes, densities })),
+      });
+
       showSuccess('Análise concluída!');
     } catch (error: any) {
       const message = String(error?.message || error || '');
