@@ -1,5 +1,6 @@
+"use client";
+
 import React, { useEffect, useRef, useState } from 'react';
-import ImageAnnotator, { RegionBBox } from '@/components/camera/ImageAnnotator';
 import AnalysisModeIllustration from '@/components/camera/AnalysisModeIllustration';
 import AnalysisTutorialDialog from '@/components/camera/AnalysisTutorialDialog';
 import Navbar from '@/components/layout/Navbar';
@@ -26,6 +27,7 @@ import { uploadPhotoToR2 } from '@/lib/r2';
 import { useUser } from '@/lib/auth';
 import { useSupabaseClient } from '@/lib/supabase';
 import type { AnalysisImage } from '@/services/types';
+import type { RegionBBox } from '@/components/camera/ImageAnnotator';
 import { consumeAnalysisCredit } from '@/services/credits';
 
 const ANALYSIS_MODES = [
@@ -42,8 +44,6 @@ type PendingAnalysisState = {
   densities?: Record<string, number>;
   step?: 'regions' | 'density';
 };
-
-const PENDING_ANALYSIS_KEY = 'elha:pending-analysis';
 
 const MAX_UPLOAD_DIMENSION = 8192;
 
@@ -100,7 +100,6 @@ const Capture = () => {
   const location = useLocation();
   const [capturedImages, setCapturedImages] = useState<AnalysisImage[]>([]);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
-  const [isAnnotating, setIsAnnotating] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>('');
@@ -114,7 +113,6 @@ const Capture = () => {
   useEffect(() => {
     setCapturedImages([]);
     setCurrentImage(null);
-    setIsAnnotating(false);
     setSelectedClientId('');
     setAnalysisMode('single');
     setIsAnalyzing(false);
@@ -122,31 +120,22 @@ const Capture = () => {
 
   useEffect(() => {
     const pendingState = location.state as PendingAnalysisState | null;
-    const savedState = sessionStorage.getItem(PENDING_ANALYSIS_KEY);
 
-    const payload = pendingState?.image
-      ? pendingState
-      : savedState
-        ? (JSON.parse(savedState) as PendingAnalysisState)
-        : null;
-
-    if (!payload?.image) {
+    if (!pendingState?.image) {
       return;
     }
 
     setCapturedImages([
       {
-        url: payload.image,
-        dataUrl: payload.image,
-        bboxes: payload.bboxes || {},
-        densities: payload.densities,
+        url: pendingState.image,
+        dataUrl: pendingState.image,
+        bboxes: pendingState.bboxes || {},
+        densities: pendingState.densities,
       },
     ]);
 
     setCurrentImage(null);
-    setIsAnnotating(false);
     setSelectedClientId('');
-    sessionStorage.removeItem(PENDING_ANALYSIS_KEY);
   }, [location.state]);
 
   useEffect(() => {
@@ -221,7 +210,6 @@ const Capture = () => {
 
       setCapturedImages((prev) => [...prev, { url: imageUrl, dataUrl: annotatedBase64, bboxes }]);
       setCurrentImage(null);
-      setIsAnnotating(false);
 
       showSuccess(uploadSuccess ? 'Imagem marcada e enviada com sucesso!' : 'Imagem marcada com sucesso! (Salva localmente)');
     } catch (error: any) {
@@ -309,7 +297,6 @@ const Capture = () => {
       return;
     }
 
-    sessionStorage.setItem(PENDING_ANALYSIS_KEY, JSON.stringify({ image: currentImage, step: 'regions' }));
     navigate('/mapeamento-tecnico', {
       state: { image: currentImage, step: 'regions' },
     });
@@ -423,7 +410,6 @@ const Capture = () => {
                     <div className="text-center">
                       <h3 className="font-heading text-sm font-normal text-[#E8DECE]">Tudo pronto</h3>
                       <p className="mt-0.5 font-body text-[10px] text-[#8FAF8A]">Agora você pode gerar a análise.</p>
-
                     </div>
                   </div>
                 )
@@ -452,7 +438,6 @@ const Capture = () => {
                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md">
                   <BrainCircuit className="mb-3 h-12 w-12 animate-pulse text-[#8FAF8A]" />
                   <p className="text-sm font-bold">Processando Análise...</p>
-
                   <p className="mt-1 text-[10px] text-slate-300">Analisando evolução técnica</p>
                   <p className="mt-2 text-[10px] font-medium text-[#E8DECE]">Aguarde de 1 a 2 minutos</p>
                 </div>
@@ -526,7 +511,6 @@ const Capture = () => {
                 </p>
                 <p className="mt-0.5 text-[10px] text-[#4A7A5C]">
                   {hasAtLeastOneImage ? 'Clique abaixo para gerar a análise.' : 'Escolha uma imagem para começar.'}
-
                 </p>
               </div>
             )}

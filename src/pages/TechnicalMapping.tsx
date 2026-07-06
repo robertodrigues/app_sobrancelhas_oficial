@@ -11,8 +11,6 @@ type TechnicalMappingState = {
   step?: "regions" | "density";
 };
 
-const PENDING_ANALYSIS_KEY = "elha:pending-analysis";
-
 const TechnicalMapping = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -22,39 +20,26 @@ const TechnicalMapping = () => {
     const routeState = location.state as TechnicalMappingState | null;
 
     if (routeState?.image) {
-      const nextState = { ...routeState, step: routeState.step || "regions" };
-      setState(nextState);
-      sessionStorage.setItem(PENDING_ANALYSIS_KEY, JSON.stringify(nextState));
+      setState({ ...routeState, step: routeState.step || "regions" });
       return;
     }
 
-    const savedState = sessionStorage.getItem(PENDING_ANALYSIS_KEY);
-    if (!savedState) {
-      navigate("/captura", { replace: true });
-      return;
-    }
-
-    const parsedState = JSON.parse(savedState) as TechnicalMappingState;
-    if (!parsedState?.image) {
-      navigate("/captura", { replace: true });
-      return;
-    }
-
-    setState({ ...parsedState, step: parsedState.step || "regions" });
+    navigate("/captura", { replace: true });
   }, [location.state, navigate]);
 
-  const handleSave = (annotatedImage: string, bboxes: Record<string, RegionBBox>, densities?: Record<string, number>) => {
+  const handleSave = (
+    annotatedImage: string,
+    bboxes: Record<string, RegionBBox>,
+    densities?: Record<string, number>,
+  ) => {
     if (!state?.image) return;
 
     if (state.step === "regions") {
-      const nextState: TechnicalMappingState = {
+      setState({
         image: state.image,
         bboxes,
         step: "density",
-      };
-
-      sessionStorage.setItem(PENDING_ANALYSIS_KEY, JSON.stringify(nextState));
-      setState(nextState);
+      });
       return;
     }
 
@@ -65,7 +50,6 @@ const TechnicalMapping = () => {
       step: "density" as const,
     };
 
-    sessionStorage.setItem(PENDING_ANALYSIS_KEY, JSON.stringify(payload));
     navigate("/captura", {
       replace: true,
       state: payload,
@@ -73,7 +57,6 @@ const TechnicalMapping = () => {
   };
 
   const handleCancel = () => {
-    sessionStorage.removeItem(PENDING_ANALYSIS_KEY);
     navigate("/captura", { replace: true });
   };
 
