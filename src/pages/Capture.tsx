@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import EyebrowCropper from '@/components/camera/EyebrowCropper';
 import ImageAnnotator, { RegionBBox } from '@/components/camera/ImageAnnotator';
 import AnalysisModeIllustration from '@/components/camera/AnalysisModeIllustration';
 import AnalysisTutorialDialog from '@/components/camera/AnalysisTutorialDialog';
@@ -40,6 +39,8 @@ type AnalysisMode = (typeof ANALYSIS_MODES)[number]['id'];
 type PendingAnalysisState = {
   image?: string;
   bboxes?: Record<string, RegionBBox>;
+  densities?: Record<string, number>;
+  step?: 'regions' | 'density';
 };
 
 const PENDING_ANALYSIS_KEY = 'elha:pending-analysis';
@@ -138,8 +139,10 @@ const Capture = () => {
         url: payload.image,
         dataUrl: payload.image,
         bboxes: payload.bboxes || {},
+        densities: payload.densities,
       },
     ]);
+
     setCurrentImage(null);
     setIsAnnotating(false);
     setSelectedClientId('');
@@ -305,24 +308,12 @@ const Capture = () => {
       showError('Selecione uma imagem antes de marcar.');
       return;
     }
-    setIsAnnotating(true);
-  };
 
-  if (isAnnotating && currentImage) {
-    return (
-      <EyebrowCropper
-        image={currentImage}
-        onConfirm={async (croppedImage) => {
-          setIsAnnotating(false);
-          sessionStorage.setItem(PENDING_ANALYSIS_KEY, JSON.stringify({ image: croppedImage }));
-          navigate('/mapeamento-tecnico', {
-            state: { image: croppedImage },
-          });
-        }}
-        onCancel={() => setIsAnnotating(false)}
-      />
-    );
-  }
+    sessionStorage.setItem(PENDING_ANALYSIS_KEY, JSON.stringify({ image: currentImage, step: 'regions' }));
+    navigate('/mapeamento-tecnico', {
+      state: { image: currentImage, step: 'regions' },
+    });
+  };
 
   const hasAtLeastOneImage = capturedImages.length >= 1;
 

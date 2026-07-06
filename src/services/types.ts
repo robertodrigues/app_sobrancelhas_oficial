@@ -6,4 +6,5 @@ export interface AnalysisImage {
   url: string;
   bboxes: Record<string, RegionBBox>;
   dataUrl?: string;
+  densities?: Record<string, number>;
 }

@@ -1,12 +1,9 @@
-import { RegionBBox } from "@/components/camera/ImageAnnotator";
 import { PROMPT_ESPECIALISTA, PROMPT_TRICOSCOPIA } from "../constants/prompt";
 import type { AnalysisImage, AnalysisMode } from "./types";
 import { jsonrepair } from "jsonrepair";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "https://api.elha.com.br";
-
-const DARK_THRESHOLD = 100;
 
 type AnthropicMessageContent =
   | { type: "text"; text: string }
@@ -60,139 +57,6 @@ const compressDataUrl = (dataUrl: string, maxSize = 1280, quality = 0.82): Promi
 const prepareImageDataUrl = async (source: string): Promise<string> => {
   const dataUrl = await toDataUrl(source);
   return compressDataUrl(dataUrl);
-};
-
-const calculateDensityFromCanvas = (canvas: HTMLCanvasElement): number => {
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    throw new Error("Erro ao criar contexto canvas");
-  }
-
-  const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  console.log("Canvas dimensões:", canvas.width, canvas.height);
-  console.log("Amostra de pixels:", data[0], data[1], data[2], data[3], "|", data[400], data[401], data[402], data[403]);
-
-  let darkPixels = 0;
-  let totalPixels = 0;
-
-  for (let i = 0; i < data.length; i += 4) {
-    const alpha = data[i + 3];
-    if (alpha === 0) {
-      continue;
-    }
-
-    totalPixels += 1;
-    const luminance = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-    if (luminance < DARK_THRESHOLD) {
-      darkPixels += 1;
-    }
-  }
-
-  const lightPixels = totalPixels - darkPixels;
-  const densityPercent = totalPixels === 0 ? 0 : Math.round((darkPixels / totalPixels) * 100);
-
-  console.log("Pixels totais da ROI:", totalPixels);
-  console.log("Pixels classificados como fio:", darkPixels);
-  console.log("Pixels classificados como pele:", lightPixels);
-  console.log("Threshold usado:", DARK_THRESHOLD);
-  console.log(`Percentual de fio: ${densityPercent}%`);
-
-  return densityPercent;
-};
-
-const cropImage = async (base64Str: string, bbox: RegionBBox): Promise<{ dataUrl: string; density: number }> => {
-  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const image = new Image();
-    image.crossOrigin = "anonymous";
-    image.onload = () => resolve(image);
-    image.onerror = reject;
-    image.src = base64Str;
-  });
-
-  if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
-    console.error("Imagem inválida ou não carregada corretamente:", {
-      naturalWidth: img.naturalWidth,
-      naturalHeight: img.naturalHeight,
-      complete: img.complete,
-    });
-    throw new Error("Imagem não carregou corretamente antes do recorte.");
-  }
-
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    throw new Error("Erro ao criar contexto canvas");
-  }
-
-  const imgWidth = img.naturalWidth || img.width;
-  const imgHeight = img.naturalHeight || img.height;
-  const bboxIsNormalized = bbox.maxX <= 1 && bbox.maxY <= 1 && bbox.minX >= 0 && bbox.minY >= 0;
-  const scaleX = bboxIsNormalized ? imgWidth : 1;
-  const scaleY = bboxIsNormalized ? imgHeight : 1;
-
-  const scaledMinX = bbox.minX * scaleX;
-  const scaledMinY = bbox.minY * scaleY;
-  const scaledMaxX = bbox.maxX * scaleX;
-  const scaledMaxY = bbox.maxY * scaleY;
-
-  const bboxWidth = scaledMaxX - scaledMinX;
-  const bboxHeight = scaledMaxY - scaledMinY;
-
-  const paddingX = Math.round(bboxWidth * 0.05);
-  const paddingY = Math.round(bboxHeight * 0.05);
-  console.log("Padding calculado para a região:", { paddingX, paddingY, bboxWidth, bboxHeight });
-
-  const x = Math.max(0, scaledMinX - paddingX);
-  const y = Math.max(0, scaledMinY - paddingY);
-  const expectedWidth = bboxWidth + paddingX * 2;
-  const expectedHeight = bboxHeight + paddingY * 2;
-  const width = Math.min(imgWidth - x, expectedWidth);
-  const height = Math.min(imgHeight - y, expectedHeight);
-
-  if (width <= 0 || height <= 0) {
-    console.warn("Recorte inválido após normalização da bbox:", {
-      bbox,
-      imgWidth,
-      imgHeight,
-      x,
-      y,
-      width,
-      height,
-      bboxIsNormalized,
-    });
-    throw new Error("Recorte inválido para a imagem atual.");
-  }
-
-  if (width < expectedWidth * 0.5 || height < expectedHeight * 0.5) {
-    console.warn("Possível mismatch de escala entre bbox e imagem:", {
-      width,
-      height,
-      expectedWidth,
-      expectedHeight,
-      imgWidth,
-      imgHeight,
-      bbox,
-      bboxIsNormalized,
-    });
-  }
-
-  canvas.width = Math.max(1, Math.round(width));
-  canvas.height = Math.max(1, Math.round(height));
-  console.log("Origem da imagem (src):", img.src.slice(0, 60));
-  ctx.drawImage(img, x, y, width, height, 0, 0, canvas.width, canvas.height);
-
-  let density = 0;
-  try {
-    density = calculateDensityFromCanvas(canvas);
-  } catch (err) {
-    console.error("Erro ao calcular densidade (possível CORS taint):", err);
-    throw err;
-  }
-
-  console.log("Densidade calculada:", density, "BBox:", bbox);
-  const dataUrl = await compressDataUrl(canvas.toDataURL("image/jpeg", 0.82), 900, 0.78);
-
-  return { dataUrl, density };
 };
 
 const sanitizeJsonText = (text: string) =>
@@ -265,26 +129,18 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
       });
 
       console.log("bboxes recebidos para esta imagem:", images[i].bboxes);
+      console.log("densidades recebidas para esta imagem:", images[i].densities);
 
       const ordemRegioes = ["ponto_inicial", "meio", "cauda"] as const;
       for (const name of ordemRegioes) {
         const box = images[i].bboxes[name];
         if (!box) continue;
 
-        const { dataUrl: croppedData, density } = await cropImage(imageDataUrl, box);
-        console.log(`Densidade: ${name}`, density);
-        content.push({ type: "text", text: `Região: ${name.toUpperCase()} | Densidade calculada automaticamente: ${density}%` });
-        content.push({ type: "text", text: `Detalhe ${label} - Região ${name.toUpperCase()}` });
-        content.push({
-          type: "image",
-          source: {
-            type: "base64",
-            media_type: "image/jpeg",
-            data: croppedData.split(",")[1],
-          },
-        });
+        const density = images[i].densities?.[name];
+        if (typeof density === "number") {
+          content.push({ type: "text", text: `Região: ${name.toUpperCase()} | Densidade calculada automaticamente: ${density}%` });
+        }
       }
-
     }
 
     content.push({ type: "text", text: prompt });

@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HybridAuthProvider, SignedIn, SignedOut, RedirectToSignIn } from "@/lib/auth";
 import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import Index from "./pages/Index";
 import Capture from "./pages/Capture";
 import Clients from "./pages/Clients";
@@ -170,7 +171,5 @@ const App = () => {
     </HybridAuthProvider>
   );
 };
-
-import { Loader2 } from "lucide-react";
 
 export default App;

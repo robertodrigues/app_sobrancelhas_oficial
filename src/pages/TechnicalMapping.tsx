@@ -7,6 +7,8 @@ import ImageAnnotator, { type RegionBBox } from "@/components/camera/ImageAnnota
 type TechnicalMappingState = {
   image?: string;
   bboxes?: Record<string, RegionBBox>;
+  densities?: Record<string, number>;
+  step?: "regions" | "density";
 };
 
 const PENDING_ANALYSIS_KEY = "elha:pending-analysis";
@@ -14,14 +16,15 @@ const PENDING_ANALYSIS_KEY = "elha:pending-analysis";
 const TechnicalMapping = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [image, setImage] = useState<string | null>(null);
+  const [state, setState] = useState<TechnicalMappingState | null>(null);
 
   useEffect(() => {
     const routeState = location.state as TechnicalMappingState | null;
 
     if (routeState?.image) {
-      setImage(routeState.image);
-      sessionStorage.setItem(PENDING_ANALYSIS_KEY, JSON.stringify(routeState));
+      const nextState = { ...routeState, step: routeState.step || "regions" };
+      setState(nextState);
+      sessionStorage.setItem(PENDING_ANALYSIS_KEY, JSON.stringify(nextState));
       return;
     }
 
@@ -37,13 +40,29 @@ const TechnicalMapping = () => {
       return;
     }
 
-    setImage(parsedState.image);
+    setState({ ...parsedState, step: parsedState.step || "regions" });
   }, [location.state, navigate]);
 
-  const handleSave = (annotatedImage: string, bboxes: Record<string, RegionBBox>) => {
+  const handleSave = (annotatedImage: string, bboxes: Record<string, RegionBBox>, densities?: Record<string, number>) => {
+    if (!state?.image) return;
+
+    if (state.step === "regions") {
+      const nextState: TechnicalMappingState = {
+        image: state.image,
+        bboxes,
+        step: "density",
+      };
+
+      sessionStorage.setItem(PENDING_ANALYSIS_KEY, JSON.stringify(nextState));
+      setState(nextState);
+      return;
+    }
+
     const payload = {
       image: annotatedImage,
-      bboxes,
+      bboxes: state.bboxes || bboxes,
+      densities,
+      step: "density" as const,
     };
 
     sessionStorage.setItem(PENDING_ANALYSIS_KEY, JSON.stringify(payload));
@@ -58,7 +77,7 @@ const TechnicalMapping = () => {
     navigate("/captura", { replace: true });
   };
 
-  if (!image) {
+  if (!state?.image) {
     return (
       <div className="min-h-screen bg-[#1C3A2B] text-[#E8DECE] flex items-center justify-center px-6 text-center">
         <div className="space-y-3">
@@ -71,8 +90,10 @@ const TechnicalMapping = () => {
 
   return (
     <ImageAnnotator
-      image={image}
+      image={state.image}
       mode="single"
+      step={state.step || "regions"}
+      regionsBBoxes={state.bboxes}
       onSave={handleSave}
       onCancel={handleCancel}
     />

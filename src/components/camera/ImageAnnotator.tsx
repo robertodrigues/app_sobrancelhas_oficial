@@ -13,19 +13,32 @@ export interface RegionBBox {
 
 interface ImageAnnotatorProps {
   image: string;
-  onSave: (annotatedImage: string, bboxes: Record<string, RegionBBox>) => Promise<void> | void;
+  onSave: (
+    annotatedImage: string,
+    bboxes: Record<string, RegionBBox>,
+    densities?: Record<string, number>
+  ) => Promise<void> | void;
   onCancel: () => void;
   mode?: 'single' | 'comparison' | 'tricoscopia';
+  step?: 'regions' | 'density';
+  regionsBBoxes?: Record<string, RegionBBox>;
 }
 
-type Region = 'ponto_inicial' | 'meio' | 'cauda' | null;
+type Region = 'ponto_inicial' | 'meio' | 'cauda' | 'falha' | 'ideal' | null;
 
 type DrawingSnapshot = {
   data: string;
   bboxes: Record<string, RegionBBox>;
 };
 
-const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel, mode = 'single' }) => {
+const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
+  image,
+  onSave,
+  onCancel,
+  mode = 'single',
+  step = 'regions',
+  regionsBBoxes,
+}) => {
   const mainCanvasRef = useRef<HTMLCanvasElement>(null);
   const drawingCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const renderRafRef = useRef<number | null>(null);
@@ -39,10 +52,12 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
   const currentBBoxesRef = useRef<Record<string, RegionBBox>>({});
   const imageRef = useRef<HTMLImageElement | null>(null);
 
-  const colors = {
+  const colors: Record<string, string> = {
     ponto_inicial: '#16A34A',
     meio: '#EAB308',
     cauda: '#DC2626',
+    falha: 'rgba(220, 38, 38, 0.65)', // Red with 65% opacity for density mapping
+    ideal: 'rgba(22, 163, 74, 0.65)',  // Green with 65% opacity for density mapping
   };
 
   const footerLabels =
@@ -123,6 +138,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
       setCurrentBBoxes({});
       setHistory([{ data: drawingCanvas.toDataURL(), bboxes: {} }]);
       setRedoHistory([]);
+      setActiveRegion(null);
 
       const ctx = canvas.getContext('2d');
       if (ctx) {
@@ -137,6 +153,22 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
 
     img.src = image;
   }, [image]);
+
+  useEffect(() => {
+    if (!mainCanvasRef.current) return;
+
+    const drawingCanvas = document.createElement('canvas');
+    drawingCanvas.width = mainCanvasRef.current.width;
+    drawingCanvas.height = mainCanvasRef.current.height;
+    drawingCanvasRef.current = drawingCanvas;
+
+    currentBBoxesRef.current = regionsBBoxes ? { ...regionsBBoxes } : {};
+    setCurrentBBoxes(regionsBBoxes ? { ...regionsBBoxes } : {});
+    setHistory([{ data: drawingCanvas.toDataURL(), bboxes: regionsBBoxes ? { ...regionsBBoxes } : {} }]);
+    setRedoHistory([]);
+    setActiveRegion(null);
+    scheduleRender();
+  }, [step, regionsBBoxes]);
 
   const updateBBox = (region: string, x: number, y: number) => {
     const canvas = mainCanvasRef.current;
@@ -221,7 +253,9 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
       dCtx.strokeStyle = colors[activeRegion];
       dCtx.lineWidth = getStrokeWidth();
       dCtx.globalCompositeOperation = 'source-over';
-      updateBBox(activeRegion, position.x, position.y);
+      if (step !== 'density') {
+        updateBBox(activeRegion, position.x, position.y);
+      }
       scheduleRender();
     }
 
@@ -243,7 +277,9 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
       dCtx.lineWidth = getStrokeWidth();
       dCtx.lineTo(position.x, position.y);
       dCtx.stroke();
-      updateBBox(activeRegion, position.x, position.y);
+      if (step !== 'density') {
+        updateBBox(activeRegion, position.x, position.y);
+      }
       scheduleRender();
     }
   };
@@ -311,12 +347,78 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
     restoreSnapshot(snapshot);
   };
 
+  const calculateDensities = (): Record<string, number> => {
+    const drawingCanvas = drawingCanvasRef.current;
+    if (!drawingCanvas || !regionsBBoxes) return {};
+
+    const dCtx = drawingCanvas.getContext('2d');
+    if (!dCtx) return {};
+
+    const { data, width, height } = dCtx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
+    const densities: Record<string, number> = {};
+
+    const regions = ['ponto_inicial', 'meio', 'cauda'] as const;
+    for (const region of regions) {
+      const bbox = regionsBBoxes[region];
+      if (!bbox) {
+        densities[region] = 100; // Default to 100% if no bbox
+        continue;
+      }
+
+      const startX = Math.max(0, Math.floor(bbox.minX * width));
+      const startY = Math.max(0, Math.floor(bbox.minY * height));
+      const endX = Math.min(width, Math.ceil(bbox.maxX * width));
+      const endY = Math.min(height, Math.ceil(bbox.maxY * height));
+
+      let falhaPixels = 0;
+      let idealPixels = 0;
+
+      for (let y = startY; y < endY; y++) {
+        for (let x = startX; x < endX; x++) {
+          const idx = (y * width + x) * 4;
+          const r = data[idx];
+          const g = data[idx + 1];
+          const b = data[idx + 2];
+          const a = data[idx + 3];
+
+          if (a > 30) { // If painted (alpha threshold)
+            // Check if it's closer to Red (Falha) or Green (Ideal)
+            // Falha: rgba(220, 38, 38, 0.65) -> r=220, g=38, b=38
+            // Ideal: rgba(22, 163, 74, 0.65) -> r=22, g=163, b=74
+            if (r > g && r > 100) {
+              falhaPixels++;
+            } else if (g > r && g > 100) {
+              idealPixels++;
+            }
+          }
+        }
+      }
+
+      const totalPainted = falhaPixels + idealPixels;
+      if (totalPainted > 0) {
+        // Density is the percentage of ideal (healthy) pixels
+        densities[region] = Math.round((idealPixels / totalPainted) * 100);
+      } else {
+        // If nothing was painted in this region, default to 100% (no falhas)
+        densities[region] = 100;
+      }
+    }
+
+    console.log('Densidades calculadas:', densities);
+    return densities;
+  };
+
   const handleSave = async () => {
     if (isSaving) return;
 
     setIsSaving(true);
     try {
-      await Promise.resolve(onSave(mainCanvasRef.current?.toDataURL('image/jpeg', 0.9) || image, currentBBoxesRef.current));
+      if (step === 'density') {
+        const densities = calculateDensities();
+        await Promise.resolve(onSave(image, regionsBBoxes || {}, densities));
+      } else {
+        await Promise.resolve(onSave(mainCanvasRef.current?.toDataURL('image/jpeg', 0.9) || image, currentBBoxesRef.current));
+      }
     } finally {
       setIsSaving(false);
     }
@@ -335,8 +437,14 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
           <X size={24} />
         </Button>
         <div className="min-w-0 flex-1 px-2 text-center">
-          <h2 className="truncate font-heading text-base font-normal text-[#E8DECE]">Mapeamento Técnico</h2>
-          <p className="font-label-category text-[9px] text-[#8FAF8A]">Circule as regiões</p>
+          <h2 className="truncate font-heading text-base font-normal text-[#E8DECE]">
+            {step === 'density' ? 'Mapeamento de Densidade' : 'Mapeamento Técnico'}
+          </h2>
+          <p className="font-label-category text-[9px] text-[#8FAF8A]">
+            {step === 'density'
+              ? 'Pinte as áreas de falha e densidade ideal'
+              : 'Circule as regiões'}
+          </p>
         </div>
         <Button
           variant="ghost"
@@ -346,7 +454,9 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
           className="h-9 w-auto rounded-full border border-[#FFB347]/40 bg-[radial-gradient(circle_at_30%_30%,#FFD089_0%,#FF9F1C_42%,#D97706_100%)] px-4 text-white shadow-[0_8px_18px_rgba(217,119,6,0.32),inset_0_2px_4px_rgba(255,255,255,0.35),inset_0_-5px_9px_rgba(120,53,15,0.28)] transition-transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
           aria-label="Confirmar marcação e avançar"
         >
-          <span className="text-[12px] font-semibold tracking-[0.5px]">Enviar</span>
+          <span className="text-[12px] font-semibold tracking-[0.5px]">
+            {step === 'density' ? 'Concluir' : 'Avançar'}
+          </span>
         </Button>
       </div>
 
@@ -374,7 +484,11 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
               <div className="max-w-xs rounded-3xl border border-[#4A7A5C] bg-[#1C3A2B]/90 p-6 text-center backdrop-blur-md">
                 <MousePointer2 className="mx-auto mb-3 animate-bounce text-[#8FAF8A]" size={32} />
                 <p className="font-heading text-base font-normal text-[#E8DECE]">Selecione uma cor abaixo</p>
-                <p className="mt-1 font-body text-xs text-[#8FAF8A]">e circule a região correspondente na sobrancelha</p>
+                <p className="mt-1 font-body text-xs text-[#8FAF8A]">
+                  {step === 'density'
+                    ? 'e pinte as áreas correspondentes na sobrancelha'
+                    : 'e circule a região correspondente na sobrancelha'}
+                </p>
               </div>
             </div>
           )}
@@ -382,7 +496,11 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
           {isSaving && (
             <AnalysisProcessingOverlay
               title="Aguarde..."
-              message="Estamos enviando sua foto marcada para a próxima etapa."
+              message={
+                step === 'density'
+                  ? 'Estamos calculando as densidades e preparando a análise.'
+                  : 'Estamos salvando suas marcações de região.'
+              }
             />
           )}
         </div>
@@ -413,43 +531,71 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({ image, onSave, onCancel
           </button>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          <button
-            onClick={() => setActiveRegion('ponto_inicial')}
-            disabled={isSaving}
-            className={cn(
-              'flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all disabled:opacity-50',
-              activeRegion === 'ponto_inicial' ? 'border-[#16A34A] bg-[#16A34A]/20' : 'border-[#4A7A5C] bg-[#3D6B52]/30',
-            )}
-          >
-            <div className="h-6 w-6 rounded-full bg-[#16A34A]" />
-            <span className="font-label-category text-[9px] text-[#E8DECE]">{footerLabels.ponto_inicial}</span>
-          </button>
+        {step === 'density' ? (
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setActiveRegion('falha')}
+              disabled={isSaving}
+              className={cn(
+                'flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all disabled:opacity-50',
+                activeRegion === 'falha' ? 'border-[#DC2626] bg-[#DC2626]/20' : 'border-[#4A7A5C] bg-[#3D6B52]/30',
+              )}
+            >
+              <div className="h-6 w-6 rounded-full bg-[#DC2626]" />
+              <span className="font-label-category text-[9px] text-[#E8DECE]">Falha / Rarefação</span>
+            </button>
 
-          <button
-            onClick={() => setActiveRegion('meio')}
-            disabled={isSaving}
-            className={cn(
-              'flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all disabled:opacity-50',
-              activeRegion === 'meio' ? 'border-[#EAB308] bg-[#EAB308]/20' : 'border-[#4A7A5C] bg-[#3D6B52]/30',
-            )}
-          >
-            <div className="h-6 w-6 rounded-full bg-[#EAB308]" />
-            <span className="font-label-category text-[9px] text-[#E8DECE]">{footerLabels.meio}</span>
-          </button>
+            <button
+              onClick={() => setActiveRegion('ideal')}
+              disabled={isSaving}
+              className={cn(
+                'flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all disabled:opacity-50',
+                activeRegion === 'ideal' ? 'border-[#16A34A] bg-[#16A34A]/20' : 'border-[#4A7A5C] bg-[#3D6B52]/30',
+              )}
+            >
+              <div className="h-6 w-6 rounded-full bg-[#16A34A]" />
+              <span className="font-label-category text-[9px] text-[#E8DECE]">Densidade Ideal</span>
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-3">
+            <button
+              onClick={() => setActiveRegion('ponto_inicial')}
+              disabled={isSaving}
+              className={cn(
+                'flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all disabled:opacity-50',
+                activeRegion === 'ponto_inicial' ? 'border-[#16A34A] bg-[#16A34A]/20' : 'border-[#4A7A5C] bg-[#3D6B52]/30',
+              )}
+            >
+              <div className="h-6 w-6 rounded-full bg-[#16A34A]" />
+              <span className="font-label-category text-[9px] text-[#E8DECE]">{footerLabels.ponto_inicial}</span>
+            </button>
 
-          <button
-            onClick={() => setActiveRegion('cauda')}
-            disabled={isSaving}
-            className={cn(
-              'flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all disabled:opacity-50',
-              activeRegion === 'cauda' ? 'border-[#DC2626] bg-[#DC2626]/20' : 'border-[#4A7A5C] bg-[#3D6B52]/30',
-            )}
-          >
-            <div className="h-6 w-6 rounded-full bg-[#DC2626]" />
-            <span className="font-label-category text-[9px] text-[#E8DECE]">{footerLabels.cauda}</span>
-          </button>
-        </div>
+            <button
+              onClick={() => setActiveRegion('meio')}
+              disabled={isSaving}
+              className={cn(
+                'flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all disabled:opacity-50',
+                activeRegion === 'meio' ? 'border-[#EAB308] bg-[#EAB308]/20' : 'border-[#4A7A5C] bg-[#3D6B52]/30',
+              )}
+            >
+              <div className="h-6 w-6 rounded-full bg-[#EAB308]" />
+              <span className="font-label-category text-[9px] text-[#E8DECE]">{footerLabels.meio}</span>
+            </button>
+
+            <button
+              onClick={() => setActiveRegion('cauda')}
+              disabled={isSaving}
+              className={cn(
+                'flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all disabled:opacity-50',
+                activeRegion === 'cauda' ? 'border-[#DC2626] bg-[#DC2626]/20' : 'border-[#4A7A5C] bg-[#3D6B52]/30',
+              )}
+            >
+              <div className="h-6 w-6 rounded-full bg-[#DC2626]" />
+              <span className="font-label-category text-[9px] text-[#E8DECE]">{footerLabels.cauda}</span>
+            </button>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           <Button
