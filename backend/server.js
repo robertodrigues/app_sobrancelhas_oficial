@@ -233,7 +233,26 @@ const requestUpstream = async (body, messages) => {
   };
 };
 
-app.use(cors());
+const allowedOrigins = [
+  'https://app.elha.com.br',
+  'https://elha.com.br',
+  'https://www.elha.com.br',
+  'http://localhost:5173',
+  'http://localhost:4173',
+];
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(null, false);
+    },
+  }),
+);
 app.options('*', cors());
 app.use(express.json({ limit: '50mb' }));
 
