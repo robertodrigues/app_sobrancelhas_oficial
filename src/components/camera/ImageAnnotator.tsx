@@ -45,6 +45,15 @@ type DensityComputation = {
   metrics: Record<string, RegionAnalysisMetrics>;
 };
 
+type RegionCentroidEntry = {
+  key: string;
+  centroid: Point;
+};
+
+type RegionProjectionEntry = RegionCentroidEntry & {
+  projection: number;
+};
+
 const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
   image,
   onSave,
@@ -132,6 +141,9 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     };
   };
 
+  const getDistanceBetweenPoints = (a: Point, b: Point) =>
+    Math.hypot(b.x - a.x, b.y - a.y);
+
   const buildGeometricRegionOrder = (bboxes: Record<string, RegionBBox>) => {
     return Object.entries(bboxes)
       .filter(([, bbox]) => bbox.points.length >= 3)
@@ -145,64 +157,120 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
       });
   };
 
-  const assignRegionLabelsBySide = (bboxes: Record<string, RegionBBox>, side: 'left' | 'right') => {
+  const buildPrincipalAxisOrdering = (bboxes: Record<string, RegionBBox>) => {
     const entries = buildGeometricRegionOrder(bboxes);
+
+    if (entries.length < 3) {
+      return {
+        entries: entries.map((entry) => ({ ...entry, projection: 0 })),
+        axis: null,
+      };
+    }
+
+    let farthestPair: {
+      first: RegionCentroidEntry;
+      second: RegionCentroidEntry;
+      distance: number;
+    } | null = null;
+
+    for (let i = 0; i < entries.length; i += 1) {
+      for (let j = i + 1; j < entries.length; j += 1) {
+        const distance = getDistanceBetweenPoints(entries[i].centroid, entries[j].centroid);
+
+        if (!farthestPair || distance > farthestPair.distance) {
+          farthestPair = {
+            first: entries[i],
+            second: entries[j],
+            distance,
+          };
+        }
+      }
+    }
+
+    if (!farthestPair || farthestPair.distance <= 0) {
+      return {
+        entries: entries.map((entry) => ({
+          ...entry,
+          projection: entry.centroid.x,
+        })),
+        axis: null,
+      };
+    }
+
+    const axisVector = {
+      x: farthestPair.second.centroid.x - farthestPair.first.centroid.x,
+      y: farthestPair.second.centroid.y - farthestPair.first.centroid.y,
+    };
+
+    const axisLength = Math.hypot(axisVector.x, axisVector.y) || 1;
+    const axisUnit = {
+      x: axisVector.x / axisLength,
+      y: axisVector.y / axisLength,
+    };
+
+    const projectedEntries: RegionProjectionEntry[] = entries.map((entry) => {
+      const relative = {
+        x: entry.centroid.x - farthestPair!.first.centroid.x,
+        y: entry.centroid.y - farthestPair!.first.centroid.y,
+      };
+
+      return {
+        ...entry,
+        projection: relative.x * axisUnit.x + relative.y * axisUnit.y,
+      };
+    });
+
+    return {
+      entries: projectedEntries,
+      axis: {
+        first: farthestPair.first,
+        second: farthestPair.second,
+        unit: axisUnit,
+        distance: farthestPair.distance,
+      },
+    };
+  };
+
+  const assignRegionLabelsBySide = (bboxes: Record<string, RegionBBox>, side: 'left' | 'right') => {
+    const labelOrder = ['ponto_inicial', 'meio', 'cauda'] as const;
+    const { entries, axis } = buildPrincipalAxisOrdering(bboxes);
 
     if (entries.length < 3) {
       return bboxes;
     }
 
     const sorted = [...entries].sort((a, b) =>
-      side === 'left' ? b.centroid.x - a.centroid.x : a.centroid.x - b.centroid.x,
+      side === 'left' ? b.projection - a.projection : a.projection - b.projection,
     );
 
-    const labelOrder = ['ponto_inicial', 'meio', 'cauda'] as const;
     const mapped: Record<string, RegionBBox> = {};
-
     for (let i = 0; i < labelOrder.length; i += 1) {
       const entry = sorted[i];
       if (!entry) continue;
       mapped[labelOrder[i]] = bboxes[entry.key];
     }
 
+    console.log('[assignRegionLabelsBySide] lado selecionado:', side);
+    console.log('[assignRegionLabelsBySide] eixo principal:', axis || 'fallback-centroid.x');
+    console.log(
+      '[assignRegionLabelsBySide] projeções e centróides:',
+      sorted.map((entry) => ({
+        poligono: entry.key,
+        centróide: entry.centroid,
+        projeção: entry.projection,
+      })),
+    );
+    console.log(
+      '[assignRegionLabelsBySide] rótulos atribuídos:',
+      labelOrder.map((label, index) => ({
+        rotulo: label,
+        poligono: sorted[index]?.key || null,
+        centróide: sorted[index]?.centroid || null,
+        projeção: sorted[index]?.projection ?? null,
+      })),
+    );
+
     return mapped;
-  };
-
-  const getPolygonBounds = (polygon: Point[]) => {
-    const xs = polygon.map((point) => point.x);
-    const ys = polygon.map((point) => point.y);
-
-    return {
-      minX: Math.max(0, Math.floor(Math.min(...xs))),
-      minY: Math.max(0, Math.floor(Math.min(...ys))),
-      maxX: Math.max(0, Math.ceil(Math.max(...xs))),
-      maxY: Math.max(0, Math.ceil(Math.max(...ys))),
-    };
-  };
-
-  const render = () => {
-    const canvas = mainCanvasRef.current;
-    const drawingCanvas = drawingCanvasRef.current;
-    const img = imageRef.current;
-    if (!canvas || !drawingCanvas || !img) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    ctx.globalAlpha = 0.9;
-    ctx.drawImage(drawingCanvas, 0, 0);
-    ctx.globalAlpha = 1.0;
-  };
-
-  const scheduleRender = () => {
-    if (renderRafRef.current !== null) return;
-
-    renderRafRef.current = window.requestAnimationFrame(() => {
-      renderRafRef.current = null;
-      render();
-    });
   };
 
   const promptOrientation = () => {
@@ -282,6 +350,43 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     setActiveRegion(null);
     scheduleRender();
   }, [step, regionsBBoxes]);
+
+  const getPolygonBounds = (polygon: Point[]) => {
+    const xs = polygon.map((point) => point.x);
+    const ys = polygon.map((point) => point.y);
+
+    return {
+      minX: Math.max(0, Math.floor(Math.min(...xs))),
+      minY: Math.max(0, Math.floor(Math.min(...ys))),
+      maxX: Math.max(0, Math.ceil(Math.max(...xs))),
+      maxY: Math.max(0, Math.ceil(Math.max(...ys))),
+    };
+  };
+
+  const render = () => {
+    const canvas = mainCanvasRef.current;
+    const drawingCanvas = drawingCanvasRef.current;
+    const img = imageRef.current;
+    if (!canvas || !drawingCanvas || !img) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 0.9;
+    ctx.drawImage(drawingCanvas, 0, 0);
+    ctx.globalAlpha = 1.0;
+  };
+
+  const scheduleRender = () => {
+    if (renderRafRef.current !== null) return;
+
+    renderRafRef.current = window.requestAnimationFrame(() => {
+      renderRafRef.current = null;
+      render();
+    });
+  };
 
   const updateBBox = (region: string, x: number, y: number) => {
     const canvas = mainCanvasRef.current;
