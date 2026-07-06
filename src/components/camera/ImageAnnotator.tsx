@@ -203,10 +203,22 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     };
 
     const axisLength = Math.hypot(axisVector.x, axisVector.y) || 1;
-    const axisUnit = {
+    let axisUnit = {
       x: axisVector.x / axisLength,
       y: axisVector.y / axisLength,
     };
+
+    if (axisUnit.x < 0) {
+      axisUnit = {
+        x: -axisUnit.x,
+        y: -axisUnit.y,
+      };
+    }
+
+    console.log('[buildPrincipalAxisOrdering] axisUnit final:', {
+      x: axisUnit.x,
+      y: axisUnit.y,
+    });
 
     const projectedEntries: RegionProjectionEntry[] = entries.map((entry) => {
       const relative = {
