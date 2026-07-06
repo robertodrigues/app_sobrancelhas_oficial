@@ -35,9 +35,15 @@ interface ImageAnnotatorProps {
 
 type Region = 'ponto_inicial' | 'meio' | 'cauda' | 'falha' | 'ideal' | null;
 
+type DensityStroke = {
+  region: 'falha' | 'ideal';
+  points: Point[];
+};
+
 type DrawingSnapshot = {
   data: string;
   bboxes: Record<string, RegionBBox>;
+  densityStrokes?: DensityStroke[];
 };
 
 type DensityComputation = {
@@ -75,6 +81,8 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
   const [orientationSide, setOrientationSide] = useState<'left' | 'right' | null>(null);
   const [isOrientationDialogOpen, setIsOrientationDialogOpen] = useState(false);
   const currentBBoxesRef = useRef<Record<string, RegionBBox>>({});
+  const densityPolygonsRef = useRef<Record<'falha' | 'ideal', Point[]>>({ falha: [], ideal: [] });
+  const densityStrokeOrderRef = useRef<('falha' | 'ideal')[]>([]);
   const imageRef = useRef<HTMLImageElement | null>(null);
 
   const colors: Record<string, string> = {
@@ -331,8 +339,10 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
       setRedoHistory([]);
       setActiveRegion(null);
       setOrientationSide(null);
+      densityPolygonsRef.current = { falha: [], ideal: [] };
+      densityStrokeOrderRef.current = [];
       promptOrientation();
-
+  
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
