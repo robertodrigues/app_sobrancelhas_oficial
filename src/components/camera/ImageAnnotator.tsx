@@ -30,6 +30,7 @@ interface ImageAnnotatorProps {
   mode?: 'single' | 'comparison' | 'tricoscopia';
   step?: 'regions' | 'density';
   regionsBBoxes?: Record<string, RegionBBox>;
+  orientationSide?: 'left' | 'right';
 }
 
 type Region = 'ponto_inicial' | 'meio' | 'cauda' | 'falha' | 'ideal' | null;
@@ -62,15 +63,17 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
   const [redoHistory, setRedoHistory] = useState<DrawingSnapshot[]>([]);
   const [currentBBoxes, setCurrentBBoxes] = useState<Record<string, RegionBBox>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [orientationSide, setOrientationSide] = useState<'left' | 'right' | null>(null);
   const currentBBoxesRef = useRef<Record<string, RegionBBox>>({});
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const regionSelectionOrderRef = useRef<string[]>([]);
 
   const colors: Record<string, string> = {
     ponto_inicial: '#16A34A',
     meio: '#EAB308',
     cauda: '#DC2626',
-    falha: 'rgba(220, 38, 38, 0.65)',
-    ideal: 'rgba(22, 163, 74, 0.65)',
+    falha: '#DC2626',
+    ideal: '#16A34A',
   };
 
   const footerLabels =
@@ -113,6 +116,22 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
       y: point.y * height,
     }));
 
+  const getPolygonCentroid = (polygon: Point[]) => {
+    const total = polygon.length || 1;
+    const sum = polygon.reduce(
+      (acc, point) => ({
+        x: acc.x + point.x,
+        y: acc.y + point.y,
+      }),
+      { x: 0, y: 0 },
+    );
+
+    return {
+      x: sum.x / total,
+      y: sum.y / total,
+    };
+  };
+
   const getPolygonBounds = (polygon: Point[]) => {
     const xs = polygon.map((point) => point.x);
     const ys = polygon.map((point) => point.y);
@@ -123,6 +142,49 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
       maxX: Math.max(0, Math.ceil(Math.max(...xs))),
       maxY: Math.max(0, Math.ceil(Math.max(...ys))),
     };
+  };
+
+  const buildGeometricRegionOrder = (bboxes: Record<string, RegionBBox>) => {
+    const entries = Object.entries(bboxes)
+      .filter(([, bbox]) => bbox.points.length >= 3)
+      .map(([key, bbox]) => {
+        const polygon = getRegionPolygon(bbox, 1, 1);
+        const centroid = getPolygonCentroid(polygon);
+
+        return {
+          key,
+          centroid,
+        };
+      });
+
+    return entries;
+  };
+
+  const assignRegionLabelsBySide = (bboxes: Record<string, RegionBBox>, side: 'left' | 'right') => {
+    const entries = buildGeometricRegionOrder(bboxes);
+    if (entries.length < 3) {
+      return { mapped: bboxes, orderedKeys: entries.map((entry) => entry.key) };
+    }
+
+    const sorted = [...entries].sort((a, b) => (side === 'left' ? a.centroid.x - b.centroid.x : b.centroid.x - a.centroid.x));
+    const labelOrder = ['ponto_inicial', 'meio', 'cauda'] as const;
+    const mapped: Record<string, RegionBBox> = {};
+
+    for (let i = 0; i < labelOrder.length; i += 1) {
+      const entry = sorted[i];
+      if (!entry) continue;
+      mapped[labelOrder[i]] = bboxes[entry.key];
+    }
+
+    return {
+      mapped,
+      orderedKeys: sorted.map((entry) => entry.key),
+    };
+  };
+
+  const promptOrientation = () => {
+    const side = window.confirm('Essa é a sobrancelha esquerda? Clique em OK para esquerda e em Cancelar para direita.') ? 'left' : 'right';
+    setOrientationSide(side);
   };
 
   const render = () => {
@@ -219,6 +281,8 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     setHistory([{ data: drawingCanvas.toDataURL(), bboxes: regionsBBoxes ? { ...regionsBBoxes } : {} }]);
     setRedoHistory([]);
     setActiveRegion(null);
+    setOrientationSide(null);
+    regionSelectionOrderRef.current = [];
     scheduleRender();
   }, [step, regionsBBoxes]);
 
@@ -359,6 +423,10 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
 
       setHistory((prev) => [...prev, snapshot]);
       setRedoHistory([]);
+
+      if (step === 'regions' && activeRegion) {
+        regionSelectionOrderRef.current = [...regionSelectionOrderRef.current, activeRegion];
+      }
     }
 
     setIsDrawing(false);
@@ -439,6 +507,15 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
           falha_pixels: 0,
           ideal_pixels: 0,
         };
+
+        console.log('calculateDensityMetrics', {
+          region,
+          area_pixels: 0,
+          falha_pixels: 0,
+          ideal_pixels: 0,
+          percentual_falha: 0,
+          percentual_ideal: 0,
+        });
         continue;
       }
 
@@ -491,6 +568,15 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
         falha_pixels: falhaPixels,
         ideal_pixels: idealPixels,
       };
+
+      console.log('calculateDensityMetrics', {
+        region,
+        area_pixels: areaPixels,
+        falha_pixels: falhaPixels,
+        ideal_pixels: idealPixels,
+        percentual_falha: percentualFalha,
+        percentual_ideal: percentualIdeal,
+      });
     }
 
     return { densities, metrics };
@@ -505,7 +591,8 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
         const { densities, metrics } = calculateDensityMetrics();
         await Promise.resolve(onSave(image, regionsBBoxes || {}, densities, metrics));
       } else {
-        await Promise.resolve(onSave(mainCanvasRef.current?.toDataURL('image/jpeg', 0.9) || image, currentBBoxesRef.current));
+        const finalBBoxes = orientationSide ? assignRegionLabelsBySide(currentBBoxesRef.current, orientationSide).mapped : currentBBoxesRef.current;
+        await Promise.resolve(onSave(mainCanvasRef.current?.toDataURL('image/jpeg', 0.9) || image, finalBBoxes));
       }
     } finally {
       setIsSaving(false);
@@ -543,9 +630,10 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
           aria-label="Confirmar marcação e avançar"
         >
           <span className="text-[12px] font-semibold tracking-[0.5px]">
-            {step === 'density' ? 'Concluir' : 'Avançar'}
+            {step === 'regions' && !orientationSide ? 'Definir lado' : step === 'density' ? 'Concluir' : 'Avançar'}
           </span>
         </Button>
+
       </div>
 
       <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-[#1C3A2B]/90 px-2 py-2">
@@ -575,7 +663,9 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
                 <p className="mt-1 font-body text-xs text-[#8FAF8A]">
                   {step === 'density'
                     ? 'e pinte as áreas correspondentes na sobrancelha'
-                    : 'e circule a região correspondente na sobrancelha'}
+                    : orientationSide === null
+                      ? 'defina o lado da sobrancelha para seguir'
+                      : 'e circule a região correspondente na sobrancelha'}
                 </p>
               </div>
             </div>
@@ -619,8 +709,29 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
           </button>
         </div>
 
-        {step === 'density' ? (
+        {step === 'regions' && orientationSide === null ? (
           <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={promptOrientation}
+              disabled={isSaving}
+              className="flex flex-col items-center gap-2 rounded-2xl border-2 border-[#4A7A5C] bg-[#3D6B52]/30 p-3 transition-all disabled:opacity-50"
+            >
+              <div className="h-6 w-6 rounded-full bg-[#8FAF8A]" />
+              <span className="font-label-category text-[9px] text-[#E8DECE]">Definir lado da sobrancelha</span>
+            </button>
+
+            <button
+              onClick={() => setOrientationSide('left')}
+              disabled={isSaving}
+              className="flex flex-col items-center gap-2 rounded-2xl border-2 border-[#4A7A5C] bg-[#3D6B52]/30 p-3 transition-all disabled:opacity-50"
+            >
+              <div className="h-6 w-6 rounded-full bg-[#16A34A]" />
+              <span className="font-label-category text-[9px] text-[#E8DECE]">Esquerda</span>
+            </button>
+          </div>
+        ) : step === 'density' ? (
+          <div className="grid grid-cols-2 gap-3">
+
             <button
               onClick={() => setActiveRegion('falha')}
               disabled={isSaving}
