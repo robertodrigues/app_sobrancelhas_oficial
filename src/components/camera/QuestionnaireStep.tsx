@@ -114,7 +114,7 @@ const QuestionnaireStep = ({ onConfirm, onCancel }: QuestionnaireStepProps) => {
               <Button
                 type="button"
                 onClick={handleConfirm}
-                className="h-12 rounded-2xl bg-[#1C3A2B] text-[#E8DECE] hover:bg-[#10261C]"
+                className="h-12 rounded-2xl border border-[#FFB347]/40 bg-[radial-gradient(circle_at_30%_30%,#FFD089_0%,#FF9F1C_42%,#D97706_100%)] text-white shadow-[0_8px_18px_rgba(217,119,6,0.32),inset_0_2px_4px_rgba(255,255,255,0.35),inset_0_-5px_9px_rgba(120,53,15,0.28)] hover:bg-[radial-gradient(circle_at_30%_30%,#FFD089_0%,#FF9F1C_42%,#D97706_100%)]"
               >
                 <Check className="mr-2 h-4 w-4" />
                 Confirmar
