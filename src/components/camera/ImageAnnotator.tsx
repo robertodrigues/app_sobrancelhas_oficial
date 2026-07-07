@@ -476,7 +476,8 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
       dCtx.moveTo(position.x, position.y);
       dCtx.lineCap = 'round';
       dCtx.lineJoin = 'round';
-      dCtx.strokeStyle = colors[activeRegion];
+      dCtx.strokeStyle = step === 'density' ? '#9B59B6' : colors[activeRegion];
+      dCtx.globalAlpha = step === 'density' ? 0.45 : 1;
       dCtx.lineWidth = getStrokeWidth();
       dCtx.globalCompositeOperation = 'source-over';
 
@@ -500,6 +501,8 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
 
     const dCtx = drawingCanvasRef.current.getContext('2d');
     if (dCtx) {
+      dCtx.strokeStyle = step === 'density' ? '#9B59B6' : colors[activeRegion];
+      dCtx.globalAlpha = step === 'density' ? 0.45 : 1;
       dCtx.lineWidth = getStrokeWidth();
       dCtx.lineTo(position.x, position.y);
       dCtx.stroke();

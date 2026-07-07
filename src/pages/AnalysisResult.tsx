@@ -130,12 +130,22 @@ const AnalysisResult = () => {
     [allImages, hasTwoImages],
   );
 
+  const displaySingleImage = useMemo(() => {
+    if (!Array.isArray(allImages) || allImages.length === 0) {
+      return "";
+    }
+
+    const lastImage = allImages[allImages.length - 1];
+    return lastImage?.dataUrl || lastImage?.url || "";
+  }, [allImages]);
+
   const displayImage = useMemo(() => {
     if (hasTwoImages) {
-      return displayAfterImage || image || analysis?.image_url || "";
+      return displayAfterImage || displaySingleImage || image || analysis?.image_url || "";
     }
-    return image || analysis?.image_url || "";
-  }, [analysis?.image_url, displayAfterImage, hasTwoImages, image]);
+
+    return displaySingleImage || image || analysis?.image_url || "";
+  }, [analysis?.image_url, displayAfterImage, displaySingleImage, hasTwoImages, image]);
 
   const titleText = analysis?.isComparativo
     ? "Relatório de Evolução"
