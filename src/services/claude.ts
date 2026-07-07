@@ -139,13 +139,14 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
         content.push({ type: "text", text: `Região: ${name.toUpperCase()}` });
       }
 
-      if (images[i].densityRegion) {
+      if (images[i].densityRegion && images[i].densityRegion.length > 0) {
+        const orderedLabels = ordemRegioes
+          .filter((region) => images[i].densityRegion?.includes(region))
+          .map((region) => formatDensityRegionLabel(region));
+
         content.push({
           type: "text",
-          text:
-            `Marca roxa da etapa de densidade registrada separadamente na região: ` +
-            `${formatDensityRegionLabel(images[i].densityRegion)}. ` +
-            `Use essa informação explícita como apoio principal desta etapa, não apenas a imagem.`,
+          text: `Falha marcada pela profissional nas regiões: ${orderedLabels.join(", ")}`,
         });
       } else if (images[i].densityBBoxes?.falha) {
         content.push({

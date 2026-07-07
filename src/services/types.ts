@@ -14,6 +14,6 @@ export interface AnalysisImage {
   dataUrl?: string;
   densities?: Record<string, number>;
   questionnaire?: AnalysisQuestionnaire;
-  densityRegion?: DensityRegionKey | null;
+  densityRegion?: DensityRegionKey[];
   densityBBoxes?: Record<string, RegionBBox>;
 }

@@ -11,7 +11,7 @@ type TechnicalMappingState = {
   image?: string;
   bboxes?: Record<string, RegionBBox>;
   step?: "regions" | "density" | "questionnaire";
-  densityRegion?: DensityRegionKey | null;
+  densityRegion?: DensityRegionKey[];
   densityBBoxes?: Record<string, RegionBBox>;
 };
 
@@ -67,7 +67,7 @@ const TechnicalMapping = () => {
         image: state.image,
         bboxes: state.bboxes || {},
         questionnaire,
-        densityRegion: state.densityRegion || null,
+        densityRegion: state.densityRegion || [],
         densityBBoxes: state.densityBBoxes || {},
       },
     });

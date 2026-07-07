@@ -44,7 +44,7 @@ type PendingAnalysisState = {
   bboxes?: Record<string, RegionBBox>;
   step?: 'regions' | 'density';
   questionnaire?: AnalysisQuestionnaire;
-  densityRegion?: DensityRegionKey | null;
+  densityRegion?: DensityRegionKey[];
   densityBBoxes?: Record<string, RegionBBox>;
 };
 
@@ -134,7 +134,7 @@ const Capture = () => {
         dataUrl: pendingState.image,
         bboxes: pendingState.bboxes || {},
         questionnaire: pendingState.questionnaire,
-        densityRegion: pendingState.densityRegion || null,
+        densityRegion: pendingState.densityRegion || [],
         densityBBoxes: pendingState.densityBBoxes || {},
       },
     ]);
