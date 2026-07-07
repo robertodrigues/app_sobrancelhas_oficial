@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Undo2, Redo2, X, MousePointer2, Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AnalysisProcessingOverlay from '@/components/camera/AnalysisProcessingOverlay';
-import OrientationSideDialog from '@/components/camera/OrientationSideDialog';
 
 type Point = {
   x: number;
@@ -62,8 +61,6 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
   const [redoHistory, setRedoHistory] = useState<DrawingSnapshot[]>([]);
   const [currentBBoxes, setCurrentBBoxes] = useState<Record<string, RegionBBox>>({});
   const [isSaving, setIsSaving] = useState(false);
-  const [orientationSide, setOrientationSide] = useState<'left' | 'right' | null>(null);
-  const [isOrientationDialogOpen, setIsOrientationDialogOpen] = useState(false);
   const currentBBoxesRef = useRef<Record<string, RegionBBox>>({});
   const densityPolygonsRef = useRef<Record<'falha' | 'ideal', Point[]>>({ falha: [], ideal: [] });
   const imageRef = useRef<HTMLImageElement | null>(null);
@@ -276,10 +273,6 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     return mapped;
   };
 
-  const promptOrientation = () => {
-    setIsOrientationDialogOpen(true);
-  };
-
   useEffect(() => {
     const previousBodyOverflow = document.body.style.overflow;
     const previousHtmlOverflow = document.documentElement.style.overflow;
@@ -321,8 +314,6 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
       setHistory([{ data: drawingCanvas.toDataURL(), bboxes: {} }]);
       setRedoHistory([]);
       setActiveRegion(null);
-      setOrientationSide(null);
-      promptOrientation();
 
       const ctx = canvas.getContext('2d');
 
@@ -596,11 +587,6 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
   const handleSave = async () => {
     if (isSaving) return;
 
-    if (step === 'regions' && orientationSide === null) {
-      promptOrientation();
-      return;
-    }
-
     setIsSaving(true);
     try {
       if (step === 'density') {
@@ -608,10 +594,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
         await Promise.resolve(onSave(image, regionsBBoxes || {}));
 
       } else {
-
-        const finalBBoxes = orientationSide
-          ? assignRegionLabelsBySide(currentBBoxesRef.current, orientationSide)
-          : currentBBoxesRef.current;
+        const finalBBoxes = currentBBoxesRef.current;
 
         await Promise.resolve(
           onSave(mainCanvasRef.current?.toDataURL('image/jpeg', 0.9) || image, finalBBoxes),
@@ -622,26 +605,8 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     }
   };
 
-  const handleSelectOrientation = (side: 'left' | 'right') => {
-    setOrientationSide(side);
-    setIsOrientationDialogOpen(false);
-  };
-
   return (
     <div className="absolute inset-0 z-50 flex h-full w-full max-h-full max-w-full flex-col overflow-hidden bg-[#1C3A2B] text-[#E8DECE]">
-      <OrientationSideDialog
-        open={isOrientationDialogOpen}
-        onOpenChange={(open) => {
-          if (!open && orientationSide === null) {
-            setIsOrientationDialogOpen(true);
-            return;
-          }
-
-          setIsOrientationDialogOpen(open);
-        }}
-        onSelect={handleSelectOrientation}
-      />
-
       <div className="flex shrink-0 items-center justify-between border-b border-[#4A7A5C]/30 bg-[#1C3A2B] px-3 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] text-[#E8DECE] sm:px-4">
         <Button
           variant="ghost"
@@ -671,7 +636,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
           aria-label="Confirmar marcação e avançar"
         >
           <span className="text-[12px] font-semibold tracking-[0.5px]">
-            {step === 'regions' && !orientationSide ? 'Definir lado' : step === 'density' ? 'Concluir' : 'Avançar'}
+            {step === 'density' ? 'Concluir' : 'Avançar'}
           </span>
         </Button>
       </div>
@@ -703,9 +668,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
                 <p className="mt-1 font-body text-xs text-[#8FAF8A]">
                   {step === 'density'
                     ? 'e pinte as áreas correspondentes na sobrancelha'
-                    : orientationSide === null
-                      ? 'defina o lado da sobrancelha para seguir'
-                      : 'e circule a região correspondente na sobrancelha'}
+                    : 'e circule a região correspondente na sobrancelha'}
                 </p>
               </div>
             </div>
