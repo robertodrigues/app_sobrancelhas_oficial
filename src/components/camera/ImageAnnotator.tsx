@@ -4,7 +4,6 @@ import { Undo2, Redo2, X, MousePointer2, Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AnalysisProcessingOverlay from '@/components/camera/AnalysisProcessingOverlay';
 import OrientationSideDialog from '@/components/camera/OrientationSideDialog';
-import type { RegionAnalysisMetrics } from '@/services/types';
 
 type Point = {
   x: number;
@@ -21,12 +20,7 @@ export interface RegionBBox {
 
 interface ImageAnnotatorProps {
   image: string;
-  onSave: (
-    annotatedImage: string,
-    bboxes: Record<string, RegionBBox>,
-    densities?: Record<string, number>,
-    analysisMetrics?: Record<string, RegionAnalysisMetrics>,
-  ) => Promise<void> | void;
+  onSave: (annotatedImage: string, bboxes: Record<string, RegionBBox>) => Promise<void> | void;
   onCancel: () => void;
   mode?: 'single' | 'comparison' | 'tricoscopia';
   step?: 'regions' | 'density';
@@ -35,21 +29,11 @@ interface ImageAnnotatorProps {
 
 type Region = 'ponto_inicial' | 'meio' | 'cauda' | 'falha' | 'ideal' | null;
 
-type DensityStroke = {
-  region: 'falha' | 'ideal';
-  points: Point[];
-};
-
 type DrawingSnapshot = {
   data: string;
   bboxes: Record<string, RegionBBox>;
-  densityStrokes?: DensityStroke[];
 };
 
-type DensityComputation = {
-  densities: Record<string, number>;
-  metrics: Record<string, RegionAnalysisMetrics>;
-};
 
 type RegionCentroidEntry = {
   key: string;
@@ -82,7 +66,6 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
   const [isOrientationDialogOpen, setIsOrientationDialogOpen] = useState(false);
   const currentBBoxesRef = useRef<Record<string, RegionBBox>>({});
   const densityPolygonsRef = useRef<Record<'falha' | 'ideal', Point[]>>({ falha: [], ideal: [] });
-  const densityStrokeOrderRef = useRef<('falha' | 'ideal')[]>([]);
   const imageRef = useRef<HTMLImageElement | null>(null);
 
   const colors: Record<string, string> = {
@@ -339,11 +322,10 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
       setRedoHistory([]);
       setActiveRegion(null);
       setOrientationSide(null);
-      densityPolygonsRef.current = { falha: [], ideal: [] };
-      densityStrokeOrderRef.current = [];
       promptOrientation();
-  
+
       const ctx = canvas.getContext('2d');
+
       if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -371,6 +353,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     setRedoHistory([]);
     setActiveRegion(null);
     scheduleRender();
+
   }, [step, regionsBBoxes]);
 
   const getPolygonBounds = (polygon: Point[]) => {
@@ -506,9 +489,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
       dCtx.lineWidth = getStrokeWidth();
       dCtx.globalCompositeOperation = 'source-over';
 
-      if (step !== 'density') {
-        updateBBox(activeRegion, position.x, position.y);
-      }
+      updateBBox(activeRegion, position.x, position.y);
 
       scheduleRender();
     }
@@ -532,9 +513,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
       dCtx.lineTo(position.x, position.y);
       dCtx.stroke();
 
-      if (step !== 'density') {
-        updateBBox(activeRegion, position.x, position.y);
-      }
+      updateBBox(activeRegion, position.x, position.y);
 
       scheduleRender();
     }
@@ -603,107 +582,15 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     restoreSnapshot(snapshot);
   };
 
-  const calculateDensityMetrics = (): DensityComputation => {
-    const drawingCanvas = drawingCanvasRef.current;
-    if (!drawingCanvas || !regionsBBoxes) {
-      return { densities: {}, metrics: {} };
-    }
-
-    const dCtx = drawingCanvas.getContext('2d');
-    if (!dCtx) {
-      return { densities: {}, metrics: {} };
-    }
-
-    const { data, width, height } = dCtx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
+  const calculateDensityMetrics = (): Record<string, number> => {
     const densities: Record<string, number> = {};
-    const metrics: Record<string, RegionAnalysisMetrics> = {};
     const regions = ['ponto_inicial', 'meio', 'cauda'] as const;
 
     for (const region of regions) {
-      const bbox = regionsBBoxes[region];
-
-      if (!bbox || bbox.points.length < 3) {
-        densities[region] = 0;
-        metrics[region] = {
-          percentual_falha: 0,
-          percentual_ideal: 0,
-          area_pixels: 0,
-          falha_pixels: 0,
-          ideal_pixels: 0,
-        };
-
-        console.log('calculateDensityMetrics', {
-          region,
-          area_pixels: 0,
-          falha_pixels: 0,
-          ideal_pixels: 0,
-          percentual_falha: 0,
-          percentual_ideal: 0,
-        });
-        continue;
-      }
-
-      const polygon = getRegionPolygon(bbox, width, height);
-      const bounds = getPolygonBounds(polygon);
-
-      let falhaPixels = 0;
-      let idealPixels = 0;
-      let areaPixels = 0;
-
-      for (let y = bounds.minY; y < bounds.maxY; y += 1) {
-        for (let x = bounds.minX; x < bounds.maxX; x += 1) {
-          const inside = pointInPolygon({ x: x + 0.5, y: y + 0.5 }, polygon);
-
-          if (!inside) {
-            continue;
-          }
-
-          areaPixels += 1;
-
-          const idx = (y * width + x) * 4;
-          const r = data[idx];
-          const g = data[idx + 1];
-          const b = data[idx + 2];
-          const a = data[idx + 3];
-
-          if (a <= 30) {
-            continue;
-          }
-
-          const isRed = r > g && r > b && r > 100;
-          const isGreen = g > r && g > b && g > 100;
-
-          if (isRed) {
-            falhaPixels += 1;
-          } else if (isGreen) {
-            idealPixels += 1;
-          }
-        }
-      }
-
-      const percentualFalha = areaPixels > 0 ? Math.round((falhaPixels / areaPixels) * 100) : 0;
-      const percentualIdeal = areaPixels > 0 ? Math.round((idealPixels / areaPixels) * 100) : 0;
-
-      densities[region] = percentualIdeal;
-      metrics[region] = {
-        percentual_falha: percentualFalha,
-        percentual_ideal: percentualIdeal,
-        area_pixels: areaPixels,
-        falha_pixels: falhaPixels,
-        ideal_pixels: idealPixels,
-      };
-
-      console.log('calculateDensityMetrics', {
-        region,
-        area_pixels: areaPixels,
-        falha_pixels: falhaPixels,
-        ideal_pixels: idealPixels,
-        percentual_falha: percentualFalha,
-        percentual_ideal: percentualIdeal,
-      });
+      densities[region] = 0;
     }
 
-    return { densities, metrics };
+    return densities;
   };
 
   const handleSave = async () => {
@@ -717,9 +604,11 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     setIsSaving(true);
     try {
       if (step === 'density') {
-        const { densities, metrics } = calculateDensityMetrics();
-        await Promise.resolve(onSave(image, regionsBBoxes || {}, densities, metrics));
+        const densities = calculateDensityMetrics();
+        await Promise.resolve(onSave(image, regionsBBoxes || {}));
+
       } else {
+
         const finalBBoxes = orientationSide
           ? assignRegionLabelsBySide(currentBBoxesRef.current, orientationSide)
           : currentBBoxesRef.current;

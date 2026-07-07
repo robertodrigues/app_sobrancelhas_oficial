@@ -42,8 +42,6 @@ type AnalysisMode = (typeof ANALYSIS_MODES)[number]['id'];
 type PendingAnalysisState = {
   image?: string;
   bboxes?: Record<string, RegionBBox>;
-  densities?: Record<string, number>;
-  analysisMetrics?: AnalysisImage['analysisMetrics'];
   step?: 'regions' | 'density';
 };
 
@@ -132,9 +130,8 @@ const Capture = () => {
         url: pendingState.image,
         dataUrl: pendingState.image,
         bboxes: pendingState.bboxes || {},
-        densities: pendingState.densities,
-        analysisMetrics: pendingState.analysisMetrics,
       },
+
     ]);
 
     setCurrentImage(null);
@@ -272,11 +269,9 @@ const Capture = () => {
       persistAnalysisRouteState({
         analysis: resultToNavigate.analysis,
         image: resultToNavigate.image,
-        allImages: resultToNavigate.allImages.map(({ url, bboxes, densities, analysisMetrics }) => ({
+        allImages: resultToNavigate.allImages.map(({ url, bboxes }) => ({
           url,
           bboxes,
-          densities,
-          analysisMetrics,
         })),
       });
 

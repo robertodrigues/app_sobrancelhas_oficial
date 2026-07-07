@@ -3,13 +3,10 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ImageAnnotator, { type RegionBBox } from "@/components/camera/ImageAnnotator";
-import type { RegionAnalysisMetrics } from "@/services/types";
 
 type TechnicalMappingState = {
   image?: string;
   bboxes?: Record<string, RegionBBox>;
-  densities?: Record<string, number>;
-  analysisMetrics?: Record<string, RegionAnalysisMetrics>;
   step?: "regions" | "density";
 };
 
@@ -29,12 +26,7 @@ const TechnicalMapping = () => {
     navigate("/captura", { replace: true });
   }, [location.state, navigate]);
 
-  const handleSave = (
-    annotatedImage: string,
-    bboxes: Record<string, RegionBBox>,
-    densities?: Record<string, number>,
-    analysisMetrics?: Record<string, RegionAnalysisMetrics>,
-  ) => {
+  const handleSave = (annotatedImage: string, bboxes: Record<string, RegionBBox>) => {
     if (!state?.image) return;
 
     if (state.step === "regions") {
@@ -49,8 +41,6 @@ const TechnicalMapping = () => {
     const payload = {
       image: annotatedImage,
       bboxes: state.bboxes || bboxes,
-      densities,
-      analysisMetrics,
       step: "density" as const,
     };
 

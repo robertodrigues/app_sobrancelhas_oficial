@@ -129,18 +129,15 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
       });
 
       console.log("bboxes recebidos para esta imagem:", images[i].bboxes);
-      console.log("densidades recebidas para esta imagem:", images[i].densities);
 
       const ordemRegioes = ["ponto_inicial", "meio", "cauda"] as const;
       for (const name of ordemRegioes) {
         const box = images[i].bboxes[name];
         if (!box) continue;
 
-        const density = images[i].densities?.[name];
-        if (typeof density === "number") {
-          content.push({ type: "text", text: `Região: ${name.toUpperCase()} | Densidade calculada automaticamente: ${density}%` });
-        }
+        content.push({ type: "text", text: `Região: ${name.toUpperCase()}` });
       }
+
     }
 
     content.push({ type: "text", text: prompt });
