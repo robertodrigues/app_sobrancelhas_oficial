@@ -1,6 +1,7 @@
 import { PROMPT_ESPECIALISTA, PROMPT_TRICOSCOPIA } from "../constants/prompt";
 import type { AnalysisImage, AnalysisMode } from "./types";
 import { jsonrepair } from "jsonrepair";
+import { formatDensityRegionLabel } from "@/lib/densityRegion";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "https://api.elha.com.br";
@@ -136,6 +137,22 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
         if (!box) continue;
 
         content.push({ type: "text", text: `Região: ${name.toUpperCase()}` });
+      }
+
+      if (images[i].densityRegion) {
+        content.push({
+          type: "text",
+          text:
+            `Marca roxa da etapa de densidade registrada separadamente na região: ` +
+            `${formatDensityRegionLabel(images[i].densityRegion)}. ` +
+            `Use essa informação explícita como apoio principal desta etapa, não apenas a imagem.`,
+        });
+      } else if (images[i].densityBBoxes?.falha) {
+        content.push({
+          type: "text",
+          text:
+            "Marca roxa da etapa de densidade registrada separadamente, mas a região não pôde ser identificada com segurança.",
+        });
       }
     }
 

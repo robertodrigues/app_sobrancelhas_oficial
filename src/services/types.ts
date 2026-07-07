@@ -1,6 +1,7 @@
 import type { RegionBBox } from "@/components/camera/ImageAnnotator";
 
 export type AnalysisMode = "single" | "comparison" | "tricoscopia";
+export type DensityRegionKey = "ponto_inicial" | "meio" | "cauda";
 
 export interface AnalysisQuestionnaire {
   falha: "Pontual" | "Difusa";
@@ -13,4 +14,6 @@ export interface AnalysisImage {
   dataUrl?: string;
   densities?: Record<string, number>;
   questionnaire?: AnalysisQuestionnaire;
+  densityRegion?: DensityRegionKey | null;
+  densityBBoxes?: Record<string, RegionBBox>;
 }

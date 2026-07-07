@@ -4,12 +4,15 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ImageAnnotator, { type RegionBBox } from "@/components/camera/ImageAnnotator";
 import QuestionnaireStep from "@/components/camera/QuestionnaireStep";
-import type { AnalysisQuestionnaire } from "@/services/types";
+import type { AnalysisQuestionnaire, DensityRegionKey } from "@/services/types";
+import { detectDensityRegion } from "@/lib/densityRegion";
 
 type TechnicalMappingState = {
   image?: string;
   bboxes?: Record<string, RegionBBox>;
   step?: "regions" | "density" | "questionnaire";
+  densityRegion?: DensityRegionKey | null;
+  densityBBoxes?: Record<string, RegionBBox>;
 };
 
 const TechnicalMapping = () => {
@@ -41,10 +44,16 @@ const TechnicalMapping = () => {
     }
 
     if (state.step === "density") {
+      const densityBBox = bboxes.falha;
+      const densityRegion = detectDensityRegion(densityBBox, state.bboxes || {});
+      const densityBBoxes = densityBBox ? { falha: densityBBox } : {};
+
       setState({
         image: annotatedImage,
-        bboxes: bboxes || state.bboxes,
+        bboxes: state.bboxes || {},
         step: "questionnaire",
+        densityRegion,
+        densityBBoxes,
       });
     }
   };
@@ -58,6 +67,8 @@ const TechnicalMapping = () => {
         image: state.image,
         bboxes: state.bboxes || {},
         questionnaire,
+        densityRegion: state.densityRegion || null,
+        densityBBoxes: state.densityBBoxes || {},
       },
     });
   };

@@ -69,7 +69,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     ponto_inicial: '#16A34A',
     meio: '#EAB308',
     cauda: '#DC2626',
-    falha: '#DC2626',
+    falha: '#9B59B6',
     ideal: '#16A34A',
   };
 
@@ -477,7 +477,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
       dCtx.lineCap = 'round';
       dCtx.lineJoin = 'round';
       dCtx.strokeStyle = step === 'density' ? '#9B59B6' : colors[activeRegion];
-      dCtx.globalAlpha = step === 'density' ? 0.65 : 1;
+      dCtx.globalAlpha = step === 'density' ? 0.92 : 1;
       dCtx.lineWidth = getStrokeWidth();
       dCtx.globalCompositeOperation = 'source-over';
 
@@ -502,7 +502,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     const dCtx = drawingCanvasRef.current.getContext('2d');
     if (dCtx) {
       dCtx.strokeStyle = step === 'density' ? '#9B59B6' : colors[activeRegion];
-      dCtx.globalAlpha = step === 'density' ? 0.65 : 1;
+      dCtx.globalAlpha = step === 'density' ? 0.92 : 1;
       dCtx.lineWidth = getStrokeWidth();
       dCtx.lineTo(position.x, position.y);
       dCtx.stroke();
@@ -595,7 +595,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
       if (step === 'density') {
         calculateDensityMetrics();
         await Promise.resolve(
-          onSave(mainCanvasRef.current?.toDataURL('image/jpeg', 0.9) || image, regionsBBoxes || {}),
+          onSave(mainCanvasRef.current?.toDataURL('image/jpeg', 0.9) || image, currentBBoxesRef.current),
         );
       } else {
         const finalBBoxes = currentBBoxesRef.current;
