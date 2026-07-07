@@ -137,7 +137,16 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
 
         content.push({ type: "text", text: `Região: ${name.toUpperCase()}` });
       }
+    }
 
+    const questionnaire = images[0]?.questionnaire;
+    if (questionnaire) {
+      content.push({
+        type: "text",
+        text: `Questionário respondido pela profissional:
+- Tipo de falha: ${questionnaire.falha}
+- Fios em crescimento: ${questionnaire.fiosEmCrescimento}`,
+      });
     }
 
     content.push({ type: "text", text: prompt });

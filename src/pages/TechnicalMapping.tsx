@@ -3,11 +3,13 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ImageAnnotator, { type RegionBBox } from "@/components/camera/ImageAnnotator";
+import QuestionnaireStep from "@/components/camera/QuestionnaireStep";
+import type { AnalysisQuestionnaire } from "@/services/types";
 
 type TechnicalMappingState = {
   image?: string;
   bboxes?: Record<string, RegionBBox>;
-  step?: "regions" | "density";
+  step?: "regions" | "density" | "questionnaire";
 };
 
 const TechnicalMapping = () => {
@@ -38,15 +40,25 @@ const TechnicalMapping = () => {
       return;
     }
 
-    const payload = {
-      image: annotatedImage,
-      bboxes: state.bboxes || bboxes,
-      step: "density" as const,
-    };
+    if (state.step === "density") {
+      setState({
+        image: state.image,
+        bboxes: bboxes || state.bboxes,
+        step: "questionnaire",
+      });
+    }
+  };
+
+  const handleQuestionnaireConfirm = (questionnaire: AnalysisQuestionnaire) => {
+    if (!state?.image) return;
 
     navigate("/captura", {
       replace: true,
-      state: payload,
+      state: {
+        image: state.image,
+        bboxes: state.bboxes || {},
+        questionnaire,
+      },
     });
   };
 
@@ -62,6 +74,15 @@ const TechnicalMapping = () => {
           <p className="text-xs text-[#8FAF8A]">Aguarde um instante.</p>
         </div>
       </div>
+    );
+  }
+
+  if (state.step === "questionnaire") {
+    return (
+      <QuestionnaireStep
+        onConfirm={handleQuestionnaireConfirm}
+        onCancel={handleCancel}
+      />
     );
   }
 
