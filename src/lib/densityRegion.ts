@@ -34,6 +34,15 @@ export const detectDensityRegion = (
     return [];
   }
 
+  console.log("[detectDensityRegion] primeiros 3 pontos do densityBBox.points:", densityBBox.points.slice(0, 3));
+  console.log(
+    "[detectDensityRegion] primeiros 3 pontos dos polígonos das regiões:",
+    Object.entries(regionBBoxes).map(([regionKey, bbox]) => ({
+      region: regionKey,
+      points: bbox.points.slice(0, 3),
+    })),
+  );
+
   const densityPoints = densityBBox.points;
   if (densityPoints.length === 0) {
     return [];
