@@ -33,7 +33,7 @@ const TechnicalMapping = () => {
 
     if (state.step === "regions") {
       setState({
-        image: state.image,
+        image: annotatedImage,
         bboxes,
         step: "density",
       });
@@ -42,7 +42,7 @@ const TechnicalMapping = () => {
 
     if (state.step === "density") {
       setState({
-        image: state.image,
+        image: annotatedImage,
         bboxes: bboxes || state.bboxes,
         step: "questionnaire",
       });
