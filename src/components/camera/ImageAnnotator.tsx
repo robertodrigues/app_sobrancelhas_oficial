@@ -593,9 +593,10 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     setIsSaving(true);
     try {
       if (step === 'density') {
-        const densities = calculateDensityMetrics();
-        await Promise.resolve(onSave(image, regionsBBoxes || {}));
-
+        calculateDensityMetrics();
+        await Promise.resolve(
+          onSave(mainCanvasRef.current?.toDataURL('image/jpeg', 0.9) || image, regionsBBoxes || {}),
+        );
       } else {
         const finalBBoxes = currentBBoxesRef.current;
 
