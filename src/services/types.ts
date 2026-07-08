@@ -5,7 +5,7 @@ export type DensityRegionKey = "ponto_inicial" | "meio" | "cauda";
 
 export interface AnalysisQuestionnaire {
   falha: "Pontual" | "Difusa";
-  fiosEmCrescimento: "Sim" | "Não";
+  fiosEmCrescimento: DensityRegionKey[];
 }
 
 export interface AnalysisImage {
