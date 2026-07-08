@@ -60,6 +60,19 @@ const textValue = (value: unknown) => {
   return "";
 };
 
+const splitIntoBlocks = (value: string) => {
+  const normalized = value.trim();
+
+  if (!normalized) {
+    return ["Sem conteúdo disponível."];
+  }
+
+  return normalized
+    .split(/(?<=[.!?])\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+};
+
 const AnalysisResult = () => {
   const { user } = useUser();
   const location = useLocation();
@@ -364,21 +377,87 @@ const AnalysisResult = () => {
 
       if (usesNewPromptShape) {
         addSectionTitle("Resultado da análise");
-        addRegionBlock("Início", textValue(analysis.regiao_inicio), "#EAF3DE");
-        addRegionBlock("Meio", textValue(analysis.regiao_meio), "#FEF3C7");
-        addRegionBlock("Cauda", textValue(analysis.regiao_cauda), "#FEE2E2");
 
-        ensureSpace(10);
+        const stageCards = [
+          {
+            key: "inicio",
+            label: "INÍCIO",
+            text: textValue(analysis.regiao_inicio),
+            background: "#EEF7E3",
+            titleColor: "text-[#2F5B3F]",
+            bodyColor: "text-[#2F5B3F]",
+          },
+          {
+            key: "meio",
+            label: "MEIO",
+            text: textValue(analysis.regiao_meio),
+            background: "#FFF3C7",
+            titleColor: "text-[#8A5C10]",
+            bodyColor: "text-[#6E4210]",
+          },
+          {
+            key: "cauda",
+            label: "CAUDA",
+            text: textValue(analysis.regiao_cauda),
+            background: "#FDE8E6",
+            titleColor: "text-[#A13B3B]",
+            bodyColor: "text-[#7F2F2F]",
+          },
+        ] as const;
+
+        for (const card of stageCards) {
+          const blocks = splitIntoBlocks(card.text);
+          ensureSpace(52 + blocks.length * 24);
+
+          pdf.setFillColor(...hexToRgb(card.background));
+          pdf.roundedRect(margin, cursorY, contentWidth, 28 + blocks.length * 24, 6, 6, "F");
+
+          pdf.setFont("helvetica", "bold");
+          pdf.setFontSize(10);
+          pdf.setTextColor(28, 58, 43);
+          pdf.text(card.label, margin + 5, cursorY + 8);
+
+          let innerY = cursorY + 13;
+
+          blocks.forEach((block) => {
+            pdf.setFillColor(255, 255, 255);
+            pdf.roundedRect(margin + 4, innerY, contentWidth - 8, 18, 4, 4, "F");
+
+            pdf.setFont("helvetica", "normal");
+            pdf.setFontSize(8.8);
+            const lines = pdf.splitTextToSize(block, contentWidth - 14);
+            pdf.setTextColor(...hexToRgb(card.bodyColor.replace("text-[", "").replace("]", "")) as any);
+            pdf.text(lines, margin + 7, innerY + 7);
+            innerY += 21;
+          });
+
+          cursorY += 28 + blocks.length * 24 + 6;
+        }
+
+        const generalBlocks = splitIntoBlocks(
+          textValue(analysis.avaliacao_geral) || "Sem conteúdo disponível.",
+        );
+
+        ensureSpace(52 + generalBlocks.length * 24);
         pdf.setFillColor(232, 222, 206);
-        pdf.roundedRect(margin, cursorY, contentWidth, 24, 4, 4, "F");
+        pdf.roundedRect(margin, cursorY, contentWidth, 28 + generalBlocks.length * 24, 6, 6, "F");
+
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(11);
+        pdf.setFontSize(10);
         pdf.setTextColor(28, 58, 43);
-        pdf.text("Avaliação geral", margin + 4, cursorY + 7);
-        pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(9);
-        const summaryLines = pdf.splitTextToSize(textValue(analysis.avaliacao_geral) || "Sem conteúdo disponível.", contentWidth - 8);
-        pdf.text(summaryLines, margin + 4, cursorY + 13);
+        pdf.text("AVALIAÇÃO GERAL", margin + 5, cursorY + 8);
+
+        let generalY = cursorY + 13;
+        generalBlocks.forEach((block) => {
+          pdf.setFillColor(255, 255, 255);
+          pdf.roundedRect(margin + 4, generalY, contentWidth - 8, 18, 4, 4, "F");
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(8.8);
+          pdf.setTextColor(28, 58, 43);
+          const lines = pdf.splitTextToSize(block, contentWidth - 14);
+          pdf.text(lines, margin + 7, generalY + 7);
+          generalY += 21;
+        });
       } else if (isTricoscopia) {
         addSectionTitle("Relatório tricoscópico");
         addParagraph(textValue(analysis.regiaoAnalisada), 10);
@@ -499,48 +578,83 @@ const AnalysisResult = () => {
                 Resultado da análise
               </h2>
 
-              <div className="grid gap-4">
-                <Card className="border-none shadow-sm rounded-2xl overflow-hidden" style={{ backgroundColor: "#EAF3DE" }}>
-                  <CardContent className="p-6 space-y-2">
-                    <p className="text-[10px] uppercase tracking-[3px] text-[#166534]">Início</p>
-                    <p className="font-heading text-lg font-medium text-[#14532D]">
-                      {textValue(analysis.regiao_inicio) || "Sem conteúdo disponível."}
-                    </p>
-                  </CardContent>
-                </Card>
+              <div className="space-y-4">
+                {[
+                  {
+                    key: "inicio",
+                    label: "INÍCIO",
+                    text: textValue(analysis.regiao_inicio),
+                    background: "#EEF7E3",
+                    textClass: "text-[#2F5B3F]",
+                  },
+                  {
+                    key: "meio",
+                    label: "MEIO",
+                    text: textValue(analysis.regiao_meio),
+                    background: "#FFF3C7",
+                    textClass: "text-[#7A4C10]",
+                  },
+                  {
+                    key: "cauda",
+                    label: "CAUDA",
+                    text: textValue(analysis.regiao_cauda),
+                    background: "#FDE8E6",
+                    textClass: "text-[#8F3535]",
+                  },
+                ].map((stage) => {
+                  const blocks = splitIntoBlocks(stage.text);
 
-                <Card className="border-none shadow-sm rounded-2xl overflow-hidden" style={{ backgroundColor: "#FEF3C7" }}>
-                  <CardContent className="p-6 space-y-2">
-                    <p className="text-[10px] uppercase tracking-[3px] text-[#A16207]">Meio</p>
-                    <p className="font-heading text-lg font-medium text-[#78350F]">
-                      {textValue(analysis.regiao_meio) || "Sem conteúdo disponível."}
-                    </p>
-                  </CardContent>
-                </Card>
+                  return (
+                    <Card
+                      key={stage.key}
+                      className="overflow-hidden rounded-[30px] border border-white/60 shadow-[0_16px_40px_rgba(28,58,43,0.08)]"
+                      style={{ backgroundColor: stage.background }}
+                    >
+                      <CardContent className="p-5 sm:p-6">
+                        <div className="mb-4 flex items-center justify-between">
+                          <p className="font-label-category text-[10px] tracking-[3px] text-[#6B7A65]">
+                            {stage.label}
+                          </p>
+                        </div>
 
-                <Card className="border-none shadow-sm rounded-2xl overflow-hidden" style={{ backgroundColor: "#FEE2E2" }}>
-                  <CardContent className="p-6 space-y-2">
-                    <p className="text-[10px] uppercase tracking-[3px] text-[#991B1B]">Cauda</p>
-                    <p className="font-heading text-lg font-medium text-[#7F1D1D]">
-                      {textValue(analysis.regiao_cauda) || "Sem conteúdo disponível."}
-                    </p>
+                        <div className="space-y-3">
+                          {blocks.map((block, index) => (
+                            <div
+                              key={`${stage.key}-${index}`}
+                              className="rounded-2xl border border-white/60 bg-white/60 px-4 py-4 shadow-sm"
+                            >
+                              <p className={cn("font-body text-sm leading-relaxed", stage.textClass)}>
+                                {block}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+
+                <Card className="overflow-hidden rounded-[30px] border border-[#D4C9B5] bg-[#E8DECE] shadow-[0_16px_40px_rgba(28,58,43,0.08)]">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
+                      <ShieldCheck className="text-[#4A7A5C]" size={18} />
+                      Avaliação geral
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {splitIntoBlocks(textValue(analysis.avaliacao_geral) || "Sem conteúdo disponível.").map(
+                      (block, index) => (
+                        <div
+                          key={`avaliacao-geral-${index}`}
+                          className="rounded-2xl border border-[#D4C9B5]/70 bg-[#F5F0E8] px-4 py-4 shadow-sm"
+                        >
+                          <p className="font-body text-sm leading-relaxed text-[#1C3A2B]/90">{block}</p>
+                        </div>
+                      ),
+                    )}
                   </CardContent>
                 </Card>
               </div>
-
-              <Card className="border border-[#D4C9B5] bg-[#E8DECE] rounded-3xl">
-                <CardHeader>
-                  <CardTitle className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
-                    <ShieldCheck className="text-[#4A7A5C]" size={18} />
-                    Avaliação geral
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="font-body text-sm text-[#1C3A2B]/90 leading-relaxed">
-                    {textValue(analysis.avaliacao_geral) || "Sem conteúdo disponível."}
-                  </p>
-                </CardContent>
-              </Card>
             </section>
           ) : isTricoscopia ? (
             <section className="space-y-4">
