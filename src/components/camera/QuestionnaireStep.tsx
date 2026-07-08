@@ -101,7 +101,7 @@ const QuestionnaireStep = ({ onConfirm, onCancel }: QuestionnaireStepProps) => {
 
               <div className="space-y-2">
                 <p className="text-[10px] font-medium uppercase tracking-[2px] text-[#8FAF8A]">
-                  Fios em crescimento corresponde a qual área? (início=verde, meio=amarelo e cauda=vermelho)
+                  Fios em crescimento corresponde a qual área?
                 </p>
                 <div className="space-y-2">
                   {AREA_OPTIONS.map((area) => {
