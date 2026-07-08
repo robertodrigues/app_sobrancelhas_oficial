@@ -7,6 +7,7 @@ export type CompactAnalysisImage = {
 };
 
 export type AnalysisRouteState = {
+  analysisId?: string;
   analysis: unknown;
   image: string;
   allImages: CompactAnalysisImage[];
