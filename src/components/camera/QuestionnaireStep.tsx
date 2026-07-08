@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { showError } from "@/utils/toast";
-import type { AnalysisQuestionnaire, DensityRegionKey } from "@/services/types";
+import type { AnalysisQuestionnaire, QuestionnaireAreaKey } from "@/services/types";
 
 interface QuestionnaireStepProps {
   onConfirm: (questionnaire: AnalysisQuestionnaire) => void;
@@ -14,23 +14,31 @@ interface QuestionnaireStepProps {
 }
 
 const AREA_OPTIONS: Array<{
-  key: DensityRegionKey;
+  key: QuestionnaireAreaKey;
   label: string;
   color: string;
 }> = [
   { key: "ponto_inicial", label: "Início", color: "bg-[#16A34A]" },
   { key: "meio", label: "Meio", color: "bg-[#EAB308]" },
   { key: "cauda", label: "Cauda", color: "bg-[#DC2626]" },
+  { key: "nenhuma", label: "Nenhuma", color: "bg-[#8FAF8A]" },
 ];
 
 const QuestionnaireStep = ({ onConfirm, onCancel }: QuestionnaireStepProps) => {
   const [falha, setFalha] = useState<AnalysisQuestionnaire["falha"] | "">("");
-  const [fiosEmCrescimento, setFiosEmCrescimento] = useState<DensityRegionKey[]>([]);
+  const [fiosEmCrescimento, setFiosEmCrescimento] = useState<QuestionnaireAreaKey[]>([]);
 
-  const toggleArea = (area: DensityRegionKey) => {
-    setFiosEmCrescimento((current) =>
-      current.includes(area) ? current.filter((item) => item !== area) : [...current, area],
-    );
+  const toggleArea = (area: QuestionnaireAreaKey) => {
+    setFiosEmCrescimento((current) => {
+      if (area === "nenhuma") {
+        return current.includes("nenhuma") ? [] : ["nenhuma"];
+      }
+
+      const withoutNone = current.filter((item) => item !== "nenhuma");
+      return withoutNone.includes(area)
+        ? withoutNone.filter((item) => item !== area)
+        : [...withoutNone, area];
+    });
   };
 
   const handleConfirm = () => {
@@ -135,7 +143,7 @@ const QuestionnaireStep = ({ onConfirm, onCancel }: QuestionnaireStepProps) => {
                   })}
                 </div>
                 <p className="text-[10px] text-[#D4C9B5]">
-                  Você pode marcar uma, duas ou as três áreas.
+                  Você pode marcar uma, duas, as três áreas ou Nenhuma.
                 </p>
               </div>
             </div>
