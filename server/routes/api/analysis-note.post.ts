@@ -56,22 +56,44 @@ export default defineHandler(async (event) => {
 
     analysis = data as AnalysisRow | null;
   } else {
-    const { data, error } = await supabase
-      .from("analyses")
-      .select("id, result")
-      .eq("image_url", imageUrl)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const shouldAvoidImageLookup = imageUrl.startsWith("data:");
 
-    if (error) {
-      throw createError({
-        statusCode: 500,
-        statusMessage: error.message,
-      });
+    if (!shouldAvoidImageLookup) {
+      const { data, error } = await supabase
+        .from("analyses")
+        .select("id, result")
+        .eq("image_url", imageUrl)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        throw createError({
+          statusCode: 500,
+          statusMessage: error.message,
+        });
+      }
+
+      analysis = data as AnalysisRow | null;
     }
 
-    analysis = data as AnalysisRow | null;
+    if (!analysis?.id) {
+      const { data, error } = await supabase
+        .from("analyses")
+        .select("id, result")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        throw createError({
+          statusCode: 500,
+          statusMessage: error.message,
+        });
+      }
+
+      analysis = data as AnalysisRow | null;
+    }
   }
 
   if (!analysis?.id) {
