@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AnalysisNoteCard from "@/components/analysis/AnalysisNoteCard";
 import { useUser } from "@/lib/auth";
-import { useSupabaseClient } from "@/lib/supabase";
 import { createUserStorageKey } from "@/lib/userStorage";
 import { persistAnalysisRouteState } from "@/lib/analysisState";
 import { cn } from "@/lib/utils";
@@ -43,7 +42,10 @@ const getPdfSafeImageSrc = (src: string) => {
 
 const fetchImageAsDataUrl = async (src: string) => {
   const response = await fetch(src);
-  if (!response.ok) throw new Error("Não foi possível carregar a imagem.");
+  if (!response.ok) {
+    throw new Error("Não foi possível carregar a imagem.");
+  }
+
   const blob = await response.blob();
   return await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -71,7 +73,6 @@ const splitIntoBlocks = (value: string) => {
 
 const AnalysisResult = () => {
   const { user } = useUser();
-  const supabase = useSupabaseClient();
   const location = useLocation();
   const navigate = useNavigate();
   const routeState = (location.state as AnalysisPayload | null) || null;
@@ -153,7 +154,10 @@ const AnalysisResult = () => {
   );
 
   const displaySingleImage = useMemo(() => {
-    if (!Array.isArray(allImages) || allImages.length === 0) return "";
+    if (!Array.isArray(allImages) || allImages.length === 0) {
+      return "";
+    }
+
     const lastImage = allImages[allImages.length - 1];
     return lastImage?.dataUrl || lastImage?.url || "";
   }, [allImages]);
@@ -162,6 +166,7 @@ const AnalysisResult = () => {
     if (hasTwoImages) {
       return displayAfterImage || displaySingleImage || image || analysisWithNote?.image_url || "";
     }
+
     return displaySingleImage || image || analysisWithNote?.image_url || "";
   }, [analysisWithNote?.image_url, displayAfterImage, displaySingleImage, hasTwoImages, image]);
 
@@ -192,9 +197,33 @@ const AnalysisResult = () => {
     ] as const;
   };
 
-  const persistAnalysis = (nextAnalysis: unknown) => {
+  const handleSaveNote = async (nextNote: string) => {
+    const note = nextNote.trim();
+    const nextAnalysis = { ...analysisWithNote, note };
+
+    const response = await fetch("/api/analysis-note", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        analysisId: analysisId || undefined,
+        imageUrl: image || analysisWithNote?.image_url || "",
+        note,
+      }),
+    });
+
+    if (!response.ok) {
+      const message = await response.text();
+      showError(message || "Não foi possível salvar a nota.");
+      return false;
+    }
+
+    const data = await response.json();
+
+    setAnalysisNote(note);
     persistAnalysisRouteState({
-      analysisId: analysisId || undefined,
+      analysisId: data?.analysisId || analysisId || undefined,
       analysis: nextAnalysis,
       image: image || "",
       allImages: (allImages || []).map((item) => ({
@@ -202,49 +231,6 @@ const AnalysisResult = () => {
         bboxes: item.bboxes,
       })),
     });
-  };
-
-  const handleSaveNote = async (nextNote: string) => {
-    const note = nextNote.trim();
-    const nextAnalysis = { ...analysisWithNote, note };
-
-    let resolvedAnalysisId = analysisId;
-
-    if (!resolvedAnalysisId) {
-      const lookupImage = image || analysisWithNote?.image_url || "";
-      if (!lookupImage) {
-        showError("Não foi possível localizar esta análise para salvar a nota.");
-        return false;
-      }
-
-      const { data: matchedAnalysis, error: lookupError } = await supabase
-        .from("analyses")
-        .select("id")
-        .eq("image_url", lookupImage)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (lookupError || !matchedAnalysis?.id) {
-        showError("Não foi possível localizar esta análise para salvar a nota.");
-        return false;
-      }
-
-      resolvedAnalysisId = matchedAnalysis.id;
-    }
-
-    const { error } = await supabase
-      .from("analyses")
-      .update({ result: nextAnalysis })
-      .eq("id", resolvedAnalysisId);
-
-    if (error) {
-      showError("Não foi possível salvar a nota.");
-      return false;
-    }
-
-    setAnalysisNote(note);
-    persistAnalysis(nextAnalysis);
     showSuccess("Nota salva com sucesso!");
     return true;
   };
@@ -343,6 +329,7 @@ const AnalysisResult = () => {
         if (data) {
           const props = pdf.getImageProperties(data);
           const aspect = props.width / props.height;
+
           let drawW = width - 4;
           let drawH = drawW / aspect;
 
@@ -561,13 +548,21 @@ const AnalysisResult = () => {
               <div className="w-[48%] space-y-2">
                 <p className="font-label-category text-[10px] text-[#4A7A5C] text-center">Antes</p>
                 <div className="rounded-2xl shadow-md border-2 border-[#E8DECE] p-1 bg-[#1C3A2B]/5">
-                  <img src={displayBeforeImage} className="w-full aspect-square rounded-[12px] object-contain bg-[#F5F0E8] block" alt="Antes" />
+                  <img
+                    src={displayBeforeImage}
+                    className="w-full aspect-square rounded-[12px] object-contain bg-[#F5F0E8] block"
+                    alt="Antes"
+                  />
                 </div>
               </div>
               <div className="w-[48%] space-y-2">
                 <p className="font-label-category text-[10px] text-[#4A7A5C] text-center">Depois</p>
                 <div className="rounded-2xl shadow-md border-2 border-[#4A7A5C] p-1 bg-[#1C3A2B]/5">
-                  <img src={displayAfterImage} className="w-full aspect-square rounded-[12px] object-contain bg-[#F5F0E8] block" alt="Depois" />
+                  <img
+                    src={displayAfterImage}
+                    className="w-full aspect-square rounded-[12px] object-contain bg-[#F5F0E8] block"
+                    alt="Depois"
+                  />
                 </div>
               </div>
             </div>
@@ -575,7 +570,11 @@ const AnalysisResult = () => {
             <div className="space-y-3">
               <div className="relative rounded-3xl shadow-lg border-4 border-[#E8DECE] p-2 bg-[#1C3A2B]/5 min-h-[280px] flex items-center justify-center overflow-hidden">
                 {displayImage ? (
-                  <img src={displayImage} className="w-full aspect-square rounded-[20px] object-contain bg-[#F5F0E8] block" alt="Análise" />
+                  <img
+                    src={displayImage}
+                    className="w-full aspect-square rounded-[20px] object-contain bg-[#F5F0E8] block"
+                    alt="Análise"
+                  />
                 ) : (
                   <div className="w-full aspect-square rounded-[20px] bg-[#F5F0E8] border border-dashed border-[#D4C9B5] flex flex-col items-center justify-center text-center px-6">
                     <p className="font-heading text-lg text-[#1C3A2B]">Foto indisponível</p>
@@ -650,13 +649,17 @@ const AnalysisResult = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {splitIntoBlocks(textValue(analysisWithNote.avaliacao_geral) || "Sem conteúdo disponível.").map((block, index) => (
-                      <div key={`avaliacao-geral-${index}`} className="rounded-2xl border border-[#D4C9B5]/70 bg-[#F5F0E8] px-4 py-4 shadow-sm">
-                        <p className="font-body text-sm leading-relaxed text-[#1C3A2B]/90">{block}</p>
-                      </div>
-                    ))}
+                    {splitIntoBlocks(textValue(analysisWithNote.avaliacao_geral) || "Sem conteúdo disponível.").map(
+                      (block, index) => (
+                        <div key={`avaliacao-geral-${index}`} className="rounded-2xl border border-[#D4C9B5]/70 bg-[#F5F0E8] px-4 py-4 shadow-sm">
+                          <p className="font-body text-sm leading-relaxed text-[#1C3A2B]/90">{block}</p>
+                        </div>
+                      ),
+                    )}
                   </CardContent>
                 </Card>
+
+                <AnalysisNoteCard value={analysisNote} onSave={handleSaveNote} />
               </div>
             </section>
           ) : isTricoscopia ? (
@@ -667,12 +670,22 @@ const AnalysisResult = () => {
               </h2>
               <Card className="border-none shadow-sm rounded-2xl overflow-hidden bg-[#1C3A2B] text-[#E8DECE]">
                 <CardContent className="p-6 space-y-4">
-                  <p className="font-heading text-base font-normal">{textValue(analysisWithNote.regiaoAnalisada) || "Análise sem região informada."}</p>
-                  <p className="text-xs text-[#E8DECE]/90">{textValue(analysisWithNote.analiseDaPele?.conclusao) || "Sem conteúdo disponível."}</p>
-                  <p className="text-xs text-[#E8DECE]/90">{textValue(analysisWithNote.analiseDosFios?.classificacaoFiosPresentes) || "Sem conteúdo disponível."}</p>
-                  <p className="text-xs text-[#E8DECE]/90">{textValue(analysisWithNote.conclusaoTricoscopica?.estadoGeral) || "Sem conteúdo disponível."}</p>
+                  <p className="font-heading text-base font-normal">
+                    {textValue(analysisWithNote.regiaoAnalisada) || "Análise sem região informada."}
+                  </p>
+                  <p className="text-xs text-[#E8DECE]/90">
+                    {textValue(analysisWithNote.analiseDaPele?.conclusao) || "Sem conteúdo disponível."}
+                  </p>
+                  <p className="text-xs text-[#E8DECE]/90">
+                    {textValue(analysisWithNote.analiseDosFios?.classificacaoFiosPresentes) || "Sem conteúdo disponível."}
+                  </p>
+                  <p className="text-xs text-[#E8DECE]/90">
+                    {textValue(analysisWithNote.conclusaoTricoscopica?.estadoGeral) || "Sem conteúdo disponível."}
+                  </p>
                 </CardContent>
               </Card>
+
+              <AnalysisNoteCard value={analysisNote} onSave={handleSaveNote} />
             </section>
           ) : (
             <Card className="border border-[#D4C9B5] bg-[#E8DECE] rounded-3xl">
@@ -687,10 +700,11 @@ const AnalysisResult = () => {
                   {textValue(analysisWithNote?.avaliacao_geral || analysisWithNote?.visaoGeral?.descricao) || "Sem conteúdo disponível."}
                 </p>
               </CardContent>
+              <div className="px-4 pb-4">
+                <AnalysisNoteCard value={analysisNote} onSave={handleSaveNote} />
+              </div>
             </Card>
           )}
-
-          {analysisWithNote && <AnalysisNoteCard value={analysisNote} onSave={handleSaveNote} />}
 
           {analysisWithNote.alertaInterno?.presente && !usesNewPromptShape && (
             <div className="bg-[#EAF3DE] border border-[#8FAF8A] p-4 rounded-2xl flex gap-3 items-start">
