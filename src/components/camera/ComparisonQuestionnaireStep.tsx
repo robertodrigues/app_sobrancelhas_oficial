@@ -6,7 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { showError } from "@/utils/toast";
-import type { AnalysisQuestionnaire, ComparisonEvolutionKey, DensityRegionKey, QuestionnaireAreaKey } from "@/services/types";
+import type {
+  AnalysisQuestionnaire,
+  ComparisonEvolutionKey,
+  DensityRegionKey,
+  QuestionnaireAreaKey,
+} from "@/services/types";
 
 interface ComparisonQuestionnaireStepProps {
   onConfirm: (questionnaire: AnalysisQuestionnaire) => void;
@@ -80,9 +85,17 @@ const ComparisonQuestionnaireStep = ({ onConfirm, onCancel }: ComparisonQuestion
 
   const optionClass = (active: boolean) =>
     cn(
-      "flex h-12 items-center justify-center rounded-2xl border text-sm font-medium transition-all",
+      "flex min-h-12 items-center justify-center rounded-2xl border px-2 py-2 text-center text-[11px] font-medium leading-tight transition-all sm:text-sm",
       active
         ? "border-[#8FAF8A] bg-[#1C3A2B] text-[#E8DECE] shadow-md"
+        : "border-[#D4C9B5] bg-[#F5F0E8] text-[#1C3A2B] hover:bg-[#E8DECE]",
+    );
+
+  const areaButtonClass = (active: boolean) =>
+    cn(
+      "flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition-all",
+      active
+        ? "border-[#1C3A2B] bg-[#1C3A2B] text-[#E8DECE] shadow-md"
         : "border-[#D4C9B5] bg-[#F5F0E8] text-[#1C3A2B] hover:bg-[#E8DECE]",
     );
 
@@ -99,21 +112,27 @@ const ComparisonQuestionnaireStep = ({ onConfirm, onCancel }: ComparisonQuestion
               </p>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div className="space-y-3">
                 <p className="text-[10px] font-medium uppercase tracking-[2px] text-[#8FAF8A]">
                   Tabela de evolução por região
                 </p>
-                <div className="space-y-2">
+
+                <div className="space-y-3">
                   {REGION_OPTIONS.map((region) => (
-                    <div key={region.key} className="space-y-2 rounded-2xl border border-[#D4C9B5] bg-[#F5F0E8] p-3 text-[#1C3A2B]">
+                    <div
+                      key={region.key}
+                      className="space-y-3 rounded-2xl border border-[#D4C9B5] bg-[#F5F0E8] p-3 text-[#1C3A2B]"
+                    >
                       <div className="flex items-center gap-2">
                         <span className={cn("h-3.5 w-3.5 rounded-full", region.color)} />
                         <span className="text-sm font-semibold">{region.label}</span>
                       </div>
-                      <div className="grid grid-cols-5 gap-2">
+
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
                         {EVOLUTION_OPTIONS.map((option) => {
                           const active = stageEvolution[region.key] === option.key;
+
                           return (
                             <button
                               key={option.key}
@@ -137,31 +156,37 @@ const ComparisonQuestionnaireStep = ({ onConfirm, onCancel }: ComparisonQuestion
                 <p className="text-[10px] font-medium uppercase tracking-[2px] text-[#8FAF8A]">
                   Área de crescimento e novos fios
                 </p>
+
                 <div className="space-y-2">
                   {REGION_OPTIONS.map((area) => {
                     const active = growthArea.includes(area.key);
+
                     return (
                       <button
                         key={area.key}
                         type="button"
                         onClick={() => toggleArea(area.key)}
-                        className={cn(
-                          "flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition-all",
-                          active
-                            ? "border-[#1C3A2B] bg-[#1C3A2B] text-[#E8DECE] shadow-md"
-                            : "border-[#D4C9B5] bg-[#F5F0E8] text-[#1C3A2B] hover:bg-[#E8DECE]",
-                        )}
+                        className={areaButtonClass(active)}
                       >
                         <div className="flex items-center gap-3">
                           <span className={cn("h-3.5 w-3.5 rounded-full", area.color)} />
                           <span className="text-sm font-medium">{area.label}</span>
                         </div>
-                        <span className={cn("flex h-6 w-6 items-center justify-center rounded-md border", active ? "border-[#8FAF8A] bg-[#E8DECE] text-[#1C3A2B]" : "border-[#D4C9B5] bg-transparent text-transparent")}>
+
+                        <span
+                          className={cn(
+                            "flex h-6 w-6 items-center justify-center rounded-md border",
+                            active
+                              ? "border-[#8FAF8A] bg-[#E8DECE] text-[#1C3A2B]"
+                              : "border-[#D4C9B5] bg-transparent text-transparent",
+                          )}
+                        >
                           <Check className="h-4 w-4" />
                         </span>
                       </button>
                     );
                   })}
+
                   <button
                     type="button"
                     onClick={() => toggleArea("nenhuma")}
@@ -176,7 +201,15 @@ const ComparisonQuestionnaireStep = ({ onConfirm, onCancel }: ComparisonQuestion
                       <span className="h-3.5 w-3.5 rounded-full bg-[#8FAF8A]" />
                       <span className="text-sm font-medium">Nenhuma</span>
                     </div>
-                    <span className={cn("flex h-6 w-6 items-center justify-center rounded-md border", growthArea.includes("nenhuma") ? "border-[#8FAF8A] bg-[#E8DECE] text-[#1C3A2B]" : "border-[#D4C9B5] bg-transparent text-transparent")}>
+
+                    <span
+                      className={cn(
+                        "flex h-6 w-6 items-center justify-center rounded-md border",
+                        growthArea.includes("nenhuma")
+                          ? "border-[#8FAF8A] bg-[#E8DECE] text-[#1C3A2B]"
+                          : "border-[#D4C9B5] bg-transparent text-transparent",
+                      )}
+                    >
                       <Check className="h-4 w-4" />
                     </span>
                   </button>
@@ -187,9 +220,11 @@ const ComparisonQuestionnaireStep = ({ onConfirm, onCancel }: ComparisonQuestion
                 <p className="text-[10px] font-medium uppercase tracking-[2px] text-[#8FAF8A]">
                   Característica da evolução
                 </p>
+
                 <div className="space-y-2">
                   {FEATURE_OPTIONS.map((feature) => {
                     const active = features.includes(feature.key);
+
                     return (
                       <button
                         key={feature.key}
@@ -202,8 +237,16 @@ const ComparisonQuestionnaireStep = ({ onConfirm, onCancel }: ComparisonQuestion
                             : "border-[#D4C9B5] bg-[#F5F0E8] text-[#1C3A2B] hover:bg-[#E8DECE]",
                         )}
                       >
-                        <span className="text-sm font-medium">{feature.label}</span>
-                        <span className={cn("flex h-6 w-6 items-center justify-center rounded-md border", active ? "border-[#8FAF8A] bg-[#E8DECE] text-[#1C3A2B]" : "border-[#D4C9B5] bg-transparent text-transparent")}>
+                        <span className="text-sm font-medium leading-snug">{feature.label}</span>
+
+                        <span
+                          className={cn(
+                            "flex h-6 w-6 items-center justify-center rounded-md border",
+                            active
+                              ? "border-[#8FAF8A] bg-[#E8DECE] text-[#1C3A2B]"
+                              : "border-[#D4C9B5] bg-transparent text-transparent",
+                          )}
+                        >
                           <Check className="h-4 w-4" />
                         </span>
                       </button>
