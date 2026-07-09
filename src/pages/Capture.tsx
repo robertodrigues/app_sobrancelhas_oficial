@@ -26,7 +26,7 @@ import { cn } from '@/lib/utils';
 import { uploadPhotoToR2 } from '@/lib/r2';
 import { useUser } from '@/lib/auth';
 import { useSupabaseClient } from '@/lib/supabase';
-import type { AnalysisImage, AnalysisQuestionnaire, DensityRegionKey, ComparisonEvolutionKey } from '@/services/types';
+import type { AnalysisImage, AnalysisQuestionnaire, DensityRegionKey } from '@/services/types';
 
 import type { RegionBBox } from '@/components/camera/ImageAnnotator';
 import { consumeAnalysisCredit } from '@/services/credits';
@@ -45,9 +45,11 @@ type PendingAnalysisState = {
   bboxes?: Record<string, RegionBBox>;
   step?: 'regions' | 'density';
   questionnaire?: AnalysisQuestionnaire;
+  comparisonQuestionnaire?: AnalysisQuestionnaire;
   densityRegion?: DensityRegionKey[];
   densityBBoxes?: Record<string, RegionBBox>;
-  comparisonQuestionnaire?: AnalysisQuestionnaire;
+  analysisMode?: AnalysisMode;
+  comparisonVariant?: 'before' | 'after';
 };
 
 const MAX_UPLOAD_DIMENSION = 8192;
@@ -313,8 +315,20 @@ const Capture = () => {
       return;
     }
 
+    const comparisonVariant =
+      analysisMode === 'comparison'
+        ? capturedImages.length === 0
+          ? 'before'
+          : 'after'
+        : undefined;
+
     navigate('/mapeamento-tecnico', {
-      state: { image: currentImage, step: 'regions' },
+      state: {
+        image: currentImage,
+        step: 'regions',
+        analysisMode,
+        comparisonVariant,
+      },
     });
   };
 
