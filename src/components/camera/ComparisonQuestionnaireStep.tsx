@@ -99,10 +99,10 @@ const ComparisonQuestionnaireStep = ({ onConfirm, onCancel }: ComparisonQuestion
     );
 
   return (
-    <div className="min-h-screen bg-[#1C3A2B] px-4 py-6 text-[#E8DECE]">
-      <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-3xl items-center justify-center">
+    <div className="min-h-screen bg-[#1C3A2B] px-4 py-5 text-[#E8DECE]">
+      <div className="mx-auto flex min-h-[calc(100vh-2.5rem)] w-full max-w-2xl items-center justify-center">
         <Card className="w-full overflow-hidden rounded-[32px] border border-[#4A7A5C]/40 bg-[#3D6B52]/35 shadow-xl">
-          <CardContent className="space-y-6 p-5 sm:p-7">
+          <CardContent className="max-h-[calc(100vh-3rem)] space-y-6 overflow-y-auto p-5 sm:p-7">
             <div className="space-y-2 text-center">
               <p className="font-label-category text-[10px] text-[#8FAF8A]">Etapa 3</p>
               <h2 className="font-heading text-2xl font-normal text-[#E8DECE]">Questionário</h2>
