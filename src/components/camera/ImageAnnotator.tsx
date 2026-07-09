@@ -26,7 +26,7 @@ interface ImageAnnotatorProps {
   regionsBBoxes?: Record<string, RegionBBox>;
 }
 
-type Region = 'ponto_inicial' | 'meio' | 'cauda' | 'falha' | 'ideal' | null;
+type Region = 'ponto_inicial' | 'meio' | 'cauda' | 'falha' | 'ideal' | 'evolucao' | null;
 
 type DrawingSnapshot = {
   data: string;
@@ -71,6 +71,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
     cauda: '#DC2626',
     falha: '#9B59B6',
     ideal: '#16A34A',
+    evolucao: '#2563EB',
   };
 
   const footerLabels =
@@ -476,7 +477,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
       dCtx.moveTo(position.x, position.y);
       dCtx.lineCap = 'round';
       dCtx.lineJoin = 'round';
-      dCtx.strokeStyle = step === 'density' ? '#9B59B6' : colors[activeRegion];
+      dCtx.strokeStyle = step === 'density' ? (activeRegion === 'evolucao' ? '#2563EB' : '#9B59B6') : colors[activeRegion];
       dCtx.globalAlpha = step === 'density' ? 0.92 : 1;
       dCtx.lineWidth = getStrokeWidth();
       dCtx.globalCompositeOperation = 'source-over';
@@ -501,7 +502,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
 
     const dCtx = drawingCanvasRef.current.getContext('2d');
     if (dCtx) {
-      dCtx.strokeStyle = step === 'density' ? '#9B59B6' : colors[activeRegion];
+      dCtx.strokeStyle = step === 'density' ? (activeRegion === 'evolucao' ? '#2563EB' : '#9B59B6') : colors[activeRegion];
       dCtx.globalAlpha = step === 'density' ? 0.92 : 1;
       dCtx.lineWidth = getStrokeWidth();
       dCtx.lineTo(position.x, position.y);
@@ -717,7 +718,7 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
         </div>
 
         {step === 'density' ? (
-          <div className="grid grid-cols-1 gap-3">
+          <div className={cn('grid gap-3', mode === 'comparison' ? 'grid-cols-2' : 'grid-cols-1')}>
             <button
               onClick={() => setActiveRegion('falha')}
               disabled={isSaving}
@@ -729,8 +730,22 @@ const ImageAnnotator: React.FC<ImageAnnotatorProps> = ({
               <div className="h-6 w-6 rounded-full bg-[#9B59B6]" />
               <span className="font-label-category text-[9px] text-[#E8DECE]">Falha / Rarefação</span>
             </button>
+            {mode === 'comparison' && (
+              <button
+                onClick={() => setActiveRegion('evolucao')}
+                disabled={isSaving}
+                className={cn(
+                  'flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all disabled:opacity-50',
+                  activeRegion === 'evolucao' ? 'border-[#2563EB] bg-[#2563EB]/20' : 'border-[#4A7A5C] bg-[#3D6B52]/30',
+                )}
+              >
+                <div className="h-6 w-6 rounded-full bg-[#2563EB]" />
+                <span className="font-label-category text-[9px] text-[#E8DECE]">Evolução</span>
+              </button>
+            )}
           </div>
         ) : (
+
           <div className="grid grid-cols-3 gap-3">
             <button
               onClick={() => setActiveRegion('ponto_inicial')}
