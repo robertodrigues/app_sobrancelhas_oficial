@@ -48,6 +48,7 @@ type PendingAnalysisState = {
   densityRegion?: DensityRegionKey[];
   densityBBoxes?: Record<string, RegionBBox>;
   comparisonQuestionnaire?: AnalysisQuestionnaire;
+  mode?: AnalysisMode;
 };
 
 const MAX_UPLOAD_DIMENSION = 8192;
@@ -128,6 +129,10 @@ const Capture = () => {
 
     if (!pendingState?.image) {
       return;
+    }
+
+    if (pendingState.mode) {
+      setAnalysisMode(pendingState.mode);
     }
 
     setCapturedImages([
@@ -373,6 +378,7 @@ const Capture = () => {
                   <button
                     key={mode.id}
                     onClick={() => {
+                      if (analysisMode === mode.id) return;
                       setAnalysisMode(mode.id);
                       setCapturedImages([]);
                       setCurrentImage(null);

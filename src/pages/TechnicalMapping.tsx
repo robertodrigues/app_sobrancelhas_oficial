@@ -73,6 +73,7 @@ const TechnicalMapping = () => {
         questionnaire,
         densityRegion: state.densityRegion || [],
         densityBBoxes: state.densityBBoxes || {},
+        mode: state.mode,
       },
     });
   };
@@ -88,6 +89,7 @@ const TechnicalMapping = () => {
         questionnaire,
         densityRegion: state.densityRegion || [],
         densityBBoxes: state.densityBBoxes || {},
+        mode: state.mode,
       },
     });
   };
@@ -117,12 +119,7 @@ const TechnicalMapping = () => {
       );
     }
 
-    return (
-      <QuestionnaireStep
-        onConfirm={handleQuestionnaireConfirm}
-        onCancel={handleCancel}
-      />
-    );
+    return <QuestionnaireStep onConfirm={handleQuestionnaireConfirm} onCancel={handleCancel} />;
   }
 
   return (
