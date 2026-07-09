@@ -12,6 +12,7 @@ type TechnicalMappingState = {
   image?: string;
   bboxes?: Record<string, RegionBBox>;
   step?: "regions" | "density" | "questionnaire";
+  mode?: "single" | "comparison" | "tricoscopia";
   densityRegion?: DensityRegionKey[];
   densityBBoxes?: Record<string, RegionBBox>;
 };
@@ -40,6 +41,7 @@ const TechnicalMapping = () => {
         image: annotatedImage,
         bboxes,
         step: "density",
+        mode: state.mode,
       });
       return;
     }
@@ -53,10 +55,12 @@ const TechnicalMapping = () => {
         image: annotatedImage,
         bboxes: state.bboxes || {},
         step: "questionnaire",
+        mode: state.mode,
         densityRegion,
         densityBBoxes,
       });
     }
+
   };
 
   const handleComparisonQuestionnaireConfirm = (questionnaire: AnalysisQuestionnaire) => {
@@ -125,13 +129,14 @@ const TechnicalMapping = () => {
   return (
     <ImageAnnotator
       image={state.image}
-      mode="single"
+      mode={state.mode || "single"}
       step={state.step || "regions"}
       regionsBBoxes={state.bboxes}
       onSave={handleSave}
       onCancel={handleCancel}
     />
   );
+
 };
 
 export default TechnicalMapping;

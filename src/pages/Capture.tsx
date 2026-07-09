@@ -314,7 +314,7 @@ const Capture = () => {
     }
 
     navigate('/mapeamento-tecnico', {
-      state: { image: currentImage, step: 'regions' },
+      state: { image: currentImage, step: 'regions', mode: analysisMode },
     });
   };
 
