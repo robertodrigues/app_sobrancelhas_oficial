@@ -85,7 +85,7 @@ const ComparisonQuestionnaireStep = ({ onConfirm, onCancel }: ComparisonQuestion
 
   const optionClass = (active: boolean) =>
     cn(
-      "flex min-h-12 items-center justify-center rounded-2xl border px-2 py-2 text-center text-[11px] font-medium leading-tight transition-all sm:text-sm",
+      "flex min-h-10 items-center justify-center rounded-full border px-2 py-2 text-center text-[9px] font-medium leading-none tracking-[-0.01em] transition-all sm:min-h-12 sm:text-[10px]",
       active
         ? "border-[#8FAF8A] bg-[#1C3A2B] text-[#E8DECE] shadow-md"
         : "border-[#D4C9B5] bg-[#F5F0E8] text-[#1C3A2B] hover:bg-[#E8DECE]",
