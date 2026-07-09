@@ -60,7 +60,6 @@ const TechnicalMapping = () => {
         densityBBoxes,
       });
     }
-
   };
 
   const handleComparisonQuestionnaireConfirm = (questionnaire: AnalysisQuestionnaire) => {
@@ -109,7 +108,7 @@ const TechnicalMapping = () => {
   }
 
   if (state.step === "questionnaire") {
-    if (state.image && state.bboxes && state.densityRegion) {
+    if (state.mode === "comparison") {
       return (
         <ComparisonQuestionnaireStep
           onConfirm={handleComparisonQuestionnaireConfirm}
@@ -136,7 +135,6 @@ const TechnicalMapping = () => {
       onCancel={handleCancel}
     />
   );
-
 };
 
 export default TechnicalMapping;
