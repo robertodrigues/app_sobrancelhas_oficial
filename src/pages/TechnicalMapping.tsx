@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import ImageAnnotator, { type RegionBBox } from "@/components/camera/ImageAnnotator";
 import QuestionnaireStep from "@/components/camera/QuestionnaireStep";
 import ComparisonQuestionnaireStep from "@/components/camera/ComparisonQuestionnaireStep";
-import type { AnalysisMode, AnalysisQuestionnaire, DensityRegionKey } from "@/services/types";
+import type { AnalysisQuestionnaire, DensityRegionKey } from "@/services/types";
 import { detectDensityRegion } from "@/lib/densityRegion";
 
 type TechnicalMappingState = {
@@ -14,8 +14,6 @@ type TechnicalMappingState = {
   step?: "regions" | "density" | "questionnaire";
   densityRegion?: DensityRegionKey[];
   densityBBoxes?: Record<string, RegionBBox>;
-  analysisMode?: AnalysisMode;
-  comparisonVariant?: "before" | "after";
 };
 
 const TechnicalMapping = () => {
@@ -27,11 +25,7 @@ const TechnicalMapping = () => {
     const routeState = location.state as TechnicalMappingState | null;
 
     if (routeState?.image) {
-      setState({
-        ...routeState,
-        step: routeState.step || "regions",
-        analysisMode: routeState.analysisMode || "single",
-      });
+      setState({ ...routeState, step: routeState.step || "regions" });
       return;
     }
 
@@ -42,12 +36,11 @@ const TechnicalMapping = () => {
     if (!state?.image) return;
 
     if (state.step === "regions") {
-      setState((current) => ({
-        ...current,
+      setState({
         image: annotatedImage,
         bboxes,
         step: "density",
-      }));
+      });
       return;
     }
 
@@ -56,14 +49,13 @@ const TechnicalMapping = () => {
       const densityRegion = detectDensityRegion(densityBBox, state.bboxes || {});
       const densityBBoxes = densityBBox ? { falha: densityBBox } : {};
 
-      setState((current) => ({
-        ...current,
+      setState({
         image: annotatedImage,
         bboxes: state.bboxes || {},
         step: "questionnaire",
         densityRegion,
         densityBBoxes,
-      }));
+      });
     }
   };
 
@@ -75,7 +67,7 @@ const TechnicalMapping = () => {
       state: {
         image: state.image,
         bboxes: state.bboxes || {},
-        comparisonQuestionnaire: questionnaire,
+        questionnaire,
         densityRegion: state.densityRegion || [],
         densityBBoxes: state.densityBBoxes || {},
       },
@@ -103,7 +95,7 @@ const TechnicalMapping = () => {
 
   if (!state?.image) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#1C3A2B] px-6 text-center text-[#E8DECE]">
+      <div className="min-h-screen bg-[#1C3A2B] text-[#E8DECE] flex items-center justify-center px-6 text-center">
         <div className="space-y-3">
           <p className="font-heading text-lg font-normal">Carregando mapeamento técnico...</p>
           <p className="text-xs text-[#8FAF8A]">Aguarde um instante.</p>
@@ -113,7 +105,7 @@ const TechnicalMapping = () => {
   }
 
   if (state.step === "questionnaire") {
-    if (state.analysisMode === "comparison") {
+    if (state.image && state.bboxes && state.densityRegion) {
       return (
         <ComparisonQuestionnaireStep
           onConfirm={handleComparisonQuestionnaireConfirm}
@@ -133,10 +125,9 @@ const TechnicalMapping = () => {
   return (
     <ImageAnnotator
       image={state.image}
-      mode={state.analysisMode === "comparison" ? "comparison" : "single"}
+      mode="single"
       step={state.step || "regions"}
       regionsBBoxes={state.bboxes}
-      comparisonVariant={state.comparisonVariant}
       onSave={handleSave}
       onCancel={handleCancel}
     />

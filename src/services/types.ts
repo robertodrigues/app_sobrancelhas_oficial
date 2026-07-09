@@ -6,7 +6,7 @@ export type QuestionnaireAreaKey = DensityRegionKey | "nenhuma";
 export type ComparisonEvolutionKey = "sem_evolucao" | "discreta" | "moderada" | "evidente" | "piora";
 
 export interface AnalysisQuestionnaire {
-  falha?: "Pontual" | "Difusa";
+  falha: "Pontual" | "Difusa";
   fiosEmCrescimento: QuestionnaireAreaKey[];
   comparisonEvolution?: Record<DensityRegionKey, ComparisonEvolutionKey>;
   growthArea?: QuestionnaireAreaKey[];
