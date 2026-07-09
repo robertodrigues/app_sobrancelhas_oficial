@@ -26,7 +26,8 @@ import { cn } from '@/lib/utils';
 import { uploadPhotoToR2 } from '@/lib/r2';
 import { useUser } from '@/lib/auth';
 import { useSupabaseClient } from '@/lib/supabase';
-import type { AnalysisImage, AnalysisQuestionnaire, DensityRegionKey } from '@/services/types';
+import type { AnalysisImage, AnalysisQuestionnaire, DensityRegionKey, ComparisonEvolutionKey } from '@/services/types';
+
 import type { RegionBBox } from '@/components/camera/ImageAnnotator';
 import { consumeAnalysisCredit } from '@/services/credits';
 import { buildAnalysisRouteState, persistAnalysisRouteState } from '@/lib/analysisState';
@@ -46,6 +47,7 @@ type PendingAnalysisState = {
   questionnaire?: AnalysisQuestionnaire;
   densityRegion?: DensityRegionKey[];
   densityBBoxes?: Record<string, RegionBBox>;
+  comparisonQuestionnaire?: AnalysisQuestionnaire;
 };
 
 const MAX_UPLOAD_DIMENSION = 8192;
@@ -133,7 +135,7 @@ const Capture = () => {
         url: pendingState.image,
         dataUrl: pendingState.image,
         bboxes: pendingState.bboxes || {},
-        questionnaire: pendingState.questionnaire,
+        questionnaire: pendingState.questionnaire || pendingState.comparisonQuestionnaire,
         densityRegion: pendingState.densityRegion || [],
         densityBBoxes: pendingState.densityBBoxes || {},
       },

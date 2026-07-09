@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ImageAnnotator, { type RegionBBox } from "@/components/camera/ImageAnnotator";
 import QuestionnaireStep from "@/components/camera/QuestionnaireStep";
+import ComparisonQuestionnaireStep from "@/components/camera/ComparisonQuestionnaireStep";
 import type { AnalysisQuestionnaire, DensityRegionKey } from "@/services/types";
 import { detectDensityRegion } from "@/lib/densityRegion";
 
@@ -58,6 +59,21 @@ const TechnicalMapping = () => {
     }
   };
 
+  const handleComparisonQuestionnaireConfirm = (questionnaire: AnalysisQuestionnaire) => {
+    if (!state?.image) return;
+
+    navigate("/captura", {
+      replace: true,
+      state: {
+        image: state.image,
+        bboxes: state.bboxes || {},
+        questionnaire,
+        densityRegion: state.densityRegion || [],
+        densityBBoxes: state.densityBBoxes || {},
+      },
+    });
+  };
+
   const handleQuestionnaireConfirm = (questionnaire: AnalysisQuestionnaire) => {
     if (!state?.image) return;
 
@@ -89,6 +105,15 @@ const TechnicalMapping = () => {
   }
 
   if (state.step === "questionnaire") {
+    if (state.image && state.bboxes && state.densityRegion) {
+      return (
+        <ComparisonQuestionnaireStep
+          onConfirm={handleComparisonQuestionnaireConfirm}
+          onCancel={handleCancel}
+        />
+      );
+    }
+
     return (
       <QuestionnaireStep
         onConfirm={handleQuestionnaireConfirm}
