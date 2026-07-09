@@ -49,6 +49,7 @@ type PendingAnalysisState = {
   densityBBoxes?: Record<string, RegionBBox>;
   comparisonQuestionnaire?: AnalysisQuestionnaire;
   mode?: AnalysisMode;
+  selectedClientId?: string;
 };
 
 const MAX_UPLOAD_DIMENSION = 8192;
@@ -135,6 +136,10 @@ const Capture = () => {
       setAnalysisMode(pendingState.mode);
     }
 
+    if (pendingState.selectedClientId) {
+      setSelectedClientId(pendingState.selectedClientId);
+    }
+
     setCapturedImages([
       {
         url: pendingState.image,
@@ -147,7 +152,6 @@ const Capture = () => {
     ]);
 
     setCurrentImage(null);
-    setSelectedClientId('');
   }, [location.state]);
 
   useEffect(() => {
@@ -319,7 +323,7 @@ const Capture = () => {
     }
 
     navigate('/mapeamento-tecnico', {
-      state: { image: currentImage, step: 'regions', mode: analysisMode },
+      state: { image: currentImage, step: 'regions', mode: analysisMode, selectedClientId },
     });
   };
 

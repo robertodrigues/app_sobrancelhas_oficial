@@ -15,6 +15,7 @@ type TechnicalMappingState = {
   mode?: "single" | "comparison" | "tricoscopia";
   densityRegion?: DensityRegionKey[];
   densityBBoxes?: Record<string, RegionBBox>;
+  selectedClientId?: string;
 };
 
 const TechnicalMapping = () => {
@@ -42,6 +43,7 @@ const TechnicalMapping = () => {
         bboxes,
         step: "density",
         mode: state.mode,
+        selectedClientId: state.selectedClientId,
       });
       return;
     }
@@ -58,6 +60,7 @@ const TechnicalMapping = () => {
         mode: state.mode,
         densityRegion,
         densityBBoxes,
+        selectedClientId: state.selectedClientId,
       });
     }
   };
@@ -74,6 +77,7 @@ const TechnicalMapping = () => {
         densityRegion: state.densityRegion || [],
         densityBBoxes: state.densityBBoxes || {},
         mode: state.mode,
+        selectedClientId: state.selectedClientId,
       },
     });
   };
@@ -90,6 +94,7 @@ const TechnicalMapping = () => {
         densityRegion: state.densityRegion || [],
         densityBBoxes: state.densityBBoxes || {},
         mode: state.mode,
+        selectedClientId: state.selectedClientId,
       },
     });
   };
