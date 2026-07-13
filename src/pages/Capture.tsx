@@ -33,7 +33,7 @@ import { consumeAnalysisCredit } from '@/services/credits';
 import { buildAnalysisRouteState, persistAnalysisRouteState } from '@/lib/analysisState';
 
 const ANALYSIS_MODES = [
-  { id: 'single', label: 'Sem Comparações', icon: FileText },
+  { id: 'single', label: 'Avaliação Inicial', icon: FileText },
   { id: 'comparison', label: 'Com Comparações', icon: Columns },
   { id: 'tricoscopia', label: 'Tricoscopia', icon: BrainCircuit },
 ] as const;
