@@ -3,6 +3,8 @@ import { jsonrepair } from "jsonrepair";
 import { formatDensityRegionLabel } from "@/lib/densityRegion";
 import type { AnalysisImage, AnalysisMode } from "./types";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://api.elha.com.br";
+
 type AnthropicMessageContent =
   | { type: "text"; text: string }
   | { type: "image"; source: { type: "base64"; media_type: "image/jpeg"; data: string } };
