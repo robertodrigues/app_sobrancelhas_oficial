@@ -72,7 +72,6 @@ const sanitizeJsonText = (text: string) =>
 
 const extractJsonText = (text: string) => {
   const cleaned = sanitizeJsonText(text);
-  // Busca o primeiro { e o último } para garantir que pegamos apenas o objeto
   const match = cleaned.match(/\{[\s\S]*\}/);
   if (match) {
     return match[0].trim();

@@ -31,7 +31,6 @@ const sanitizeJsonText = (text: string) =>
 
 const extractJsonText = (text: string) => {
   const cleaned = sanitizeJsonText(text);
-  // Usa Regex para pegar do primeiro { ao último }
   const match = cleaned.match(/\{[\s\S]*\}/);
   
   if (!match) {
@@ -59,7 +58,6 @@ const validateRegion = (value: unknown) => {
 const validateSpecialistAnalysis = (value: unknown) => {
   if (!isObject(value)) return false;
 
-  // Aceita o novo formato do prompt ou o antigo
   return (
     hasString(value, "avaliacao_geral") || 
     hasObject(value, "visaoGeral") ||
