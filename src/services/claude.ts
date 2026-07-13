@@ -1,10 +1,7 @@
-import { PROMPT_SEM_COMPARAÇÕES, PROMPT_TRICOSCOPIA } from "../constants/prompt";
-import type { AnalysisImage, AnalysisMode } from "./types";
+import { PROMPT_SEM_COMPARAÇÕES, PROMPT_COM_COMPARAÇÕES, PROMPT_TRICOSCOPIA } from "../constants/prompt";
 import { jsonrepair } from "jsonrepair";
 import { formatDensityRegionLabel } from "@/lib/densityRegion";
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "https://api.elha.com.br";
+import type { AnalysisImage, AnalysisMode } from "./types";
 
 type AnthropicMessageContent =
   | { type: "text"; text: string }
@@ -116,7 +113,7 @@ const extractValidatedResult = (data: any) => {
 export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisMode = "single") => {
   try {
     const content: AnthropicMessageContent[] = [];
-    const prompt = mode === "tricoscopia" ? PROMPT_TRICOSCOPIA : PROMPT_SEM_COMPARAÇÕES;
+    const prompt = mode === "tricoscopia" ? PROMPT_TRICOSCOPIA : mode === "comparison" ? PROMPT_COM_COMPARAÇÕES : PROMPT_SEM_COMPARAÇÕES;
 
     for (let i = 0; i < images.length; i += 1) {
       const label = images.length > 1 ? (i === 0 ? "ANTES" : "DEPOIS") : "VISÃO GERAL";

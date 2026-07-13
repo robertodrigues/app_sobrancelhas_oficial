@@ -34,7 +34,7 @@ import { buildAnalysisRouteState, persistAnalysisRouteState } from '@/lib/analys
 
 const ANALYSIS_MODES = [
   { id: 'single', label: 'Avaliação Inicial', icon: FileText },
-  { id: 'comparison', label: 'Com Comparações', icon: Columns },
+  { id: 'comparison', label: 'Avaliação de Evolução', icon: Columns },
   { id: 'tricoscopia', label: 'Tricoscopia', icon: BrainCircuit },
 ] as const;
 
