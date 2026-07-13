@@ -1,4 +1,4 @@
-import { PROMPT_ESPECIALISTA, PROMPT_TRICOSCOPIA } from "../constants/prompt";
+import { PROMPT_SEM_COMPARAÇÕES, PROMPT_TRICOSCOPIA } from "../constants/prompt";
 import type { AnalysisImage, AnalysisMode } from "./types";
 import { jsonrepair } from "jsonrepair";
 import { formatDensityRegionLabel } from "@/lib/densityRegion";
@@ -116,7 +116,7 @@ const extractValidatedResult = (data: any) => {
 export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisMode = "single") => {
   try {
     const content: AnthropicMessageContent[] = [];
-    const prompt = mode === "tricoscopia" ? PROMPT_TRICOSCOPIA : PROMPT_ESPECIALISTA;
+    const prompt = mode === "tricoscopia" ? PROMPT_TRICOSCOPIA : PROMPT_SEM_COMPARAÇÕES;
 
     for (let i = 0; i < images.length; i += 1) {
       const label = images.length > 1 ? (i === 0 ? "ANTES" : "DEPOIS") : "VISÃO GERAL";
