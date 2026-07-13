@@ -112,10 +112,32 @@ const extractValidatedResult = (data: any) => {
   throw new Error("A resposta da IA veio vazia ou inválida.");
 };
 
+const formatComparisonEvolution = (value: string | undefined) => {
+  switch (value) {
+    case "sem_evolucao":
+      return "Sem evolução";
+    case "discreta":
+      return "Discreta";
+    case "moderada":
+      return "Moderada";
+    case "evidente":
+      return "Evidente";
+    case "piora":
+      return "Piora";
+    default:
+      return "";
+  }
+};
+
 export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisMode = "single") => {
   try {
     const content: AnthropicMessageContent[] = [];
-    const prompt = mode === "tricoscopia" ? PROMPT_TRICOSCOPIA : mode === "comparison" ? PROMPT_COM_COMPARAÇÕES : PROMPT_SEM_COMPARAÇÕES;
+    const prompt =
+      mode === "tricoscopia"
+        ? PROMPT_TRICOSCOPIA
+        : mode === "comparison"
+          ? PROMPT_COM_COMPARAÇÕES
+          : PROMPT_SEM_COMPARAÇÕES;
 
     for (let i = 0; i < images.length; i += 1) {
       const label = images.length > 1 ? (i === 0 ? "ANTES" : "DEPOIS") : "VISÃO GERAL";
@@ -160,11 +182,35 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
 
     const questionnaire = images[0]?.questionnaire;
     if (questionnaire) {
+      const lines: string[] = [
+        `Questionário respondido pela profissional:`,
+        `- Tipo de falha: ${questionnaire.falha}`,
+        `- Fios em crescimento: ${questionnaire.fiosEmCrescimento.join(", ")}`,
+      ];
+
+      if (mode === "comparison") {
+        const comparisonEvolution = questionnaire.comparisonEvolution;
+        if (comparisonEvolution) {
+          lines.push(
+            `- Evolução por região: ` +
+              `início=${formatComparisonEvolution(comparisonEvolution.ponto_inicial)}, ` +
+              `meio=${formatComparisonEvolution(comparisonEvolution.meio)}, ` +
+              `cauda=${formatComparisonEvolution(comparisonEvolution.cauda)}`,
+          );
+        }
+
+        if (questionnaire.growthArea?.length) {
+          lines.push(`- Regiões com crescimento e novos fios: ${questionnaire.growthArea.join(", ")}`);
+        }
+
+        if (questionnaire.evolutionFeatures?.length) {
+          lines.push(`- Características da evolução: ${questionnaire.evolutionFeatures.join(", ")}`);
+        }
+      }
+
       content.push({
         type: "text",
-        text: `Questionário respondido pela profissional:
-- Tipo de falha: ${questionnaire.falha}
-- Fios em crescimento: ${questionnaire.fiosEmCrescimento}`,
+        text: lines.join("\n"),
       });
     }
 
