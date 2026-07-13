@@ -80,13 +80,14 @@ const extractJsonText = (text: string) => {
 };
 
 const parseValidatedJson = (text: string) => {
-  const candidate = extractJsonText(text);
+  const candidate = text.trim().startsWith("{") ? text.trim() : `{${text.trim()}`;
+  const extracted = extractJsonText(candidate);
 
   try {
-    return JSON.parse(candidate);
+    return JSON.parse(extracted);
   } catch (err) {
     try {
-      const repaired = jsonrepair(candidate);
+      const repaired = jsonrepair(extracted);
       return JSON.parse(repaired);
     } catch (repairErr) {
       console.error("Falha ao parsear JSON:", { original: text, candidate });

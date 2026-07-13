@@ -207,11 +207,19 @@ const requestUpstream = async (body, messages) => {
 
   const { messages: anthropicMessages, system } = convertMessagesForAnthropic(messages);
 
+  const messagesWithPrefill = [
+    ...anthropicMessages,
+    {
+      role: 'assistant',
+      content: '{',
+    },
+  ];
+
   console.log('>>> CHAMANDO ANTHROPIC AGORA <<<');
 
   const response = await client.messages.create({
     model,
-    messages: anthropicMessages,
+    messages: messagesWithPrefill,
     max_tokens: body.max_tokens ?? 2000,
     temperature: body.temperature ?? 0,
     ...(system ? { system } : {}),
