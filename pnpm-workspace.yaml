@@ -1,3 +1,11 @@
+packages:
+  - "."
+
+onlyBuiltDependencies:
+  - "@clerk/shared"
+  - "@clerk/shared@2.22.1"
+  - "@clerk/shared@3.47.7"
+
 allowBuilds:
   "@clerk/shared@2.22.1(react-dom@18.3.1(react@18.3.1))(react": false # dyad-auto-denied
   "@clerk/shared@3.47.7(react-dom@18.3.1(react@18.3.1))(react": false # dyad-auto-denied
@@ -375,7 +383,4 @@ allowBuilds:
   zlib-sync: true
   zopflipng-bin: true
   # dyad-default-allow-builds end
-
-packages:
-  - .
 minimumReleaseAge: 1440
