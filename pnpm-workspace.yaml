@@ -1,3 +1,6 @@
 overrides:
   "@clerk/shared": "3.47.7"
   "@clerk/types": "4.15.0"
+
+onlyBuiltDependencies:
+  - "@clerk/shared"
