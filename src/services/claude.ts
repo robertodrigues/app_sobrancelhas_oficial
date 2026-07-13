@@ -67,19 +67,17 @@ const sanitizeJsonText = (text: string) =>
     .replace(/[\u2013\u2014\u2015]/g, "-")
     .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
     .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
-    .replace(/[\u00A0\u202F\u2009]/g, " ")
+    .replace(/[\u00A0\u202F\u2009\uFEFF]/g, " ")
     .trim();
 
 const extractJsonText = (text: string) => {
   const cleaned = sanitizeJsonText(text);
-  const start = cleaned.indexOf("{");
-  const end = cleaned.lastIndexOf("}") + 1;
-
-  if (start === -1 || end <= start) {
-    return cleaned;
+  // Busca o primeiro { e o último } para garantir que pegamos apenas o objeto
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if (match) {
+    return match[0].trim();
   }
-
-  return cleaned.slice(start, end).trim();
+  return cleaned;
 };
 
 const parseValidatedJson = (text: string) => {
@@ -87,9 +85,14 @@ const parseValidatedJson = (text: string) => {
 
   try {
     return JSON.parse(candidate);
-  } catch {
-    const repaired = jsonrepair(candidate);
-    return JSON.parse(repaired);
+  } catch (err) {
+    try {
+      const repaired = jsonrepair(candidate);
+      return JSON.parse(repaired);
+    } catch (repairErr) {
+      console.error("Falha ao parsear JSON:", { original: text, candidate });
+      throw new Error("A resposta da IA não pôde ser interpretada como um relatório técnico.");
+    }
   }
 };
 
@@ -129,8 +132,6 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
         },
       });
 
-      console.log("bboxes recebidos para esta imagem:", images[i].bboxes);
-
       const ordemRegioes = ["ponto_inicial", "meio", "cauda"] as const;
       for (const name of ordemRegioes) {
         const box = images[i].bboxes[name];
@@ -147,12 +148,6 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
         content.push({
           type: "text",
           text: `Falha marcada pela profissional nas regiões: ${orderedLabels.join(", ")}`,
-        });
-      } else if (images[i].densityBBoxes?.falha) {
-        content.push({
-          type: "text",
-          text:
-            "Marca roxa da etapa de densidade registrada separadamente, mas a região não pôde ser identificada com segurança.",
         });
       }
     }
