@@ -76,7 +76,7 @@ const extractJsonText = (text: string) => {
   if (match) {
     return match[0].trim();
   }
-  return cleaned;
+  throw new Error("A resposta da IA veio em formato inesperado: " + cleaned.slice(0, 100));
 };
 
 const parseValidatedJson = (text: string) => {
