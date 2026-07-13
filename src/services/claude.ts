@@ -150,6 +150,13 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
           text: `Falha marcada pela profissional nas regiões: ${orderedLabels.join(", ")}`,
         });
       }
+
+      if (images[i].densityBBoxes?.falha) {
+        content.push({
+          type: "text",
+          text: "densityBBoxes.falha: região de falha destacada pela profissional.",
+        });
+      }
     }
 
     const questionnaire = images[0]?.questionnaire;
