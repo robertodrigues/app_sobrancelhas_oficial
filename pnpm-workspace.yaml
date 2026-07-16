@@ -1,6 +1,4 @@
 allowBuilds:
-  "@clerk/shared@2.22.1(react-dom@18.3.1(react@18.3.1))(react": false # dyad-auto-denied
-  "@clerk/shared@3.47.7(react-dom@18.3.1(react@18.3.1))(react": false # dyad-auto-denied
   # dyad-default-allow-builds begin
   # dyad-default-allow-builds-schema=v1
   # dyad-default-allow-builds-data-version=2026-07-08.1
@@ -25,6 +23,7 @@ allowBuilds:
   "@bufbuild/buf": true
   "@cdktf/node-pty-prebuilt-multiarch": true
   "@ckeditor/ckeditor5-vue": true
+  '@clerk/shared': set this to true or false
   "@cloudflare/wrangler": true
   "@contrast/fn-inspect": true
   "@cubejs-backend/cubestore": true
