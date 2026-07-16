@@ -13,6 +13,7 @@ import { buildSingleImageState, persistAnalysisRouteState } from "@/lib/analysis
 import { cn } from "@/lib/utils";
 import { useUser } from "@/lib/auth";
 import { useSupabaseClient } from "@/lib/supabase";
+import { uploadPhotoToR2 } from "@/lib/r2";
 import AnalysisModeIllustration from "@/components/camera/AnalysisModeIllustration";
 import type { RegionBBox } from "@/components/camera/ImageAnnotator";
 import type { AnalysisImage, TricoscopiaQuestionnaire, TricoscopiaRegionKey } from "@/services/types";
@@ -24,6 +25,19 @@ const REGION_OPTIONS: Array<{ key: TricoscopiaRegionKey; label: string }> = [
   { key: "meio", label: "Meio" },
   { key: "cauda", label: "Cauda" },
 ];
+
+const dataURLtoFile = (dataurl: string, filename: string): File => {
+  const [header, data] = dataurl.split(",");
+  const mime = header.match(/:(.*?);/)?.[1] || "image/jpeg";
+  const binary = atob(data || "");
+  const bytes = new Uint8Array(binary.length);
+
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return new File([bytes], filename, { type: mime });
+};
 
 const Tricoscopia = () => {
   const navigate = useNavigate();
@@ -145,14 +159,31 @@ const Tricoscopia = () => {
       };
 
       const result = await performDualAnalysis([analysisImage], "tricoscopia");
-
       const routeState = buildSingleImageState(result, finalImage);
       persistAnalysisRouteState(routeState);
+
+      let imageUrl = finalImage;
+
+      try {
+        const file = dataURLtoFile(finalImage, `tricoscopia-${Date.now()}.jpg`);
+        const uploadRes = await uploadPhotoToR2(file, {
+          userId: user.id,
+          folder: "tricoscopia",
+        });
+
+        if (uploadRes?.url) {
+          imageUrl = uploadRes.url;
+        } else {
+          console.warn("Upload da imagem de tricoscopia retornou sem URL. Mantendo fallback local.");
+        }
+      } catch (uploadError) {
+        console.warn("Falha ao enviar imagem de tricoscopia para o R2. Mantendo fallback local:", uploadError);
+      }
 
       const { error } = await supabase.from("analyses").insert([
         {
           client_id: selectedClientId,
-          image_url: finalImage,
+          image_url: imageUrl,
           result,
         },
       ]);
