@@ -2,94 +2,96 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 37 31% 94%;
-    --foreground: 150 35% 17%;
-    --card: 37 33% 86%;
-    --card-foreground: 150 35% 17%;
-    --popover: 37 31% 94%;
-    --popover-foreground: 150 35% 17%;
-    --primary: 150 35% 17%;
-    --primary-foreground: 37 33% 86%;
-    --secondary: 142 24% 38%;
-    --secondary-foreground: 37 31% 94%;
-    --muted: 39 25% 77%;
-    --muted-foreground: 142 24% 38%;
-    --accent: 142 24% 38%;
-    --accent-foreground: 37 31% 94%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 39 25% 77%;
-    --input: 39 25% 77%;
-    --ring: 150 35% 17%;
-    --radius: 16px;
-  }
-
-  .dark {
-    --background: 150 35% 17%;
-    --foreground: 37 33% 86%;
-    --card: 150 35% 17%;
-    --card-foreground: 37 33% 86%;
-    --popover: 150 35% 17%;
-    --popover-foreground: 37 33% 86%;
-    --primary: 37 33% 86%;
-    --primary-foreground: 150 35% 17%;
-    --secondary: 142 24% 38%;
-    --secondary-foreground: 37 33% 86%;
-    --muted: 142 24% 38%;
-    --muted-foreground: 37 33% 86%;
-    --accent: 142 24% 38%;
-    --accent-foreground: 37 33% 86%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 37 33% 86%;
-    --border: 142 24% 38%;
-    --input: 142 24% 38%;
-    --ring: 37 33% 86%;
-  }
+:root {
+  --background: 37 31% 94%;
+  --foreground: 150 35% 17%;
+  --card: 37 33% 86%;
+  --card-foreground: 150 35% 17%;
+  --popover: 37 31% 94%;
+  --popover-foreground: 150 35% 17%;
+  --primary: 150 35% 17%;
+  --primary-foreground: 37 33% 86%;
+  --secondary: 142 24% 38%;
+  --secondary-foreground: 37 31% 94%;
+  --muted: 39 25% 77%;
+  --muted-foreground: 142 24% 38%;
+  --accent: 142 24% 38%;
+  --accent-foreground: 37 31% 94%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 39 25% 77%;
+  --input: 39 25% 77%;
+  --ring: 150 35% 17%;
+  --radius: 16px;
 }
 
-@layer base {
-  *,
-  *::before,
-  *::after {
-    font-family: 'Poppins', sans-serif;
-  }
+.dark {
+  --background: 150 35% 17%;
+  --foreground: 37 33% 86%;
+  --card: 150 35% 17%;
+  --card-foreground: 37 33% 86%;
+  --popover: 150 35% 17%;
+  --popover-foreground: 37 33% 86%;
+  --primary: 37 33% 86%;
+  --primary-foreground: 150 35% 17%;
+  --secondary: 142 24% 38%;
+  --secondary-foreground: 37 33% 86%;
+  --muted: 142 24% 38%;
+  --muted-foreground: 37 33% 86%;
+  --accent: 142 24% 38%;
+  --accent-foreground: 37 33% 86%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 37 33% 86%;
+  --border: 142 24% 38%;
+  --input: 142 24% 38%;
+  --ring: 37 33% 86%;
+}
 
-  body {
-    background-color: #F5F0E8;
-    color: #1C3A2B;
-    font-family: 'Poppins', sans-serif;
-    font-weight: 300;
-    line-height: 1.7;
-    -webkit-tap-highlight-color: transparent;
-  }
+*,
+*::before,
+*::after {
+  font-family: "Poppins", sans-serif;
+}
 
-  ::-webkit-scrollbar {
-    display: none;
-  }
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  background-color: #F5F0E8;
+  color: #1C3A2B;
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+  -webkit-tap-highlight-color: transparent;
+}
+
+::-webkit-scrollbar {
+  display: none;
 }
 
 .font-brand-logo {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-weight: 500;
   letter-spacing: 12px;
 }
 
 .font-heading {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-weight: 500;
   letter-spacing: 1.5px;
 }
 
 .font-body {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-weight: 300;
   line-height: 1.7;
 }
 
 .font-label-category {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-weight: 500;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -98,8 +100,8 @@
 .btn-elha-primary {
   background-color: #1C3A2B;
   color: #E8DECE;
-  border-radius: 99px;
-  font-family: 'Poppins', sans-serif;
+  border-radius: 9999px;
+  font-family: "Poppins", sans-serif;
   font-weight: 500;
   font-size: 11px;
   letter-spacing: 3px;
@@ -116,8 +118,8 @@
   background-color: transparent;
   color: #1C3A2B;
   border: 1px solid #1C3A2B;
-  border-radius: 99px;
-  font-family: 'Poppins', sans-serif;
+  border-radius: 9999px;
+  font-family: "Poppins", sans-serif;
   font-weight: 500;
   font-size: 11px;
   letter-spacing: 3px;
@@ -132,12 +134,12 @@
 .tag-elha {
   background-color: #EAF3DE;
   color: #3B6D11;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-weight: 500;
   font-size: 11px;
   letter-spacing: 1px;
   padding: 6px 14px;
-  border-radius: 99px;
+  border-radius: 9999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
