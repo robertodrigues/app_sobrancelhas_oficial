@@ -1,3 +1,160 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --background: 37 31% 94%;
+  --foreground: 150 35% 17%;
+  --card: 37 33% 86%;
+  --card-foreground: 150 35% 17%;
+  --popover: 37 31% 94%;
+  --popover-foreground: 150 35% 17%;
+  --primary: 150 35% 17%;
+  --primary-foreground: 37 33% 86%;
+  --secondary: 142 24% 38%;
+  --secondary-foreground: 37 31% 94%;
+  --muted: 39 25% 77%;
+  --muted-foreground: 142 24% 38%;
+  --accent: 142 24% 38%;
+  --accent-foreground: 37 31% 94%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 39 25% 77%;
+  --input: 39 25% 77%;
+  --ring: 150 35% 17%;
+  --radius: 16px;
+}
+
+.dark {
+  --background: 150 35% 17%;
+  --foreground: 37 33% 86%;
+  --card: 150 35% 17%;
+  --card-foreground: 37 33% 86%;
+  --popover: 150 35% 17%;
+  --popover-foreground: 37 33% 86%;
+  --primary: 37 33% 86%;
+  --primary-foreground: 150 35% 17%;
+  --secondary: 142 24% 38%;
+  --secondary-foreground: 37 33% 86%;
+  --muted: 142 24% 38%;
+  --muted-foreground: 37 33% 86%;
+  --accent: 142 24% 38%;
+  --accent-foreground: 37 33% 86%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 37 33% 86%;
+  --border: 142 24% 38%;
+  --input: 142 24% 38%;
+  --ring: 37 33% 86%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: #f5f0e8;
+  color: #1c3a2b;
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  font: inherit;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+.font-brand-logo {
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  letter-spacing: 12px;
+}
+
+.font-heading {
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+}
+
+.font-body {
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+.font-label-category {
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.btn-elha-primary {
+  background-color: #1c3a2b;
+  color: #e8dece;
+  border-radius: 9999px;
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-elha-primary:hover {
+  background-color: #2a543f;
+  opacity: 0.95;
+}
+
+.btn-elha-outline {
+  background-color: transparent;
+  color: #1c3a2b;
+  border: 1px solid #1c3a2b;
+  border-radius: 9999px;
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-elha-outline:hover {
+  background-color: rgba(28, 58, 43, 0.05);
+}
+
+.tag-elha {
+  background-color: #eaf3de;
+  color: #3b6d11;
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.glass-card {
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
