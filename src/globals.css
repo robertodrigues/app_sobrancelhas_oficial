@@ -50,6 +50,7 @@
 *,
 *::before,
 *::after {
+  box-sizing: border-box;
   font-family: "Poppins", sans-serif;
 }
 
@@ -60,12 +61,17 @@ body,
 }
 
 body {
+  margin: 0;
   background-color: #F5F0E8;
   color: #1C3A2B;
   font-family: "Poppins", sans-serif;
   font-weight: 300;
   line-height: 1.7;
   -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  font: inherit;
 }
 
 ::-webkit-scrollbar {
@@ -151,8 +157,4 @@ body {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
-}
-
-button:active {
-  transform: scale(0.96);
 }
