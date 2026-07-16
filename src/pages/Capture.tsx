@@ -382,6 +382,11 @@ const Capture = () => {
                   <button
                     key={mode.id}
                     onClick={() => {
+                      if (mode.id === 'tricoscopia') {
+                        navigate('/tricoscopia');
+                        return;
+                      }
+
                       if (analysisMode === mode.id) return;
                       setAnalysisMode(mode.id);
                       setCapturedImages([]);

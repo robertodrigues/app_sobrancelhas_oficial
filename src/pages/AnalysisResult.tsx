@@ -173,7 +173,7 @@ const AnalysisResult = () => {
   const titleText = analysisWithNote?.isComparativo
     ? "Relatório de Evolução"
     : isTricoscopia
-      ? "Relatório Tricoscópico"
+      ? "Relatório de Tricoscopia"
       : "Relatório Técnico";
 
   const getPdfImageData = async (src: string | null | undefined) => {
@@ -399,7 +399,19 @@ const AnalysisResult = () => {
         cursorY += boxHeight + 8;
       }
 
-      if (usesNewPromptShape) {
+      if (isTricoscopia) {
+        addSectionTitle("Pele");
+        addParagraph(textValue(analysisWithNote.pilar_pele), 10);
+
+        addSectionTitle("Óstios");
+        addParagraph(textValue(analysisWithNote.pilar_ostios), 10);
+
+        addSectionTitle("Fios");
+        addParagraph(textValue(analysisWithNote.pilar_fios), 10);
+
+        addSectionTitle("Avaliação geral");
+        addParagraph(textValue(analysisWithNote.avaliacao_geral), 10);
+      } else if (usesNewPromptShape) {
         addSectionTitle("Resultado da análise");
 
         const stageCards = [
@@ -587,7 +599,78 @@ const AnalysisResult = () => {
             </div>
           )}
 
-          {usesNewPromptShape ? (
+          {isTricoscopia ? (
+            <section className="space-y-4">
+              <h2 className="font-label-category text-xs font-medium text-[#1C3A2B] flex items-center gap-2">
+                <Target size={18} className="text-[#4A7A5C]" />
+                Resultado da tricoscopia
+              </h2>
+
+              <Card className="overflow-hidden rounded-[30px] border border-[#D4C9B5] bg-[#E8DECE] shadow-[0_16px_40px_rgba(28,58,43,0.08)]">
+                <CardHeader className="pb-3">
+                  <CardTitle className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
+                    <ShieldCheck className="text-[#4A7A5C]" size={18} />
+                    Pele
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {splitIntoBlocks(textValue(analysisWithNote.pilar_pele)).map((block, index) => (
+                    <div key={`pele-${index}`} className="rounded-2xl border border-[#D4C9B5]/70 bg-[#F5F0E8] px-4 py-4 shadow-sm">
+                      <p className="font-body text-sm leading-relaxed text-[#1C3A2B]/90">{block}</p>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden rounded-[30px] border border-[#D4C9B5] bg-[#E8DECE] shadow-[0_16px_40px_rgba(28,58,43,0.08)]">
+                <CardHeader className="pb-3">
+                  <CardTitle className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
+                    <ShieldCheck className="text-[#4A7A5C]" size={18} />
+                    Óstios
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {splitIntoBlocks(textValue(analysisWithNote.pilar_ostios)).map((block, index) => (
+                    <div key={`ostios-${index}`} className="rounded-2xl border border-[#D4C9B5]/70 bg-[#F5F0E8] px-4 py-4 shadow-sm">
+                      <p className="font-body text-sm leading-relaxed text-[#1C3A2B]/90">{block}</p>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden rounded-[30px] border border-[#D4C9B5] bg-[#E8DECE] shadow-[0_16px_40px_rgba(28,58,43,0.08)]">
+                <CardHeader className="pb-3">
+                  <CardTitle className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
+                    <ShieldCheck className="text-[#4A7A5C]" size={18} />
+                    Fios
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {splitIntoBlocks(textValue(analysisWithNote.pilar_fios)).map((block, index) => (
+                    <div key={`fios-${index}`} className="rounded-2xl border border-[#D4C9B5]/70 bg-[#F5F0E8] px-4 py-4 shadow-sm">
+                      <p className="font-body text-sm leading-relaxed text-[#1C3A2B]/90">{block}</p>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden rounded-[30px] border border-[#D4C9B5] bg-[#E8DECE] shadow-[0_16px_40px_rgba(28,58,43,0.08)]">
+                <CardHeader className="pb-3">
+                  <CardTitle className="font-label-category text-[10px] text-[#1C3A2B] flex items-center gap-2">
+                    <Target className="text-[#4A7A5C]" size={18} />
+                    Avaliação geral
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {splitIntoBlocks(textValue(analysisWithNote.avaliacao_geral) || "Sem conteúdo disponível.").map((block, index) => (
+                    <div key={`avaliacao-geral-${index}`} className="rounded-2xl border border-[#D4C9B5]/70 bg-[#F5F0E8] px-4 py-4 shadow-sm">
+                      <p className="font-body text-sm leading-relaxed text-[#1C3A2B]/90">{block}</p>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </section>
+          ) : usesNewPromptShape ? (
             <section className="space-y-4">
               <h2 className="font-label-category text-xs font-medium text-[#1C3A2B] flex items-center gap-2">
                 <Target size={18} className="text-[#4A7A5C]" />

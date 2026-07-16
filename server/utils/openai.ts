@@ -32,7 +32,6 @@ const sanitizeJsonText = (text: string) =>
 const extractJsonText = (text: string) => {
   const cleaned = sanitizeJsonText(text);
   const match = cleaned.match(/\{[\s\S]*\}/);
-  
   if (!match) {
     throw new Error("A resposta da IA não contém um objeto de dados válido.");
   }
@@ -48,30 +47,23 @@ export const parseAnalysisResult = (text: string) => {
 const validateRegion = (value: unknown) => {
   if (!isObject(value)) return false;
 
-  return (
-    hasString(value, "descricao") || 
-    hasString(value, "resumo") ||
-    hasObject(value, "densidade")
-  );
+  return hasString(value, "descricao") || hasString(value, "resumo") || hasObject(value, "densidade");
 };
 
 const validateSpecialistAnalysis = (value: unknown) => {
   if (!isObject(value)) return false;
 
-  return (
-    hasString(value, "avaliacao_geral") || 
-    hasObject(value, "visaoGeral") ||
-    hasObject(value, "regioes")
-  );
+  return hasString(value, "avaliacao_geral") || hasObject(value, "visaoGeral") || hasObject(value, "regioes");
 };
 
 const validateTricoscopiaAnalysis = (value: unknown) => {
   if (!isObject(value)) return false;
 
   return (
-    hasString(value, "modoAnalise") &&
-    hasObject(value, "analiseDaPele") &&
-    hasObject(value, "analiseDosFios")
+    hasString(value, "pilar_pele") &&
+    hasString(value, "pilar_ostios") &&
+    hasString(value, "pilar_fios") &&
+    hasString(value, "avaliacao_geral")
   );
 };
 

@@ -1,7 +1,7 @@
-import { PROMPT_SEM_COMPARAÇÕES, PROMPT_COM_COMPARAÇÕES, PROMPT_TRICOSCOPIA } from "../constants/prompt";
+import { PROMPT_SEM_COMPARAÇÕES, PROMPT_COM_COMPARAÇÕES } from "../constants/prompt";
 import { jsonrepair } from "jsonrepair";
 import { formatDensityRegionLabel } from "@/lib/densityRegion";
-import type { AnalysisImage, AnalysisMode } from "./types";
+import type { AnalysisImage, AnalysisMode, TricoscopiaQuestionnaire } from "./types";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://api.elha.com.br";
 
@@ -84,11 +84,11 @@ const parseValidatedJson = (text: string) => {
 
   try {
     return JSON.parse(extracted);
-  } catch (err) {
+  } catch {
     try {
       const repaired = jsonrepair(extracted);
       return JSON.parse(repaired);
-    } catch (repairErr) {
+    } catch {
       console.error("Falha ao parsear JSON:", { original: text, candidate });
       throw new Error("A resposta da IA não pôde ser interpretada como um relatório técnico.");
     }
@@ -129,12 +129,65 @@ const formatComparisonEvolution = (value: string | undefined) => {
   }
 };
 
+const formatTricoscopiaRegion = (value: string | undefined) => {
+  switch (value) {
+    case "ponto_inicial":
+      return "Início";
+    case "meio":
+      return "Meio";
+    case "cauda":
+      return "Cauda";
+    default:
+      return "";
+  }
+};
+
+const formatTricoscopiaList = (values: string[] = []) => {
+  const mapping: Record<string, string> = {
+    vermelhidao: "Vermelhidão",
+    descamacao_perifolicular: "Descamação ao redor do óstio (perifolicular)",
+    descamacao_interfolicular: "Descamação entre os óstios (interfolicular)",
+    oleosidade: "Oleosidade",
+    ressecamento: "Ressecamento",
+    ostio_sem_fio_visivel: "Óstio sem fio visível",
+    ostio_amarelo: "Óstio amarelo",
+    halo_perifolicular: "Halo perifolicular (vermelhidão ao redor do óstio)",
+    ostio_preto: "Óstio preto (fio quebrado junto à abertura folicular)",
+    fios_espessura_diferente: "Fios de espessura diferente entre si",
+    fios_miniaturizados: "Fios miniaturizados (mais finos que o habitual)",
+    fios_novos_nascendo: "Fios novos nascendo",
+    fios_quebrados: "Fios quebrados",
+    sem_alteracoes: "Sem alterações",
+  };
+
+  if (values.includes("sem_alteracoes")) {
+    return ["Sem alterações"];
+  }
+
+  return values.map((value) => mapping[value] || value).filter(Boolean);
+};
+
 export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisMode = "single") => {
   try {
     const content: AnthropicMessageContent[] = [];
     const prompt =
       mode === "tricoscopia"
-        ? PROMPT_TRICOSCOPIA
+        ? `
+Você é um assistente especializado em documentação técnica de avaliações de tricoscopia de sobrancelhas.
+
+RESPONDA SOMENTE EM JSON VÁLIDO, sem markdown, sem texto fora do JSON, seguindo exatamente esta estrutura:
+
+{
+  "pilar_pele": "texto",
+  "pilar_ostios": "texto",
+  "pilar_fios": "texto",
+  "avaliacao_geral": "texto"
+}
+
+Use português do Brasil, linguagem técnica, frases curtas e objetivas.
+Não mencione diagnóstico.
+Não mencione recomendações de tratamento.
+`
         : mode === "comparison"
           ? PROMPT_COM_COMPARAÇÕES
           : PROMPT_SEM_COMPARAÇÕES;
@@ -152,6 +205,22 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
           data: imageDataUrl.split(",")[1],
         },
       });
+
+      if (mode === "tricoscopia") {
+        const tricoscopia = images[i].tricoscopiaQuestionnaire;
+        if (tricoscopia) {
+          content.push({
+            type: "text",
+            text: [
+              `Região analisada: ${formatTricoscopiaRegion(tricoscopia.regiao)}`,
+              `Pele: ${formatTricoscopiaList(tricoscopia.pilarPele).join(", ")}`,
+              `Óstios: ${formatTricoscopiaList(tricoscopia.pilarOstios).join(", ")}`,
+              `Fios: ${formatTricoscopiaList(tricoscopia.pilarFios).join(", ")}`,
+            ].join("\n"),
+          });
+        }
+        continue;
+      }
 
       const ordemRegioes = ["ponto_inicial", "meio", "cauda"] as const;
       for (const name of ordemRegioes) {
@@ -181,7 +250,7 @@ export const analyzeWithClaude = async (images: AnalysisImage[], mode: AnalysisM
     }
 
     const questionnaire = images[0]?.questionnaire;
-    if (questionnaire) {
+    if (questionnaire && mode !== "tricoscopia") {
       const lines: string[] = [
         `Questionário respondido pela profissional:`,
         `- Tipo de falha: ${questionnaire.falha}`,
