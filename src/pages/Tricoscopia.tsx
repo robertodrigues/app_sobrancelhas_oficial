@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Loader2, Upload } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, Upload, User } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,13 +12,10 @@ import { consumeAnalysisCredit } from "@/services/credits";
 import { buildSingleImageState, persistAnalysisRouteState } from "@/lib/analysisState";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/lib/auth";
+import { useSupabaseClient } from "@/lib/supabase";
 import AnalysisModeIllustration from "@/components/camera/AnalysisModeIllustration";
 import type { RegionBBox } from "@/components/camera/ImageAnnotator";
-import type {
-  AnalysisImage,
-  TricoscopiaQuestionnaire,
-  TricoscopiaRegionKey,
-} from "@/services/types";
+import type { AnalysisImage, TricoscopiaQuestionnaire, TricoscopiaRegionKey } from "@/services/types";
 import TricoscopiaAnnotationStep from "@/components/tricoscopia/TricoscopiaAnnotationStep";
 import TricoscopiaQuestionnaireStep from "@/components/tricoscopia/TricoscopiaQuestionnaireStep";
 
@@ -31,9 +28,12 @@ const REGION_OPTIONS: Array<{ key: TricoscopiaRegionKey; label: string }> = [
 const Tricoscopia = () => {
   const navigate = useNavigate();
   const { user } = useUser();
+  const supabase = useSupabaseClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
+  const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<TricoscopiaRegionKey | null>(null);
   const [rawImage, setRawImage] = useState<string | null>(null);
   const [annotatedImage, setAnnotatedImage] = useState<string | null>(null);
@@ -43,6 +43,35 @@ const Tricoscopia = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const regionLabel = selectedRegion === "ponto_inicial" ? "Início" : selectedRegion === "meio" ? "Meio" : "Cauda";
+
+  useEffect(() => {
+    const fetchClients = async () => {
+      setClients([]);
+
+      if (!user?.id) {
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("clients")
+          .select("id, name")
+          .eq("user_id", user.id)
+          .order("name");
+
+        if (error) {
+          throw error;
+        }
+
+        setClients(data || []);
+      } catch (err) {
+        console.error("Erro ao buscar clientes:", err);
+        showError("Erro ao buscar clientes.");
+      }
+    };
+
+    fetchClients();
+  }, [user?.id, supabase]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -71,6 +100,11 @@ const Tricoscopia = () => {
       return;
     }
 
+    if (!selectedClientId) {
+      showError("Selecione um cliente para salvar a análise no histórico.");
+      return;
+    }
+
     setStep(2);
   };
 
@@ -83,6 +117,11 @@ const Tricoscopia = () => {
   const handleFinish = async (nextQuestionnaire: TricoscopiaQuestionnaire) => {
     if (!user?.id) {
       showError("Sessão inválida. Faça login novamente.");
+      return;
+    }
+
+    if (!selectedClientId) {
+      showError("Selecione um cliente para salvar a análise no histórico.");
       return;
     }
 
@@ -109,6 +148,18 @@ const Tricoscopia = () => {
 
       const routeState = buildSingleImageState(result, finalImage);
       persistAnalysisRouteState(routeState);
+
+      const { error } = await supabase.from("analyses").insert([
+        {
+          client_id: selectedClientId,
+          image_url: finalImage,
+          result,
+        },
+      ]);
+
+      if (error) {
+        throw error;
+      }
 
       showSuccess("Análise de tricoscopia concluída!");
       navigate("/resultado", {
@@ -180,9 +231,32 @@ const Tricoscopia = () => {
         <Card className="border border-[#4A7A5C]/40 bg-[#3D6B52]/35 text-[#E8DECE] rounded-2xl shadow-sm">
           <CardContent className="p-4 space-y-4">
             <div className="flex items-center gap-2 text-[#8FAF8A]">
-              <Camera size={16} />
-              <span className="font-label-category text-[9px]">Escolha da região</span>
+              <User size={16} />
+              <span className="font-label-category text-[9px]">Selecionar Cliente</span>
             </div>
+
+            <div className="rounded-xl border border-[#4A7A5C] bg-[#1C3A2B]/30 px-3 py-2.5">
+              <select
+                value={selectedClientId}
+                onChange={(e) => setSelectedClientId(e.target.value)}
+                className="w-full bg-transparent text-[#E8DECE] outline-none text-xs"
+              >
+                <option value="" className="text-black">
+                  Selecionar Cliente
+                </option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id} className="text-black">
+                    {client.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {clients.length === 0 && (
+              <p className="text-[10px] text-[#8FAF8A]">
+                Cadastre um cliente antes de gerar a análise.
+              </p>
+            )}
 
             <div className="grid grid-cols-3 gap-2">
               {REGION_OPTIONS.map((option) => {
@@ -272,7 +346,7 @@ const Tricoscopia = () => {
             <Button
               className="btn-elha-primary w-full h-12 gap-2"
               onClick={handleProceedToMarking}
-              disabled={!rawImage || !selectedRegion || isAnalyzing}
+              disabled={!rawImage || !selectedRegion || isAnalyzing || !selectedClientId}
             >
               {isAnalyzing ? <Loader2 className="animate-spin" size={14} /> : <Upload size={14} />}
               Próximo
