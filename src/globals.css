@@ -67,12 +67,15 @@
 }
 
 @layer base {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     font-family: 'Poppins', sans-serif;
   }
 
   body {
-    @apply bg-[#F5F0E8] text-[#1C3A2B];
+    background-color: #F5F0E8;
+    color: #1C3A2B;
     font-family: 'Poppins', sans-serif;
     font-weight: 300;
     line-height: 1.7;
@@ -161,7 +164,11 @@
 }
 
 .glass-card {
-  @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
 }
 
 button:active {
