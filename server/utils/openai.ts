@@ -1,4 +1,4 @@
-export type AnalysisMode = "single" | "comparison" | "tricoscopia";
+import type { AnalysisMode } from "../../src/services/types";
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);

@@ -1,12 +1,9 @@
 import OpenAI from "openai";
 import { defineHandler } from "nitro";
 import { createError, readBody } from "nitro/h3";
-import {
-  buildRepairMessages,
-  parseAnalysisResult,
-  validateAnalysisResult,
-  type AnalysisMode,
-} from "../../utils/openai";
+import { useRuntimeConfig } from "nitro";
+import { buildRepairMessages, parseAnalysisResult, validateAnalysisResult } from "../../utils/openai";
+import type { AnalysisMode } from "../../src/services/types";
 
 type AnalysisMessage = {
   role: string;
