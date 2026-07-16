@@ -62,8 +62,8 @@ body,
 
 body {
   margin: 0;
-  background-color: #F5F0E8;
-  color: #1C3A2B;
+  background-color: #f5f0e8;
+  color: #1c3a2b;
   font-family: "Poppins", sans-serif;
   font-weight: 300;
   line-height: 1.7;
@@ -104,8 +104,8 @@ button {
 }
 
 .btn-elha-primary {
-  background-color: #1C3A2B;
-  color: #E8DECE;
+  background-color: #1c3a2b;
+  color: #e8dece;
   border-radius: 9999px;
   font-family: "Poppins", sans-serif;
   font-weight: 500;
@@ -122,8 +122,8 @@ button {
 
 .btn-elha-outline {
   background-color: transparent;
-  color: #1C3A2B;
-  border: 1px solid #1C3A2B;
+  color: #1c3a2b;
+  border: 1px solid #1c3a2b;
   border-radius: 9999px;
   font-family: "Poppins", sans-serif;
   font-weight: 500;
@@ -138,8 +138,8 @@ button {
 }
 
 .tag-elha {
-  background-color: #EAF3DE;
-  color: #3B6D11;
+  background-color: #eaf3de;
+  color: #3b6d11;
   font-family: "Poppins", sans-serif;
   font-weight: 500;
   font-size: 11px;
