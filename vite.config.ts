@@ -20,7 +20,7 @@ export default defineConfig({
     port: 8080,
   },
   plugins: [
-    ...(dyadPlugin ? [dyadPlugin()] : []),
+    // ...(dyadPlugin ? [dyadPlugin()] : []), // temporariamente desativado para teste
     react(),
   ],
   resolve: {
