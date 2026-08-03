@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,7 @@ const TricoscopiaAnnotationStep = ({ image, regionLabel, onConfirm, onCancel }: 
   const drawingRef = useRef(false);
   const [activeCategory, setActiveCategory] = useState<TricoscopiaCategory>("pele");
   const [bboxes, setBboxes] = useState<Record<string, RegionBBox>>({});
+  const [history, setHistory] = useState<Array<{ image: string; bboxes: Record<string, RegionBBox> }>>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const activeColor = useMemo(
@@ -72,6 +74,7 @@ const TricoscopiaAnnotationStep = ({ image, regionLabel, onConfirm, onCancel }: 
       canvas.width = img.naturalWidth || img.width;
       canvas.height = img.naturalHeight || img.height;
       setBboxes({});
+      setHistory([]);
       setIsLoading(false);
       drawBaseImage();
     };
@@ -153,6 +156,13 @@ const TricoscopiaAnnotationStep = ({ image, regionLabel, onConfirm, onCancel }: 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    setHistory((prev) => [
+      ...prev,
+      {
+        image: canvas.toDataURL("image/png"),
+        bboxes: structuredClone(bboxes),
+      },
+    ]);
     drawingRef.current = true;
     ctx.beginPath();
     ctx.moveTo(point.x, point.y);
@@ -176,7 +186,28 @@ const TricoscopiaAnnotationStep = ({ image, regionLabel, onConfirm, onCancel }: 
 
   const handleClear = () => {
     setBboxes({});
+    setHistory([]);
     drawBaseImage();
+  };
+
+  const handleUndo = () => {
+    const previous = history[history.length - 1];
+    if (!previous) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const restoredImage = new Image();
+    restoredImage.onload = () => {
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(restoredImage, 0, 0, canvas.width, canvas.height);
+      setBboxes(previous.bboxes);
+      setHistory((prev) => prev.slice(0, -1));
+    };
+    restoredImage.src = previous.image;
   };
 
   const handleConfirm = () => {
@@ -264,9 +295,20 @@ const TricoscopiaAnnotationStep = ({ image, regionLabel, onConfirm, onCancel }: 
             </div>
 
             <div className="flex items-center justify-between text-[10px] text-[#8FAF8A]">
-              <button type="button" onClick={handleClear} className="underline underline-offset-4">
-                Limpar marcações
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleUndo}
+                  disabled={history.length === 0}
+                  className="inline-flex items-center gap-1 underline underline-offset-4 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Undo2 size={12} />
+                  Desfazer
+                </button>
+                <button type="button" onClick={handleClear} className="underline underline-offset-4">
+                  Limpar marcações
+                </button>
+              </div>
               <span>Cor ativa: {activeCategory}</span>
             </div>
           </CardContent>
