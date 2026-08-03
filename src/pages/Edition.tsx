@@ -76,7 +76,11 @@ const Edition = () => {
     <div className="min-h-screen bg-[#F5F0E8] text-[#1C3A2B] pb-28">
       <Navbar />
 
-      <main className="mx-auto w-full max-w-md px-4 py-4">
+      <main className="mx-auto w-full max-w-md space-y-3 px-4 py-4">
+        <p className="px-2 text-center text-xs leading-relaxed text-[#4A7A5C]">
+          O card abaixo representa a edição do PDF das suas análises quando ele é gerado. Portanto, você tem a opção de incluir a sua logo, com a cor do background da sua marca.
+        </p>
+
         <Card className="overflow-hidden rounded-2xl border border-red-700 bg-red-600 text-white shadow-sm">
           <CardContent className="space-y-3 p-4">
             <h1 className="flex items-center gap-1.5 font-label-category text-[9px] text-white">
