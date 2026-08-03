@@ -22,7 +22,7 @@ import { buildSingleImageState, persistAnalysisRouteState } from "@/lib/analysis
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://api.elha.com.br";
 
 const Index = () => {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
   const supabase = useSupabaseClient();
   const [stats, setStats] = useState({ clients: 0, analyses: 0 });
@@ -71,6 +71,8 @@ const Index = () => {
     }, 2200);
 
     const fetchData = async () => {
+      if (!isLoaded) return;
+
       setLoading(true);
       setStats({ clients: 0, analyses: 0 });
       setRecentActivities([]);
@@ -170,7 +172,7 @@ const Index = () => {
       clearTimeout(timer);
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [user?.id, supabase]);
+  }, [isLoaded, user?.id, supabase]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
