@@ -83,13 +83,13 @@ const AnalysisTutorialDialog = ({
 
           <div className="flex min-h-0 flex-1 flex-col gap-4 px-5 pb-5">
             <div className="overflow-hidden rounded-[28px] border border-[#D4C9B5] bg-[#1C3A2B] shadow-[0_18px_40px_rgba(28,58,43,0.22)]">
-              <div className="aspect-[9/16] w-full bg-black">
+              <div className="w-full bg-black">
                 {embedUrl ? (
                   isDirectVideo ? (
                     <video
                       src={embedUrl}
                       title="Tutorial em vídeo"
-                      className="h-full w-full object-contain"
+                      className="mx-auto block max-h-[72vh] w-auto max-w-full object-contain"
                       controls
                       playsInline
                     />
