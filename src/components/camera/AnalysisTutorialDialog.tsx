@@ -42,9 +42,12 @@ const toYouTubeEmbedUrl = (url: string) => {
   }
 };
 
-const AnalysisTutorialDialog = ({ videoUrl = '' }: AnalysisTutorialDialogProps) => {
+const AnalysisTutorialDialog = ({
+  videoUrl = 'https://mirvthmrjscgrifzbyrc.supabase.co/storage/v1/object/public/Tutorial/Elha%20Editado.mp4',
+}: AnalysisTutorialDialogProps) => {
   const [open, setOpen] = useState(false);
   const embedUrl = useMemo(() => toYouTubeEmbedUrl(videoUrl), [videoUrl]);
+  const isDirectVideo = /\.(mp4|webm|ogg)(\?.*)?$/i.test(embedUrl);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -82,13 +85,23 @@ const AnalysisTutorialDialog = ({ videoUrl = '' }: AnalysisTutorialDialogProps) 
             <div className="overflow-hidden rounded-[28px] border border-[#D4C9B5] bg-[#1C3A2B] shadow-[0_18px_40px_rgba(28,58,43,0.22)]">
               <div className="aspect-[9/16] w-full bg-black">
                 {embedUrl ? (
-                  <iframe
-                    src={embedUrl}
-                    title="Tutorial em vídeo"
-                    className="h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  />
+                  isDirectVideo ? (
+                    <video
+                      src={embedUrl}
+                      title="Tutorial em vídeo"
+                      className="h-full w-full object-contain"
+                      controls
+                      playsInline
+                    />
+                  ) : (
+                    <iframe
+                      src={embedUrl}
+                      title="Tutorial em vídeo"
+                      className="h-full w-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
+                  )
                 ) : (
                   <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-6 text-center text-[#E8DECE]">
                     <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[#FFB347]">
